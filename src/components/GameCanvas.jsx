@@ -1,0 +1,228 @@
+import React, { useEffect, useRef, useState } from 'react'
+import { ARENA_W, ARENA_H, MAPS, P1_KEYS, P2_KEYS } from '../game/constants.js'
+import { initState, tick, applyInput } from '../game/engine.js'
+import { render } from '../game/render.js'
+import { makeAIController } from '../game/ai.js'
+import { playMusic, stopMusic, resumeAudio, sfx } from '../game/sfx.js'
+
+export default function GameCanvas({ config, onExit }) {
+  const canvasRef = useRef(null)
+  const wrapRef = useRef(null)
+  const stateRef = useRef(null)
+  const keysRef = useRef({})
+  const prevKeysRef = useRef({})
+  const touchRef = useRef({ p1: {}, p2: {} })
+  const aiRef = useRef([])
+  const rafRef = useRef(0)
+  const lastRef = useRef(0)
+  const [paused, setPaused] = useState(false)
+  const [tick2, setTick2] = useState(0)
+  const [scale, setScale] = useState(1)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const mapObj = MAPS.find(m => m.id === config.map) || MAPS[0]
+    const s = initState({
+      mode: config.mode,
+      matchType: config.matchType || (config.mode === '2p' ? '1v1' : '1v1'),
+      map: config.map,
+      p1Char: config.p1Char,
+      p2Char: config.p2Char,
+      difficulty: config.difficulty,
+    })
+    s.mapObj = mapObj
+    stateRef.current = s
+
+    // Prepare AI controllers for CPU players
+    aiRef.current = s.players.map(p => p.isCPU ? makeAIController(s.difficulty) : null)
+
+    playMusic('battle')
+    resumeAudio()
+
+    return () => { cancelAnimationFrame(rafRef.current); stopMusic() }
+  }, [config])
+
+  // Input handling
+  useEffect(() => {
+    const down = e => {
+      keysRef.current[e.code] = true
+      if (e.code === 'Escape') { setPaused(p => !p); sfx.click() }
+    }
+    const up = e => { keysRef.current[e.code] = false }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    return () => {
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+    }
+  }, [])
+
+  // Resize / fit
+  useEffect(() => {
+    const fit = () => {
+      const el = wrapRef.current; if (!el) return
+      const rect = el.getBoundingClientRect()
+      const s = Math.min(rect.width / ARENA_W, rect.height / ARENA_H)
+      setScale(s)
+      setIsMobile(window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 900)
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [])
+
+  // Main loop
+  useEffect(() => {
+    const ctx = canvasRef.current.getContext('2d')
+
+    const loop = (now) => {
+      const dt = Math.min(50, now - (lastRef.current || now))
+      lastRef.current = now
+      const s = stateRef.current
+      if (s && !paused) {
+        const k = keysRef.current
+        const pk = prevKeysRef.current
+
+        // Build inputs for each player
+        s.players.forEach((p, i) => {
+          if (p.isCPU) {
+            const ai = aiRef.current[i]
+            if (ai) {
+              const input = ai(p, s, dt)
+              applyInput(p, input, dt, s)
+            }
+          } else {
+            const keys = p.kind === 'p2' ? P2_KEYS : P1_KEYS
+            const catchPressed = k[keys.catch] && !pk[keys.catch]
+            const input = {
+              left: !!k[keys.left],
+              right: !!k[keys.right],
+              jump: !!k[keys.jump],
+              duck: !!k[keys.duck],
+              throw: !!k[keys.throw],
+              catchPressed,
+            }
+            // Merge in touch input
+            const t = p.kind === 'p2' ? touchRef.current.p2 : touchRef.current.p1
+            input.left = input.left || !!t.left
+            input.right = input.right || !!t.right
+            input.jump = input.jump || !!t.jump
+            input.duck = input.duck || !!t.duck
+            input.throw = input.throw || !!t.throw
+            if (t.catchOnce) { input.catchPressed = true; t.catchOnce = false }
+            applyInput(p, input, dt, s)
+          }
+        })
+
+        prevKeysRef.current = { ...k }
+        tick(s, dt)
+        render(ctx, s, s.mapObj)
+      } else if (s) {
+        render(ctx, s, s.mapObj)
+        // Pause overlay
+        ctx.fillStyle = 'rgba(0,0,0,0.6)'
+        ctx.fillRect(0, 0, ARENA_W, ARENA_H)
+        ctx.fillStyle = '#fff'
+        ctx.font = 'bold 64px system-ui'
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+        ctx.fillText('PAUSED', ARENA_W/2, ARENA_H/2)
+        ctx.font = '20px system-ui'
+        ctx.fillText('Press ESC to resume', ARENA_W/2, ARENA_H/2 + 60)
+      }
+      rafRef.current = requestAnimationFrame(loop)
+    }
+    rafRef.current = requestAnimationFrame(loop)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [paused])
+
+  const s = stateRef.current
+  const matchEnd = s?.phase === 'matchEnd'
+
+  const touchStart = (side, action) => () => {
+    if (side === 'p1') touchRef.current.p1[action] = true
+    else touchRef.current.p2[action] = true
+    if (action === 'catch') {
+      if (side === 'p1') touchRef.current.p1.catchOnce = true
+      else touchRef.current.p2.catchOnce = true
+    }
+  }
+  const touchEnd = (side, action) => () => {
+    if (side === 'p1') touchRef.current.p1[action] = false
+    else touchRef.current.p2[action] = false
+  }
+
+  return (
+    <div ref={wrapRef} className="w-screen h-screen flex items-center justify-center bg-black relative overflow-hidden">
+      <div style={{ width: ARENA_W * scale, height: ARENA_H * scale, position: 'relative' }}>
+        <canvas
+          ref={canvasRef}
+          width={ARENA_W}
+          height={ARENA_H}
+          style={{ width: ARENA_W * scale, height: ARENA_H * scale, background: '#000' }}
+        />
+
+        {/* Top bar */}
+        <div className="absolute top-2 right-2 flex gap-2" style={{ transform: `scale(${scale})`, transformOrigin: 'top right' }}>
+          <button onClick={() => setPaused(p => !p)} className="px-3 py-1 rounded bg-slate-800/80 border border-slate-500 text-white text-sm">
+            {paused ? 'Resume' : 'Pause'}
+          </button>
+          <button onClick={onExit} className="px-3 py-1 rounded bg-red-900/80 border border-red-500 text-white text-sm">
+            Menu
+          </button>
+        </div>
+
+        {/* Match end overlay */}
+        {matchEnd && (
+          <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 pointer-events-none">
+            <div className="pointer-events-auto flex gap-3">
+              <button onClick={onExit} className="px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-lg">
+                Main Menu
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile controls */}
+        {isMobile && (
+          <MobileControls
+            twoPlayer={config.mode === '2p'}
+            onDown={touchStart}
+            onUp={touchEnd}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+function MobileControls({ twoPlayer, onDown, onUp }) {
+  const btnCls = 'w-14 h-14 rounded-full bg-white/20 active:bg-white/40 border border-white/40 text-white text-lg font-bold flex items-center justify-center touch-none select-none'
+  const dpad = (side) => (
+    <div className="flex flex-col items-center gap-1">
+      <button className={btnCls} onTouchStart={onDown(side,'jump')} onTouchEnd={onUp(side,'jump')} onMouseDown={onDown(side,'jump')} onMouseUp={onUp(side,'jump')}>▲</button>
+      <div className="flex gap-1">
+        <button className={btnCls} onTouchStart={onDown(side,'left')} onTouchEnd={onUp(side,'left')} onMouseDown={onDown(side,'left')} onMouseUp={onUp(side,'left')}>◀</button>
+        <button className={btnCls} onTouchStart={onDown(side,'duck')} onTouchEnd={onUp(side,'duck')} onMouseDown={onDown(side,'duck')} onMouseUp={onUp(side,'duck')}>▼</button>
+        <button className={btnCls} onTouchStart={onDown(side,'right')} onTouchEnd={onUp(side,'right')} onMouseDown={onDown(side,'right')} onMouseUp={onUp(side,'right')}>▶</button>
+      </div>
+    </div>
+  )
+  const actions = (side) => (
+    <div className="flex flex-col items-center gap-2">
+      <button className={btnCls + ' bg-red-500/40'} onTouchStart={onDown(side,'throw')} onTouchEnd={onUp(side,'throw')} onMouseDown={onDown(side,'throw')} onMouseUp={onUp(side,'throw')}>THR</button>
+      <button className={btnCls + ' bg-green-500/40'} onTouchStart={onDown(side,'catch')} onTouchEnd={onUp(side,'catch')} onMouseDown={onDown(side,'catch')} onMouseUp={onUp(side,'catch')}>CATCH</button>
+    </div>
+  )
+  return (
+    <>
+      <div className="absolute bottom-4 left-4 pointer-events-auto">{dpad('p1')}</div>
+      <div className="absolute bottom-4 right-4 pointer-events-auto">{actions('p1')}</div>
+      {twoPlayer && (
+        <>
+          <div className="absolute top-24 left-4 pointer-events-auto opacity-90">{dpad('p2')}</div>
+          <div className="absolute top-24 right-4 pointer-events-auto opacity-90">{actions('p2')}</div>
+        </>
+      )}
+    </>
+  )
+}
