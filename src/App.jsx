@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro } from './components/Menus.jsx'
+import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro, ModifiersScreen } from './components/Menus.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
@@ -163,7 +163,18 @@ export default function App() {
       {screen === 'map' && (
         <MapSelect
           onBack={() => setScreen(cfg.mode === '2p' ? 'p2' : 'p2cpu')}
-          onPick={(m) => { setCfg(c => ({ ...c, map: m })); start() }}
+          onPick={(m) => {
+            setCfg(c => ({ ...c, map: m }))
+            // Practice skips modifiers; everything else offers them
+            if (cfg.mode === 'practice') start()
+            else setScreen('modifiers')
+          }}
+        />
+      )}
+      {screen === 'modifiers' && (
+        <ModifiersScreen
+          onBack={() => setScreen('map')}
+          onStart={(mods) => { setCfg(c => ({ ...c, modifiers: mods })); start() }}
         />
       )}
       {screen === 'game' && cfg.mode && cfg.p1Char && cfg.p2Char && cfg.map && (

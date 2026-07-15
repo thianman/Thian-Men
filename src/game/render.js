@@ -65,8 +65,9 @@ export function render(ctx, state, mapObj, extras = {}) {
   }
 
   // Players
+  const bigHead = state.mods && state.mods.has('bighead')
   for (const p of state.players) {
-    drawPlayer(ctx, p)
+    drawPlayer(ctx, p, { bigHead })
   }
 
   // Charge bars
@@ -166,9 +167,10 @@ function drawMapDecor(ctx, m) {
   }
 }
 
-function drawPlayer(ctx, p) {
+function drawPlayer(ctx, p, opts = {}) {
   const flash = p.hitFlash > 0
   const shape = p.char.shape || 'normal'
+  const headScale = opts.bigHead ? 1.6 : 1
   ctx.save()
   ctx.translate(p.x, p.y)
   // Shadow
@@ -200,8 +202,9 @@ function drawPlayer(ctx, p) {
   }
 
   // Head
+  const drawHeadR = headR * headScale
   ctx.fillStyle = flash ? '#fff' : lighten(p.char.color, 20)
-  ctx.beginPath(); ctx.arc(p.w/2, 12, headR, 0, Math.PI*2); ctx.fill()
+  ctx.beginPath(); ctx.arc(p.w/2, 12, drawHeadR, 0, Math.PI*2); ctx.fill()
 
   // Character-specific head decor
   if (!flash) {

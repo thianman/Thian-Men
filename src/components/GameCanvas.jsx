@@ -15,6 +15,7 @@ export default function GameCanvas({ config, onExit, onMatchEnd }) {
   const aiRef = useRef([])
   const rafRef = useRef(0)
   const lastRef = useRef(0)
+  const slowmoTickRef = useRef(false)
   const [paused, setPaused] = useState(false)
   const [tick2, setTick2] = useState(0)
   const [scale, setScale] = useState(1)
@@ -31,6 +32,7 @@ export default function GameCanvas({ config, onExit, onMatchEnd }) {
       p1Char: config.p1Char,
       p2Char: config.p2Char,
       difficulty: config.difficulty,
+      modifiers: config.modifiers,
     })
     s.mapObj = mapObj
     stateRef.current = s
@@ -123,7 +125,11 @@ export default function GameCanvas({ config, onExit, onMatchEnd }) {
 
         prevKeysRef.current = { ...k }
         const prevPhase = s.phase
-        tick(s, dt)
+        // Slow-mo: skip alternate physics ticks (rendering stays 60fps)
+        const slowmo = s.mods && s.mods.has('slowmo')
+        if (!slowmo || (slowmoTickRef.current = !slowmoTickRef.current)) {
+          tick(s, dt)
+        }
         if (s.phase !== prevPhase) setGamePhase(s.phase)
         render(ctx, s, s.mapObj)
       } else if (s) {

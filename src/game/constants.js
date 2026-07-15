@@ -73,3 +73,11 @@ export const DIFFICULTIES = [
 
 export const P1_KEYS = { left: 'KeyA', right: 'KeyD', jump: 'KeyW', duck: 'KeyS', throw: 'KeyF', catch: 'KeyG' }
 export const P2_KEYS = { left: 'ArrowLeft', right: 'ArrowRight', jump: 'ArrowUp', duck: 'ArrowDown', throw: 'Comma', catch: 'Period' }
+
+export const MODIFIERS = [
+  { id: 'chaos',    label: 'Chaos',        desc: 'Double the balls in play.' },
+  { id: 'glass',    label: 'Glass Cannon', desc: 'Everyone starts with just 1 HP.' },
+  { id: 'slowmo',   label: 'Slow-Mo',      desc: 'World runs at 60% speed. More time to react.' },
+  { id: 'bighead',  label: 'Big Head',     desc: 'Larger head hitboxes — harder to hide behind.' },
+  { id: 'noperks',  label: 'Vanilla',      desc: 'Character perks disabled.' },
+]

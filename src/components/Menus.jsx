@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { CHARACTERS, MAPS, DIFFICULTIES, STAT_STARS } from '../game/constants.js'
+import { CHARACTERS, MAPS, DIFFICULTIES, STAT_STARS, MODIFIERS } from '../game/constants.js'
 import { sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
 import { getRecords, bestForCharacter, formatTime, clearRecords } from '../game/ladderStore.js'
 
@@ -295,6 +295,40 @@ export function LadderIntro({ p1Char, opponents, current, onNext, onQuit, victor
         {!victoryOverall && (
           <button onClick={() => { sfx.click(); onQuit() }} className={btnAlt}>Give Up</button>
         )}
+      </div>
+    </Screen>
+  )
+}
+
+export function ModifiersScreen({ onStart, onBack }) {
+  const [selected, setSelected] = useState(new Set())
+  const toggle = (id) => {
+    const next = new Set(selected)
+    next.has(id) ? next.delete(id) : next.add(id)
+    setSelected(next)
+    sfx.click()
+  }
+  return (
+    <Screen title="MODIFIERS" subtitle="Optional twists. Combine any. Skip for a plain match." onBack={onBack}>
+      <div className="grid md:grid-cols-2 gap-3 max-w-3xl mx-auto">
+        {MODIFIERS.map(m => {
+          const on = selected.has(m.id)
+          return (
+            <button key={m.id} onClick={() => toggle(m.id)}
+              className={`p-4 rounded-xl border-2 text-left transition ${on ? 'border-amber-400 bg-amber-900/30' : 'border-slate-600 bg-slate-800 hover:border-slate-400'}`}>
+              <div className="flex items-center justify-between">
+                <div className="text-lg font-black text-amber-200">{m.label}</div>
+                <div className={`w-5 h-5 rounded border-2 ${on ? 'bg-amber-400 border-amber-300' : 'border-slate-500'}`} />
+              </div>
+              <div className="text-sm text-slate-300 mt-1">{m.desc}</div>
+            </button>
+          )
+        })}
+      </div>
+      <div className="text-center mt-8">
+        <button onClick={() => { sfx.click(); onStart(Array.from(selected)) }} className={btn}>
+          {selected.size > 0 ? `START (${selected.size} ACTIVE)` : 'START'}
+        </button>
       </div>
     </Screen>
   )

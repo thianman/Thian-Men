@@ -36,8 +36,10 @@ export function makeBall(x, y, vx = 0, vy = 0) {
   return { x, y, vx, vy, r: BALL_R, held: false, ownerSide: null, live: false, thrownBy: null, aliveMs: 0 }
 }
 
-export function initState({ mode, matchType, map, p1Char, p2Char, difficulty }) {
-  const numBalls = matchType === '2v2' ? 5 : 3
+export function initState({ mode, matchType, map, p1Char, p2Char, difficulty, modifiers }) {
+  const mods = new Set(modifiers || [])
+  const baseBalls = matchType === '2v2' ? 5 : 3
+  const numBalls = mods.has('chaos') ? baseBalls * 2 : baseBalls
   const players = []
   if (matchType === '2v2') {
     players.push(makePlayer({ side: 'left',  kind: 'p1',   character: p1Char }))
@@ -79,6 +81,11 @@ export function initState({ mode, matchType, map, p1Char, p2Char, difficulty }) 
     hitstop: 0,
     koFlash: 0,
     stats: { left: { throws: 0, catches: 0, hits: 0 }, right: { throws: 0, catches: 0, hits: 0 } },
+    mods,
+    _initApplied: (() => {
+      if (mods.has('glass')) players.forEach(p => p.hp = 1)
+      return true
+    })(),
   }
 }
 
@@ -88,8 +95,9 @@ function pickRandom(exclude) {
 }
 
 export function resetRound(state) {
+  const glass = state.mods && state.mods.has('glass')
   state.players.forEach(p => {
-    p.hp = MAX_HP
+    p.hp = glass ? 1 : MAX_HP
     p.x = p.side === 'left' ? (p.kind === 'p2' ? 320 : 180) : (p.kind === 'cpu2' ? ARENA_W - 320 - PLAYER_W : ARENA_W - 180 - PLAYER_W)
     p.y = FLOOR_Y - PLAYER_H
     p.vx = 0; p.vy = 0
@@ -115,7 +123,7 @@ export function applyInput(player, input, dtMs, state) {
   const speed = player.char.speed
   const now = performance.now()
 
-  const perk = player.char.perk || {}
+  const perk = (state.mods && state.mods.has('noperks')) ? {} : (player.char.perk || {})
   const dashCdBase = 900 * (perk.dashCdMul || 1)
   const dashSpeed = (speed + 6) * (perk.dashPowerMul || 1)
 
@@ -208,7 +216,7 @@ function throwBall(player, state) {
   b.y = player.y + 30
   b.held = false; b.ownerSide = null; b.live = true; b.thrownBy = player.side; b.chargeAtThrow = player.chargeVal; b.aliveMs = 0
   b.trail = []
-  const perk = player.char.perk || {}
+  const perk = (state.mods && state.mods.has('noperks')) ? {} : (player.char.perk || {})
   b.uncatchable = !!(perk.uncatchableAt && player.chargeVal >= perk.uncatchableAt)
   player.holdingBall = null
   state.stats[player.side].throws++
@@ -216,7 +224,7 @@ function throwBall(player, state) {
 }
 
 function attemptCatch(player, state) {
-  const perk = player.char.perk || {}
+  const perk = (state.mods && state.mods.has('noperks')) ? {} : (player.char.perk || {})
   for (const b of state.balls) {
     if (!b.live) continue
     if (b.thrownBy === player.side) continue
@@ -320,14 +328,16 @@ export function tick(state, dtMs) {
         b.live = false; b.vx = 0; b.vy = 0
       }
 
-      // Hit detection
+      // Hit detection (Big Head: enlarge upper head region)
+      const bigHead = state.mods && state.mods.has('bighead')
       for (const p of state.players) {
         if (p.hp <= 0) continue
         if (b.thrownBy === p.side) continue
         if (p.dashActive > 0) continue
-        if (rectCircle(p.x, p.y, p.w, p.h, b.x, b.y, b.r)) {
-          hitPlayer(state, p, b)
-          break
+        if (rectCircle(p.x, p.y, p.w, p.h, b.x, b.y, b.r)) { hitPlayer(state, p, b); break }
+        if (bigHead) {
+          const hx = p.x - 8, hy = p.y - 10, hw = p.w + 16, hh = 30
+          if (rectCircle(hx, hy, hw, hh, b.x, b.y, b.r)) { hitPlayer(state, p, b); break }
         }
       }
     } else {
