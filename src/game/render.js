@@ -282,10 +282,14 @@ function drawBall(ctx, b) {
   }
   ctx.fillStyle = 'rgba(0,0,0,0.35)'
   ctx.beginPath(); ctx.ellipse(b.x, FLOOR_Y + 4, b.r, 4, 0, 0, Math.PI*2); ctx.fill()
-  ctx.fillStyle = b.live ? '#ef4444' : '#fbbf24'
+  ctx.fillStyle = b.uncatchable ? '#a855f7' : (b.live ? '#ef4444' : '#fbbf24')
   ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill()
-  ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 2; ctx.stroke()
+  ctx.strokeStyle = b.uncatchable ? '#f0abfc' : '#7c2d12'; ctx.lineWidth = 2; ctx.stroke()
   ctx.beginPath(); ctx.arc(b.x, b.y, b.r - 4, -0.4, 0.4); ctx.stroke()
+  if (b.uncatchable) {
+    ctx.strokeStyle = '#f0abfc'; ctx.lineWidth = 1
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.r + 4, 0, Math.PI*2); ctx.stroke()
+  }
   ctx.restore()
 }
 

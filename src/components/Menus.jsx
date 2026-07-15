@@ -187,6 +187,12 @@ export function CharacterSelect({ label, exclude, onPick, onBack }) {
                 <div>Strength <Stars n={STAT_STARS.strength[c.id]} /></div>
                 <div>Jump <Stars n={STAT_STARS.jump[c.id]} /></div>
               </div>
+              {c.perk && (
+                <div className="mt-3 rounded-lg px-2 py-1.5 bg-gradient-to-r from-fuchsia-900/60 to-cyan-900/60 border border-fuchsia-500/40">
+                  <div className="text-xs font-bold text-fuchsia-300 uppercase tracking-wide">{c.perk.label}</div>
+                  <div className="text-xs text-slate-200">{c.perk.desc}</div>
+                </div>
+              )}
             </button>
           )
         })}

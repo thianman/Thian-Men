@@ -28,6 +28,7 @@ export function makePlayer({ side, character, isCPU, kind }) {
     dashCd: 0,
     dashDir: 0,
     afterImages: [],
+    doubleJumped: false,
   }
 }
 
@@ -95,6 +96,7 @@ export function resetRound(state) {
     p.hasBall = false; p.holdingBall = null
     p.charging = false; p.chargeVal = 0
     p.hitFlash = 0; p.ducking = false; p.onGround = true
+    p.doubleJumped = false; p.dashActive = 0; p.dashCd = 0
   })
   state.balls.forEach((b, i) => {
     const spacing = ARENA_W / (state.balls.length + 1)
@@ -113,12 +115,16 @@ export function applyInput(player, input, dtMs, state) {
   const speed = player.char.speed
   const now = performance.now()
 
+  const perk = player.char.perk || {}
+  const dashCdBase = 900 * (perk.dashCdMul || 1)
+  const dashSpeed = (speed + 6) * (perk.dashPowerMul || 1)
+
   // Detect dash: double-tap direction within 260ms
   if (input.leftPressed || input.rightPressed) {
     const dir = input.leftPressed ? -1 : 1
     if (player.lastTap.dir === dir && now - player.lastTap.ms < 260 && player.dashCd <= 0) {
       player.dashActive = 220
-      player.dashCd = 900
+      player.dashCd = dashCdBase
       player.dashDir = dir
       player.facing = dir
       sfx.jump()
@@ -128,7 +134,7 @@ export function applyInput(player, input, dtMs, state) {
   if (player.dashCd > 0) player.dashCd -= dtMs
   if (player.dashActive > 0) {
     player.dashActive -= dtMs
-    player.vx = player.dashDir * (speed + 6)
+    player.vx = player.dashDir * dashSpeed
     player.afterImages.push({ x: player.x, y: player.y, w: player.w, h: player.h, life: 220, color: player.char.color })
   } else if (input.left) { player.vx = -speed; player.facing = -1 }
   else if (input.right) { player.vx = speed; player.facing = 1 }
@@ -139,9 +145,16 @@ export function applyInput(player, input, dtMs, state) {
   player.afterImages = player.afterImages.filter(a => a.life > 0)
 
   player.ducking = !!input.duck && player.onGround
-  if (input.jump && player.onGround && !player.ducking) {
+  const jumpEdge = !!input.jump && !player.jumpHeld
+  player.jumpHeld = !!input.jump
+  if (jumpEdge && player.onGround && !player.ducking) {
     player.vy = -player.char.jump
     player.onGround = false
+    player.doubleJumped = false
+    sfx.jump()
+  } else if (jumpEdge && !player.onGround && perk.doubleJump && !player.doubleJumped) {
+    player.vy = -player.char.jump * 0.85
+    player.doubleJumped = true
     sfx.jump()
   }
   // Fast-fall: duck while airborne and rising slowly / falling gives extra downward velocity
@@ -155,11 +168,12 @@ export function applyInput(player, input, dtMs, state) {
     grabNearestBall(player, state)
   }
   if (player.holdingBall) {
+    const chargeSpeed = perk.chargeSpeedMul || 1
     if (input.throw) {
       if (!player.charging) { player.charging = true; player.chargeStart = performance.now() }
-      player.chargeVal = Math.min(1, (performance.now() - player.chargeStart) / THROW_CHARGE_MS)
+      const elapsed = (performance.now() - player.chargeStart) * chargeSpeed
+      player.chargeVal = Math.min(1, elapsed / THROW_CHARGE_MS)
     } else if (player.charging) {
-      // release
       throwBall(player, state)
       player.charging = false; player.chargeVal = 0
     }
@@ -194,18 +208,22 @@ function throwBall(player, state) {
   b.y = player.y + 30
   b.held = false; b.ownerSide = null; b.live = true; b.thrownBy = player.side; b.chargeAtThrow = player.chargeVal; b.aliveMs = 0
   b.trail = []
+  const perk = player.char.perk || {}
+  b.uncatchable = !!(perk.uncatchableAt && player.chargeVal >= perk.uncatchableAt)
   player.holdingBall = null
   state.stats[player.side].throws++
   sfx.throw()
 }
 
 function attemptCatch(player, state) {
+  const perk = player.char.perk || {}
   for (const b of state.balls) {
     if (!b.live) continue
     if (b.thrownBy === player.side) continue
+    if (b.uncatchable) continue
     const d = dist(player.x + player.w/2, player.y + player.h/2, b.x, b.y)
-    // Higher charge = narrower window (harder catch)
-    const window = CATCH_RANGE * (1 - 0.4 * (b.chargeAtThrow || 0.5))
+    const baseWindow = CATCH_RANGE * (1 - 0.4 * (b.chargeAtThrow || 0.5))
+    const window = baseWindow * (perk.catchWindowMul || 1)
     if (d < window) {
       b.live = false; b.vx = 0; b.vy = 0
       b.held = true; b.ownerSide = player.side

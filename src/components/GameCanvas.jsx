@@ -98,13 +98,14 @@ export default function GameCanvas({ config, onExit, onMatchEnd }) {
             const catchPressed = k[keys.catch] && !pk[keys.catch]
             const leftPressed = k[keys.left] && !pk[keys.left]
             const rightPressed = k[keys.right] && !pk[keys.right]
+            const jumpPressed = k[keys.jump] && !pk[keys.jump]
             const input = {
               left: !!k[keys.left],
               right: !!k[keys.right],
               jump: !!k[keys.jump],
               duck: !!k[keys.duck],
               throw: !!k[keys.throw],
-              catchPressed, leftPressed, rightPressed,
+              catchPressed, leftPressed, rightPressed, jumpPressed,
             }
             // Merge in touch input
             const t = p.kind === 'p2' ? touchRef.current.p2 : touchRef.current.p1
