@@ -3,7 +3,7 @@ import { ARENA_W, ARENA_H, MAPS, P1_KEYS, P2_KEYS } from '../game/constants.js'
 import { initState, tick, applyInput } from '../game/engine.js'
 import { render } from '../game/render.js'
 import { makeAIController } from '../game/ai.js'
-import { playMusic, stopMusic, resumeAudio, sfx } from '../game/sfx.js'
+import { playMusic, stopMusic, resumeAudio, sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
 
 export default function GameCanvas({ config, onExit }) {
   const canvasRef = useRef(null)
@@ -120,15 +120,9 @@ export default function GameCanvas({ config, onExit }) {
         render(ctx, s, s.mapObj)
       } else if (s) {
         render(ctx, s, s.mapObj)
-        // Pause overlay
+        // Dim overlay only; pause UI is a React layer above
         ctx.fillStyle = 'rgba(0,0,0,0.6)'
         ctx.fillRect(0, 0, ARENA_W, ARENA_H)
-        ctx.fillStyle = '#fff'
-        ctx.font = 'bold 64px system-ui'
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-        ctx.fillText('PAUSED', ARENA_W/2, ARENA_H/2)
-        ctx.font = '20px system-ui'
-        ctx.fillText('Press ESC to resume', ARENA_W/2, ARENA_H/2 + 60)
       }
       rafRef.current = requestAnimationFrame(loop)
     }
@@ -167,10 +161,16 @@ export default function GameCanvas({ config, onExit }) {
           <button onClick={() => setPaused(p => !p)} className="px-3 py-1 rounded bg-slate-800/80 border border-slate-500 text-white text-sm">
             {paused ? 'Resume' : 'Pause'}
           </button>
-          <button onClick={onExit} className="px-3 py-1 rounded bg-red-900/80 border border-red-500 text-white text-sm">
-            Menu
-          </button>
         </div>
+
+        {/* Pause menu */}
+        {paused && (
+          <PauseMenu
+            onResume={() => setPaused(false)}
+            onRestart={() => { setPaused(false); setRematchNonce(n => n + 1) }}
+            onQuit={onExit}
+          />
+        )}
 
         {/* Match end overlay */}
         {matchEnd && (
@@ -194,6 +194,34 @@ export default function GameCanvas({ config, onExit }) {
             onUp={touchEnd}
           />
         )}
+      </div>
+    </div>
+  )
+}
+
+function PauseMenu({ onResume, onRestart, onQuit }) {
+  const [music, setMusic] = useState(!isMusicMuted())
+  const [sound, setSound] = useState(!isSfxMuted())
+  const btn = 'w-56 px-5 py-3 rounded-xl font-bold text-lg shadow-lg border transition'
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div className="pointer-events-auto bg-slate-900/95 border border-slate-600 rounded-2xl px-8 py-6 flex flex-col items-center gap-3 shadow-2xl">
+        <h2 className="text-4xl font-black text-white mb-2">PAUSED</h2>
+        <button className={btn + ' bg-cyan-600 hover:bg-cyan-500 text-white border-cyan-300/40'} onClick={() => { sfx.click(); onResume() }}>Resume</button>
+        <button className={btn + ' bg-amber-600 hover:bg-amber-500 text-white border-amber-300/40'} onClick={() => { sfx.click(); onRestart() }}>Restart Match</button>
+        <button className={btn + ' bg-red-700 hover:bg-red-600 text-white border-red-300/40'} onClick={() => { sfx.click(); onQuit() }}>Quit to Menu</button>
+
+        <div className="w-full flex gap-2 justify-between mt-3 text-slate-200 text-sm">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={music} onChange={e => { setMusic(e.target.checked); setMusicMuted(!e.target.checked) }} />
+            Music
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={sound} onChange={e => { setSound(e.target.checked); setSfxMuted(!e.target.checked) }} />
+            SFX
+          </label>
+        </div>
+        <p className="text-slate-400 text-xs mt-1">Press ESC to resume</p>
       </div>
     </div>
   )

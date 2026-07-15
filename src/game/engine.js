@@ -116,6 +116,10 @@ export function applyInput(player, input, dtMs, state) {
     player.onGround = false
     sfx.jump()
   }
+  // Fast-fall: duck while airborne and rising slowly / falling gives extra downward velocity
+  if (input.duck && !player.onGround && player.vy < 12) {
+    player.vy += 2.2
+  }
 
   // Charging throw
   if (input.throw && !player.charging && !player.holdingBall && hasNearbyBall(player, state)) {
