@@ -38,6 +38,8 @@ export default function GameCanvas({ config, onExit, onMatchEnd }) {
     })
     s.mapObj = mapObj
     stateRef.current = s
+    // Sync React phase state so the match-end overlay clears on rematch
+    setGamePhase(s.phase)
 
     // Prepare AI controllers for CPU players
     aiRef.current = s.players.map(p => p.isCPU ? makeAIController(s.difficulty) : null)
