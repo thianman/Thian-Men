@@ -1,6 +1,6 @@
 import {
   ARENA_W, ARENA_H, GRAVITY, FLOOR_Y, PLAYER_W, PLAYER_H, DUCK_H,
-  BALL_R, MAX_HP, CATCH_RANGE, THROW_CHARGE_MS, CHARACTERS,
+  BALL_R, MAX_HP, CATCH_RANGE, THROW_CHARGE_MS, CHARACTERS, HAZARD_STYLE,
 } from './constants.js'
 import { sfx } from './sfx.js'
 
@@ -82,6 +82,8 @@ export function initState({ mode, matchType, map, p1Char, p2Char, difficulty, mo
     koFlash: 0,
     stats: { left: { throws: 0, catches: 0, hits: 0 }, right: { throws: 0, catches: 0, hits: 0 } },
     mods,
+    hazards: [],
+    hazardTimer: mods.has('hazards') ? 3000 : Infinity,
     _initApplied: (() => {
       if (mods.has('glass')) players.forEach(p => p.hp = 1)
       return true
@@ -96,6 +98,8 @@ function pickRandom(exclude) {
 
 export function resetRound(state) {
   const glass = state.mods && state.mods.has('glass')
+  state.hazards = []
+  state.hazardTimer = state.mods && state.mods.has('hazards') ? 3000 : Infinity
   state.players.forEach(p => {
     p.hp = glass ? 1 : MAX_HP
     p.x = p.side === 'left' ? (p.kind === 'p2' ? 320 : 180) : (p.kind === 'cpu2' ? ARENA_W - 320 - PLAYER_W : ARENA_W - 180 - PLAYER_W)
@@ -350,6 +354,40 @@ export function tick(state, dtMs) {
     }
   }
 
+  // Hazards
+  if (state.mods && state.mods.has('hazards')) {
+    state.hazardTimer -= dtMs
+    if (state.hazardTimer <= 0) {
+      const mapId = state.mapObj?.id || 'arena'
+      const style = HAZARD_STYLE[mapId] || HAZARD_STYLE.arena
+      const x = 100 + Math.random() * (ARENA_W - 200)
+      state.hazards.push({
+        x, y: -20, vx: 0, vy: 2 + Math.random() * 2,
+        r: 18, warn: 700, alive: true, style,
+      })
+      state.hazardTimer = 2600 + Math.random() * 1800
+    }
+    for (const h of state.hazards) {
+      if (h.warn > 0) { h.warn -= dtMs; continue }
+      h.vy += GRAVITY * 0.5
+      h.x += h.vx; h.y += h.vy
+      if (h.y - h.r > FLOOR_Y) { h.alive = false; continue }
+      // Player collision
+      for (const p of state.players) {
+        if (p.hp <= 0) continue
+        if (p.dashActive > 0) continue
+        if (rectCircle(p.x, p.y, p.w, p.h, h.x, h.y, h.r)) {
+          h.alive = false
+          hazardHit(state, p, h)
+          break
+        }
+      }
+      // Floor
+      if (h.y + h.r >= FLOOR_Y) { h.alive = false }
+    }
+    state.hazards = state.hazards.filter(h => h.alive)
+  }
+
   // Check win conditions
   if (!state.isPractice) {
     const leftAlive = sideAlive(state, 'left')
@@ -393,6 +431,24 @@ function advancePhase(state) {
     state.countdown = 3
   } else if (state.phase === 'countdown') {
     state.phase = 'play'
+  }
+}
+
+function hazardHit(state, p, h) {
+  p.hp -= (h.style.dmg || 1)
+  p.hitFlash = 260
+  sfx.hit()
+  state.shake = 260
+  state.hitstop = p.hp <= 0 ? 140 : 60
+  if (p.hp <= 0) state.koFlash = 900
+  for (let i = 0; i < 10; i++) {
+    state.particles.push({
+      x: h.x, y: h.y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6 - 2,
+      life: 400 + Math.random() * 200,
+      color: h.style.ring, r: 3 + Math.random() * 3,
+    })
   }
 }
 

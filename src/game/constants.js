@@ -110,4 +110,11 @@ export const MODIFIERS = [
   { id: 'slowmo',   label: 'Slow-Mo',      desc: 'World runs at 60% speed. More time to react.' },
   { id: 'bighead',  label: 'Big Head',     desc: 'Larger head hitboxes — harder to hide behind.' },
   { id: 'noperks',  label: 'Vanilla',      desc: 'Character perks disabled.' },
+  { id: 'hazards',  label: 'Hazards',      desc: 'Map-themed projectiles fall from the sky every few seconds.' },
 ]
+
+export const HAZARD_STYLE = {
+  arena: { color: '#22d3ee', ring: '#67e8f9', shape: 'bolt', dmg: 1 },
+  gym:   { color: '#f97316', ring: '#fdba74', shape: 'ball', dmg: 1 },
+  beach: { color: '#78350f', ring: '#a3e635', shape: 'coconut', dmg: 1 },
+}

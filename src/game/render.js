@@ -41,6 +41,28 @@ export function render(ctx, state, mapObj, extras = {}) {
     drawBall(ctx, b)
   }
 
+  // Hazards
+  if (state.hazards) {
+    for (const h of state.hazards) {
+      if (h.warn > 0) {
+        // Warning zone on the floor
+        const a = 1 - (h.warn / 700)
+        ctx.globalAlpha = 0.4 + 0.5 * a
+        ctx.strokeStyle = h.style.ring
+        ctx.lineWidth = 3
+        ctx.beginPath(); ctx.ellipse(h.x, FLOOR_Y - 2, 30 + 6 * Math.sin(a * 12), 8, 0, 0, Math.PI*2); ctx.stroke()
+        ctx.globalAlpha = 0.9
+        ctx.fillStyle = h.style.ring
+        ctx.font = 'bold 28px system-ui'
+        ctx.textAlign = 'center'
+        ctx.fillText('!', h.x, 40)
+        ctx.globalAlpha = 1
+      } else {
+        drawHazard(ctx, h)
+      }
+    }
+  }
+
   // Particles
   if (state.particles) {
     for (const p of state.particles) {
@@ -262,6 +284,42 @@ function drawPlayer(ctx, p, opts = {}) {
   ctx.textAlign = 'center'
   ctx.fillText(p.char.name, p.w/2, -18)
 
+  ctx.restore()
+}
+
+function drawHazard(ctx, h) {
+  ctx.save()
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'
+  ctx.beginPath(); ctx.ellipse(h.x, FLOOR_Y - 2, h.r, 5, 0, 0, Math.PI*2); ctx.fill()
+  const shape = h.style.shape
+  if (shape === 'bolt') {
+    ctx.fillStyle = h.style.color
+    ctx.shadowBlur = 16; ctx.shadowColor = h.style.ring
+    ctx.beginPath()
+    ctx.moveTo(h.x - 4, h.y - h.r)
+    ctx.lineTo(h.x + 8, h.y - 4)
+    ctx.lineTo(h.x, h.y - 4)
+    ctx.lineTo(h.x + 6, h.y + h.r)
+    ctx.lineTo(h.x - 6, h.y + 2)
+    ctx.lineTo(h.x + 2, h.y + 2)
+    ctx.closePath(); ctx.fill()
+  } else if (shape === 'coconut') {
+    ctx.fillStyle = h.style.color
+    ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI*2); ctx.fill()
+    ctx.fillStyle = '#3f1d0c'
+    for (const [dx, dy] of [[-6, -4], [6, -4], [0, 4]]) {
+      ctx.beginPath(); ctx.arc(h.x + dx, h.y + dy, 2.5, 0, Math.PI*2); ctx.fill()
+    }
+    ctx.fillStyle = h.style.ring
+    ctx.fillRect(h.x - 2, h.y - h.r - 5, 4, 6)
+  } else {
+    // basketball
+    ctx.fillStyle = h.style.color
+    ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI*2); ctx.fill()
+    ctx.strokeStyle = '#431407'; ctx.lineWidth = 2
+    ctx.beginPath(); ctx.moveTo(h.x - h.r, h.y); ctx.lineTo(h.x + h.r, h.y); ctx.stroke()
+    ctx.beginPath(); ctx.moveTo(h.x, h.y - h.r); ctx.lineTo(h.x, h.y + h.r); ctx.stroke()
+  }
   ctx.restore()
 }
 
