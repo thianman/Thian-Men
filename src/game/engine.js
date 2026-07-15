@@ -23,6 +23,11 @@ export function makePlayer({ side, character, isCPU, kind }) {
     hitFlash: 0,
     // AI state
     aiTimer: 0, aiIntent: 'idle',
+    lastTap: { dir: 0, ms: -1e9 },
+    dashActive: 0,
+    dashCd: 0,
+    dashDir: 0,
+    afterImages: [],
   }
 }
 
@@ -106,9 +111,32 @@ function sideAlive(state, side) {
 export function applyInput(player, input, dtMs, state) {
   if (player.hp <= 0) return
   const speed = player.char.speed
-  if (input.left) { player.vx = -speed; player.facing = -1 }
+  const now = performance.now()
+
+  // Detect dash: double-tap direction within 260ms
+  if (input.leftPressed || input.rightPressed) {
+    const dir = input.leftPressed ? -1 : 1
+    if (player.lastTap.dir === dir && now - player.lastTap.ms < 260 && player.dashCd <= 0) {
+      player.dashActive = 220
+      player.dashCd = 900
+      player.dashDir = dir
+      player.facing = dir
+      sfx.jump()
+    }
+    player.lastTap = { dir, ms: now }
+  }
+  if (player.dashCd > 0) player.dashCd -= dtMs
+  if (player.dashActive > 0) {
+    player.dashActive -= dtMs
+    player.vx = player.dashDir * (speed + 6)
+    player.afterImages.push({ x: player.x, y: player.y, w: player.w, h: player.h, life: 220, color: player.char.color })
+  } else if (input.left) { player.vx = -speed; player.facing = -1 }
   else if (input.right) { player.vx = speed; player.facing = 1 }
   else player.vx = 0
+
+  // Age afterimages
+  for (const a of player.afterImages) a.life -= dtMs
+  player.afterImages = player.afterImages.filter(a => a.life > 0)
 
   player.ducking = !!input.duck && player.onGround
   if (input.jump && player.onGround && !player.ducking) {
@@ -278,6 +306,7 @@ export function tick(state, dtMs) {
       for (const p of state.players) {
         if (p.hp <= 0) continue
         if (b.thrownBy === p.side) continue
+        if (p.dashActive > 0) continue
         if (rectCircle(p.x, p.y, p.w, p.h, b.x, b.y, b.r)) {
           hitPlayer(state, p, b)
           break

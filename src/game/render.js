@@ -52,6 +52,18 @@ export function render(ctx, state, mapObj, extras = {}) {
     ctx.globalAlpha = 1
   }
 
+  // Player afterimages (behind player)
+  for (const p of state.players) {
+    if (!p.afterImages) continue
+    for (const a of p.afterImages) {
+      const alpha = Math.max(0, a.life / 220) * 0.5
+      ctx.globalAlpha = alpha
+      ctx.fillStyle = a.color
+      ctx.fillRect(a.x + 4, a.y + 12, a.w - 8, a.h - 20)
+    }
+    ctx.globalAlpha = 1
+  }
+
   // Players
   for (const p of state.players) {
     drawPlayer(ctx, p)

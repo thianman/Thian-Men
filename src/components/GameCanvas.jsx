@@ -95,13 +95,15 @@ export default function GameCanvas({ config, onExit }) {
           } else {
             const keys = p.kind === 'p2' ? P2_KEYS : P1_KEYS
             const catchPressed = k[keys.catch] && !pk[keys.catch]
+            const leftPressed = k[keys.left] && !pk[keys.left]
+            const rightPressed = k[keys.right] && !pk[keys.right]
             const input = {
               left: !!k[keys.left],
               right: !!k[keys.right],
               jump: !!k[keys.jump],
               duck: !!k[keys.duck],
               throw: !!k[keys.throw],
-              catchPressed,
+              catchPressed, leftPressed, rightPressed,
             }
             // Merge in touch input
             const t = p.kind === 'p2' ? touchRef.current.p2 : touchRef.current.p1
@@ -111,6 +113,8 @@ export default function GameCanvas({ config, onExit }) {
             input.duck = input.duck || !!t.duck
             input.throw = input.throw || !!t.throw
             if (t.catchOnce) { input.catchPressed = true; t.catchOnce = false }
+            if (t.dashLeftOnce) { input.leftPressed = true; t.dashLeftOnce = false }
+            if (t.dashRightOnce) { input.rightPressed = true; t.dashRightOnce = false }
             applyInput(p, input, dt, s)
           }
         })

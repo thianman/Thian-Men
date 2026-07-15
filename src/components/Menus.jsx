@@ -90,6 +90,7 @@ export function InstructionsScreen({ onBack }) {
         <p><b className="text-amber-300">Throw:</b> Hold Throw to charge (0–100%). Higher charge = more power but harder to catch.</p>
         <p><b className="text-emerald-300">Catch:</b> Tap Catch when a ball is near — timing matters.</p>
         <p><b className="text-sky-300">Fast-fall:</b> Hold Duck while in the air to drop faster — useful for slipping under high throws.</p>
+        <p><b className="text-purple-300">Dash:</b> Double-tap left or right for a quick invulnerable dash (short cooldown). Perfect for weaving past a shot.</p>
         <p><b className="text-fuchsia-300">HP:</b> 3 hits. Last player standing wins the round. First to 5 rounds wins the set. First to 3 sets wins the match.</p>
       </div>
     </Screen>

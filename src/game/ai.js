@@ -61,6 +61,16 @@ export function makeAIController(difficulty = 'medium') {
       else input.duck = true
     }
 
+    // Dash (hard/impossible only): if a ball is close and cd ready, fire an edge press away from it
+    if (incoming && incDist < 160 && cpu.dashCd <= 0 && (difficulty === 'hard' || difficulty === 'impossible')) {
+      const chance = difficulty === 'impossible' ? 0.5 : 0.25
+      if (Math.random() < chance) {
+        const dir = incoming.x > cpu.x + cpu.w / 2 ? -1 : 1
+        if (dir < 0) { input.leftPressed = true; cpu.lastTap = { dir: -1, ms: performance.now() - 100 } }
+        else         { input.rightPressed = true; cpu.lastTap = { dir: 1,  ms: performance.now() - 100 } }
+      }
+    }
+
     // Catch attempt
     if (incoming && incDist < 80 && mem.catchCd <= 0) {
       if (Math.random() < cfg.catchChance) input.catchPressed = true
