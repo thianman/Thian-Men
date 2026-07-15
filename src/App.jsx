@@ -22,6 +22,8 @@ export default function App() {
     difficulty: 'medium',
     p1Char: null,
     p2Char: null,
+    p1Skin: 0,
+    p2Skin: 0,
     map: null,
     hideEndButtons: false,
   })
@@ -48,12 +50,15 @@ export default function App() {
           onSettings={() => setScreen('settings')}
           onLeaderboard={() => setScreen('leaderboard')}
           onQuickPlay={() => {
-            const p1 = pick(CHARACTERS).id
+            const p1c = pick(CHARACTERS); const p1 = p1c.id
             const p2Pool = CHARACTERS.filter(c => c.id !== p1)
-            const p2 = pick(p2Pool).id
+            const p2c = pick(p2Pool); const p2 = p2c.id
             setCfg({
               mode: '1p', matchType: '1v1', difficulty: 'medium',
-              p1Char: p1, p2Char: p2, map: pick(MAPS).id,
+              p1Char: p1, p2Char: p2,
+              p1Skin: Math.floor(Math.random() * (p1c.skins?.length || 1)),
+              p2Skin: Math.floor(Math.random() * (p2c.skins?.length || 1)),
+              map: pick(MAPS).id,
             })
             start()
           }}
@@ -83,9 +88,9 @@ export default function App() {
         <CharacterSelect
           label="LADDER — PICK YOUR FIGHTER"
           onBack={() => setScreen('mode')}
-          onPick={(id) => {
+          onPick={(id, skinIdx) => {
             const opponents = buildLadder(id)
-            setLadder({ p1: id, opponents, current: 0, victoryOverall: false, startedAt: Date.now(), clearMs: null })
+            setLadder({ p1: id, p1Skin: skinIdx || 0, opponents, current: 0, victoryOverall: false, startedAt: Date.now(), clearMs: null })
             setScreen('ladderIntro')
           }}
         />
@@ -105,6 +110,7 @@ export default function App() {
               mode: '1p', matchType: '1v1',
               difficulty: opp.difficulty,
               p1Char: ladder.p1, p2Char: opp.char,
+              p1Skin: ladder.p1Skin || 0, p2Skin: 0,
               map: opp.map,
               hideEndButtons: true,
             })
@@ -132,8 +138,8 @@ export default function App() {
         <CharacterSelect
           label={cfg.mode === '2p' ? 'PLAYER 1 — PICK CHARACTER' : 'PICK YOUR CHARACTER'}
           onBack={() => setScreen('mode')}
-          onPick={(id) => {
-            setCfg(c => ({ ...c, p1Char: id }))
+          onPick={(id, skinIdx) => {
+            setCfg(c => ({ ...c, p1Char: id, p1Skin: skinIdx || 0 }))
             if (cfg.mode === '2p') setScreen('p2')
             else if (cfg.mode === '1p') setScreen('difficulty1p')
             else setScreen('p2cpu')
@@ -150,14 +156,14 @@ export default function App() {
         <CharacterSelect
           label="PLAYER 2 — PICK CHARACTER"
           onBack={() => setScreen('p1')}
-          onPick={(id) => { setCfg(c => ({ ...c, p2Char: id })); setScreen('map') }}
+          onPick={(id, skinIdx) => { setCfg(c => ({ ...c, p2Char: id, p2Skin: skinIdx || 0 })); setScreen('map') }}
         />
       )}
       {screen === 'p2cpu' && (
         <CharacterSelect
           label={cfg.mode === 'practice' ? 'PICK CPU CHARACTER' : 'PICK OPPONENT CHARACTER'}
           onBack={() => setScreen(cfg.mode === '1p' ? 'difficulty1p' : 'p1')}
-          onPick={(id) => { setCfg(c => ({ ...c, p2Char: id })); setScreen('map') }}
+          onPick={(id, skinIdx) => { setCfg(c => ({ ...c, p2Char: id, p2Skin: skinIdx || 0 })); setScreen('map') }}
         />
       )}
       {screen === 'map' && (

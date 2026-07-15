@@ -4,8 +4,10 @@ import {
 } from './constants.js'
 import { sfx } from './sfx.js'
 
-export function makePlayer({ side, character, isCPU, kind }) {
-  const char = CHARACTERS.find(c => c.id === character) || CHARACTERS[0]
+export function makePlayer({ side, character, isCPU, kind, skinIndex = 0 }) {
+  const base = CHARACTERS.find(c => c.id === character) || CHARACTERS[0]
+  const skin = (base.skins && base.skins[skinIndex]) || null
+  const char = skin ? { ...base, color: skin.color, accent: skin.accent, skinName: skin.name } : base
   const startX = side === 'left' ? 180 : ARENA_W - 180 - PLAYER_W
   return {
     side, kind, isCPU: !!isCPU,
@@ -36,28 +38,26 @@ export function makeBall(x, y, vx = 0, vy = 0) {
   return { x, y, vx, vy, r: BALL_R, held: false, ownerSide: null, live: false, thrownBy: null, aliveMs: 0 }
 }
 
-export function initState({ mode, matchType, map, p1Char, p2Char, difficulty, modifiers }) {
+export function initState({ mode, matchType, map, p1Char, p2Char, difficulty, modifiers, p1Skin = 0, p2Skin = 0 }) {
   const mods = new Set(modifiers || [])
   const baseBalls = matchType === '2v2' ? 5 : 3
   const numBalls = mods.has('chaos') ? baseBalls * 2 : baseBalls
   const players = []
   if (matchType === '2v2') {
-    players.push(makePlayer({ side: 'left',  kind: 'p1',   character: p1Char }))
-    players.push(makePlayer({ side: 'left',  kind: 'p2',   character: p2Char || pickRandom(p1Char) }))
+    players.push(makePlayer({ side: 'left',  kind: 'p1',   character: p1Char, skinIndex: p1Skin }))
+    players.push(makePlayer({ side: 'left',  kind: 'p2',   character: p2Char || pickRandom(p1Char), skinIndex: p2Skin }))
     const cpuA = pickRandom(p1Char)
     const cpuB = pickRandom(cpuA)
     players.push(makePlayer({ side: 'right', kind: 'cpu1', character: cpuA, isCPU: true }))
     players.push(makePlayer({ side: 'right', kind: 'cpu2', character: cpuB, isCPU: true }))
-    // spread out
     players[1].x = 320
     players[3].x = ARENA_W - 320 - PLAYER_W
   } else if (mode === '2p') {
-    players.push(makePlayer({ side: 'left',  kind: 'p1', character: p1Char }))
-    players.push(makePlayer({ side: 'right', kind: 'p2', character: p2Char }))
+    players.push(makePlayer({ side: 'left',  kind: 'p1', character: p1Char, skinIndex: p1Skin }))
+    players.push(makePlayer({ side: 'right', kind: 'p2', character: p2Char, skinIndex: p2Skin }))
   } else {
-    // 1p vs CPU or practice
-    players.push(makePlayer({ side: 'left',  kind: 'p1', character: p1Char }))
-    players.push(makePlayer({ side: 'right', kind: 'cpu', character: p2Char, isCPU: true }))
+    players.push(makePlayer({ side: 'left',  kind: 'p1', character: p1Char, skinIndex: p1Skin }))
+    players.push(makePlayer({ side: 'right', kind: 'cpu', character: p2Char, isCPU: true, skinIndex: p2Skin }))
   }
   const balls = []
   const spacing = ARENA_W / (numBalls + 1)

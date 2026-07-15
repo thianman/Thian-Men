@@ -202,38 +202,71 @@ function Stars({ n }) {
   )
 }
 
+const SKIN_KEY = 'db_last_skin_v1'
+function loadLastSkins() {
+  try { return JSON.parse(localStorage.getItem(SKIN_KEY) || '{}') } catch { return {} }
+}
+function saveLastSkin(charId, idx) {
+  try {
+    const m = loadLastSkins(); m[charId] = idx
+    localStorage.setItem(SKIN_KEY, JSON.stringify(m))
+  } catch {}
+}
+
 export function CharacterSelect({ label, exclude, onPick, onBack }) {
+  const [skins, setSkins] = useState(loadLastSkins())
+  const setSkin = (id, idx) => {
+    const next = { ...skins, [id]: idx }; setSkins(next); saveLastSkin(id, idx); sfx.click()
+  }
   return (
-    <Screen title={label} subtitle="Choose your fighter." onBack={onBack}>
+    <Screen title={label} subtitle="Choose your fighter. Tap a color dot for a skin." onBack={onBack}>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {CHARACTERS.map(c => {
           const dis = exclude === c.id
+          const skinIdx = skins[c.id] || 0
+          const skin = (c.skins && c.skins[skinIdx]) || c
           return (
-            <button
-              key={c.id}
-              disabled={dis}
-              onClick={() => { if (!dis) { sfx.click(); onPick(c.id) } }}
-              className={`p-4 rounded-xl border text-left transition ${dis ? 'opacity-40 border-slate-700 bg-slate-800/50 cursor-not-allowed' : 'border-slate-600 bg-slate-800 hover:border-cyan-400 hover:bg-slate-700'}`}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 rounded-lg flex-shrink-0" style={{ background: c.color }} />
-                <div>
-                  <div className="text-xl font-black">{c.name}</div>
-                  <div className="text-xs text-slate-400 italic">{c.vibe}</div>
+            <div key={c.id}
+              className={`p-4 rounded-xl border text-left transition ${dis ? 'opacity-40 border-slate-700 bg-slate-800/50' : 'border-slate-600 bg-slate-800 hover:border-cyan-400'}`}>
+              <button
+                disabled={dis}
+                onClick={() => { if (!dis) { sfx.click(); onPick(c.id, skinIdx) } }}
+                className={`w-full text-left ${dis ? 'cursor-not-allowed' : ''}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-14 rounded-lg flex-shrink-0 border-2" style={{ background: skin.color, borderColor: skin.accent }} />
+                  <div>
+                    <div className="text-xl font-black">{c.name}</div>
+                    <div className="text-xs text-slate-400 italic">{c.vibe}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-3 text-sm text-slate-200 space-y-1">
-                <div>Speed <Stars n={STAT_STARS.speed[c.id]} /></div>
-                <div>Strength <Stars n={STAT_STARS.strength[c.id]} /></div>
-                <div>Jump <Stars n={STAT_STARS.jump[c.id]} /></div>
-              </div>
-              {c.perk && (
-                <div className="mt-3 rounded-lg px-2 py-1.5 bg-gradient-to-r from-fuchsia-900/60 to-cyan-900/60 border border-fuchsia-500/40">
-                  <div className="text-xs font-bold text-fuchsia-300 uppercase tracking-wide">{c.perk.label}</div>
-                  <div className="text-xs text-slate-200">{c.perk.desc}</div>
+                <div className="mt-3 text-sm text-slate-200 space-y-1">
+                  <div>Speed <Stars n={STAT_STARS.speed[c.id]} /></div>
+                  <div>Strength <Stars n={STAT_STARS.strength[c.id]} /></div>
+                  <div>Jump <Stars n={STAT_STARS.jump[c.id]} /></div>
+                </div>
+                {c.perk && (
+                  <div className="mt-3 rounded-lg px-2 py-1.5 bg-gradient-to-r from-fuchsia-900/60 to-cyan-900/60 border border-fuchsia-500/40">
+                    <div className="text-xs font-bold text-fuchsia-300 uppercase tracking-wide">{c.perk.label}</div>
+                    <div className="text-xs text-slate-200">{c.perk.desc}</div>
+                  </div>
+                )}
+              </button>
+              {!dis && c.skins && (
+                <div className="mt-3 flex gap-2 items-center">
+                  <span className="text-xs text-slate-400 uppercase tracking-wide">Skin:</span>
+                  {c.skins.map((s, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => { e.stopPropagation(); setSkin(c.id, i) }}
+                      className={`w-7 h-7 rounded-full border-2 transition ${i === skinIdx ? 'border-white scale-110' : 'border-slate-500 hover:border-slate-300'}`}
+                      style={{ background: s.color }}
+                      title={s.name}
+                    />
+                  ))}
                 </div>
               )}
-            </button>
+            </div>
           )
         })}
       </div>

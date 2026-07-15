@@ -31,6 +31,8 @@ export default function GameCanvas({ config, onExit, onMatchEnd }) {
       map: config.map,
       p1Char: config.p1Char,
       p2Char: config.p2Char,
+      p1Skin: config.p1Skin || 0,
+      p2Skin: config.p2Skin || 0,
       difficulty: config.difficulty,
       modifiers: config.modifiers,
     })
