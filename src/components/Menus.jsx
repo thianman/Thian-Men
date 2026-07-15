@@ -101,11 +101,12 @@ export function ModeSelect({ onPick, onBack }) {
   const modes = [
     { id: '1p', name: '1P vs CPU', desc: 'Play against the AI' },
     { id: '2p', name: '2P Local', desc: 'Two players, one keyboard' },
+    { id: 'ladder', name: 'Survival Ladder', desc: 'Beat all 6 fighters, rising difficulty' },
     { id: 'practice', name: 'Practice Arena', desc: 'Warm up, no score' },
   ]
   return (
     <Screen title="SELECT MODE" onBack={onBack}>
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
         {modes.map(m => (
           <button key={m.id} onClick={() => { sfx.click(); onPick(m.id) }}
             className="p-6 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-cyan-400 text-left transition">
@@ -189,6 +190,47 @@ export function CharacterSelect({ label, exclude, onPick, onBack }) {
             </button>
           )
         })}
+      </div>
+    </Screen>
+  )
+}
+
+export function LadderIntro({ p1Char, opponents, current, onNext, onQuit, victoryOverall }) {
+  const opp = opponents[current]
+  const oppChar = opp ? CHARACTERS.find(c => c.id === opp.char) : null
+  return (
+    <Screen title={victoryOverall ? 'LADDER CLEARED!' : `FIGHT ${current + 1} / ${opponents.length}`}
+            subtitle={victoryOverall ? 'You beat every fighter on the ladder.' : 'Prepare for your next opponent.'}>
+      {!victoryOverall && oppChar && (
+        <div className="max-w-lg mx-auto p-6 bg-slate-800 rounded-2xl border border-slate-600 flex items-center gap-6">
+          <div className="w-24 h-24 rounded-xl flex-shrink-0" style={{ background: oppChar.color }} />
+          <div>
+            <div className="text-3xl font-black">{oppChar.name}</div>
+            <div className="text-slate-300 italic">{oppChar.vibe}</div>
+            <div className="mt-2 text-sm text-slate-200">
+              Difficulty: <span className="font-mono text-amber-300 uppercase">{opp.difficulty}</span>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        {opponents.map((o, i) => {
+          const state = i < current ? 'won' : i === current ? 'now' : 'todo'
+          const c = CHARACTERS.find(ch => ch.id === o.char)
+          return (
+            <div key={i} className={`px-3 py-1 rounded-lg border text-sm ${state === 'won' ? 'bg-emerald-800/60 border-emerald-500 text-emerald-100' : state === 'now' ? 'bg-cyan-800/60 border-cyan-400 text-cyan-100' : 'bg-slate-800/60 border-slate-600 text-slate-400'}`}>
+              {c.name}
+              {state === 'won' && ' ✓'}
+            </div>
+          )
+        })}
+      </div>
+      <div className="mt-8 flex justify-center gap-3">
+        <button onClick={() => { sfx.click(); onNext() }}
+                className={btn}>{victoryOverall ? 'Back to Menu' : 'FIGHT!'}</button>
+        {!victoryOverall && (
+          <button onClick={() => { sfx.click(); onQuit() }} className={btnAlt}>Give Up</button>
+        )}
       </div>
     </Screen>
   )

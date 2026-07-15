@@ -1,21 +1,30 @@
 import React, { useEffect, useState } from 'react'
-import { TitleScreen, InstructionsScreen, SettingsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect } from './components/Menus.jsx'
+import { TitleScreen, InstructionsScreen, SettingsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro } from './components/Menus.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)]
 
+const LADDER_DIFF = ['easy', 'easy', 'medium', 'medium', 'hard', 'impossible']
+
+function buildLadder(p1) {
+  const pool = CHARACTERS.filter(c => c.id !== p1).sort(() => Math.random() - 0.5)
+  return pool.map((c, i) => ({ char: c.id, difficulty: LADDER_DIFF[i] || 'hard', map: pick(MAPS).id }))
+}
+
 export default function App() {
   const [screen, setScreen] = useState('title')
   const [cfg, setCfg] = useState({
-    mode: null,           // '1p' | '2p' | 'practice'
-    matchType: '1v1',     // '1v1' | '2v2'
+    mode: null,
+    matchType: '1v1',
     difficulty: 'medium',
     p1Char: null,
     p2Char: null,
     map: null,
+    hideEndButtons: false,
   })
+  const [ladder, setLadder] = useState(null) // { p1, opponents:[{char,difficulty,map}], current:0, victoryOverall:false }
 
   useEffect(() => {
     if (screen === 'game') { stopMusic() } else { playMusic('menu') }
@@ -60,7 +69,40 @@ export default function App() {
           onPick={(m) => {
             setCfg(c => ({ ...c, mode: m }))
             if (m === '2p') setScreen('matchType')
+            else if (m === 'ladder') setScreen('ladderP1')
             else setScreen('p1')
+          }}
+        />
+      )}
+      {screen === 'ladderP1' && (
+        <CharacterSelect
+          label="LADDER — PICK YOUR FIGHTER"
+          onBack={() => setScreen('mode')}
+          onPick={(id) => {
+            const opponents = buildLadder(id)
+            setLadder({ p1: id, opponents, current: 0, victoryOverall: false })
+            setScreen('ladderIntro')
+          }}
+        />
+      )}
+      {screen === 'ladderIntro' && ladder && (
+        <LadderIntro
+          p1Char={ladder.p1}
+          opponents={ladder.opponents}
+          current={ladder.current}
+          victoryOverall={ladder.victoryOverall}
+          onQuit={backToTitle}
+          onNext={() => {
+            if (ladder.victoryOverall) { backToTitle(); return }
+            const opp = ladder.opponents[ladder.current]
+            setCfg({
+              mode: '1p', matchType: '1v1',
+              difficulty: opp.difficulty,
+              p1Char: ladder.p1, p2Char: opp.char,
+              map: opp.map,
+              hideEndButtons: true,
+            })
+            start()
           }}
         />
       )}
@@ -119,7 +161,27 @@ export default function App() {
         />
       )}
       {screen === 'game' && cfg.mode && cfg.p1Char && cfg.p2Char && cfg.map && (
-        <GameCanvas config={cfg} onExit={backToTitle} />
+        <GameCanvas
+          config={cfg}
+          onExit={backToTitle}
+          onMatchEnd={(winnerSide) => {
+            if (ladder && cfg.hideEndButtons) {
+              if (winnerSide === 'left') {
+                // Won: advance ladder
+                const next = ladder.current + 1
+                const done = next >= ladder.opponents.length
+                setLadder({ ...ladder, current: done ? ladder.current : next, victoryOverall: done })
+                setTimeout(() => setScreen('ladderIntro'), 1600)
+              } else {
+                // Lost: end run
+                setTimeout(() => {
+                  setLadder(null)
+                  setScreen('title')
+                }, 1800)
+              }
+            }
+          }}
+        />
       )}
     </>
   )

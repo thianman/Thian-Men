@@ -5,7 +5,7 @@ import { render } from '../game/render.js'
 import { makeAIController } from '../game/ai.js'
 import { playMusic, stopMusic, resumeAudio, sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
 
-export default function GameCanvas({ config, onExit }) {
+export default function GameCanvas({ config, onExit, onMatchEnd }) {
   const canvasRef = useRef(null)
   const wrapRef = useRef(null)
   const stateRef = useRef(null)
@@ -20,6 +20,7 @@ export default function GameCanvas({ config, onExit }) {
   const [scale, setScale] = useState(1)
   const [isMobile, setIsMobile] = useState(false)
   const [rematchNonce, setRematchNonce] = useState(0)
+  const [gamePhase, setGamePhase] = useState('play')
 
   useEffect(() => {
     const mapObj = MAPS.find(m => m.id === config.map) || MAPS[0]
@@ -120,7 +121,9 @@ export default function GameCanvas({ config, onExit }) {
         })
 
         prevKeysRef.current = { ...k }
+        const prevPhase = s.phase
         tick(s, dt)
+        if (s.phase !== prevPhase) setGamePhase(s.phase)
         render(ctx, s, s.mapObj)
       } else if (s) {
         render(ctx, s, s.mapObj)
@@ -135,7 +138,17 @@ export default function GameCanvas({ config, onExit }) {
   }, [paused])
 
   const s = stateRef.current
-  const matchEnd = s?.phase === 'matchEnd'
+  const matchEnd = gamePhase === 'matchEnd'
+
+  // Reset notification flag on rematch
+  const notifiedRef = useRef(false)
+  useEffect(() => { notifiedRef.current = false }, [rematchNonce])
+  useEffect(() => {
+    if (matchEnd && !notifiedRef.current && s) {
+      notifiedRef.current = true
+      onMatchEnd && onMatchEnd(s.matchWinnerSide)
+    }
+  }, [matchEnd, s, onMatchEnd])
 
   const touchStart = (side, action) => () => {
     if (side === 'p1') touchRef.current.p1[action] = true
@@ -177,7 +190,7 @@ export default function GameCanvas({ config, onExit }) {
         )}
 
         {/* Match end overlay */}
-        {matchEnd && (
+        {matchEnd && !config.hideEndButtons && (
           <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 pointer-events-none">
             <div className="pointer-events-auto flex gap-3">
               <button onClick={() => setRematchNonce(n => n + 1)} className="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg">
