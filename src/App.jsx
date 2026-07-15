@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro, ModifiersScreen } from './components/Menus.jsx'
+import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, CreditsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro, ModifiersScreen } from './components/Menus.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
@@ -49,6 +49,7 @@ export default function App() {
           onInstructions={() => setScreen('instructions')}
           onSettings={() => setScreen('settings')}
           onLeaderboard={() => setScreen('leaderboard')}
+          onCredits={() => setScreen('credits')}
           onQuickPlay={() => {
             const p1c = pick(CHARACTERS); const p1 = p1c.id
             const p2Pool = CHARACTERS.filter(c => c.id !== p1)
@@ -72,6 +73,9 @@ export default function App() {
       )}
       {screen === 'leaderboard' && (
         <LeaderboardScreen onBack={backToTitle} />
+      )}
+      {screen === 'credits' && (
+        <CreditsScreen onBack={backToTitle} />
       )}
       {screen === 'mode' && (
         <ModeSelect

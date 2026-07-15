@@ -21,7 +21,7 @@ export function Screen({ children, title, subtitle, onBack }) {
   )
 }
 
-export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard }) {
+export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onCredits }) {
   return (
     <Screen title="DODGEBALL" subtitle="Platformer showdown — dodge, catch, throw.">
       <div className="flex flex-col items-center gap-3">
@@ -30,8 +30,63 @@ export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, o
         <button className={btnAlt} onClick={() => { sfx.click(); onLeaderboard() }}>Leaderboard</button>
         <button className={btnAlt} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
         <button className={btnAlt} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
+        <button className={btnAlt} onClick={() => { sfx.click(); onCredits() }}>Credits</button>
       </div>
       <p className="text-center text-slate-400 text-sm mt-8">Made for vibe coders. Best of 3 sets. Winner stays king.</p>
+    </Screen>
+  )
+}
+
+export function CreditsScreen({ onBack }) {
+  const Section = ({ title, children }) => (
+    <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700">
+      <h3 className="text-lg font-bold mb-2 text-cyan-300">{title}</h3>
+      <div className="text-slate-200 text-sm space-y-1">{children}</div>
+    </div>
+  )
+  return (
+    <Screen title="ABOUT & CREDITS" onBack={onBack}>
+      <div className="max-w-3xl mx-auto space-y-4">
+        <Section title="About">
+          <p>A 2D platformer dodgeball game — solo or local 2P — with 6 fighters, 4 maps, four CPU tiers, a Survival Ladder, cosmetic skins, difficulty modifiers, and arena hazards. Built to be picked up in seconds and mastered over hundreds of matches.</p>
+        </Section>
+
+        <Section title="Design & Direction">
+          <p>Hadi — game design, character roster, match pacing, art direction, vibe QA.</p>
+        </Section>
+
+        <Section title="Engineering">
+          <p>Claude (Anthropic) — React + Vite + Tailwind scaffolding, Canvas 2D engine, physics, AI, mobile controls, VFX pipeline.</p>
+        </Section>
+
+        <Section title="Fighters">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {CHARACTERS.map(c => (
+              <div key={c.id} className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-sm" style={{ background: c.color }} />
+                <span className="font-bold">{c.name}</span>
+                <span className="text-slate-400 italic text-xs">— {c.vibe}</span>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Maps">
+          <div className="flex flex-wrap gap-3">
+            {MAPS.map(m => (
+              <span key={m.id} className="px-2 py-1 rounded bg-slate-800 border border-slate-600">{m.name}</span>
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Tech">
+          <p>React 18 · Vite · Tailwind CSS · HTML5 Canvas 2D · Web Audio API (procedural music &amp; SFX)</p>
+        </Section>
+
+        <p className="text-center text-slate-500 text-xs pt-4">
+          Version 0.1 · Made with care by vibe coders · Winner stays king.
+        </p>
+      </div>
     </Screen>
   )
 }
