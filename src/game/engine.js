@@ -62,11 +62,15 @@ export function initState({ mode, matchType, map, p1Char, p2Char, difficulty }) 
     roundsP1: 0, roundsP2: 0,
     roundsPerSet: matchType === '2v2' ? 7 : 5,
     setsToWin: 3,
-    phase: 'play', // 'play' | 'roundEnd' | 'setEnd' | 'matchEnd'
-    phaseTimer: 0,
+    phase: 'countdown',
+    phaseTimer: 2200,
+    countdown: 3,
     winnerSide: null,
     matchWinnerSide: null,
     isPractice: mode === 'practice',
+    shake: 0,
+    particles: [],
+    stats: { left: { throws: 0, catches: 0, hits: 0 }, right: { throws: 0, catches: 0, hits: 0 } },
   }
 }
 
@@ -155,7 +159,9 @@ function throwBall(player, state) {
   b.x = player.x + player.w/2 + player.facing * (player.w/2 + BALL_R + 2)
   b.y = player.y + 30
   b.held = false; b.ownerSide = null; b.live = true; b.thrownBy = player.side; b.chargeAtThrow = player.chargeVal; b.aliveMs = 0
+  b.trail = []
   player.holdingBall = null
+  state.stats[player.side].throws++
   sfx.throw()
 }
 
@@ -170,6 +176,7 @@ function attemptCatch(player, state) {
       b.live = false; b.vx = 0; b.vy = 0
       b.held = true; b.ownerSide = player.side
       player.holdingBall = b
+      state.stats[player.side].catches++
       sfx.catch()
       return
     }
@@ -178,10 +185,23 @@ function attemptCatch(player, state) {
 
 // ---- Main tick ----
 export function tick(state, dtMs) {
+  if (state.shake > 0) state.shake = Math.max(0, state.shake - dtMs)
+  // particles
+  for (const pt of state.particles) {
+    pt.x += pt.vx; pt.y += pt.vy
+    pt.vy += 0.4
+    pt.life -= dtMs
+  }
+  state.particles = state.particles.filter(p => p.life > 0)
+
   if (state.phase !== 'play') {
     state.phaseTimer -= dtMs
+    if (state.phase === 'countdown') {
+      const remaining = Math.ceil(state.phaseTimer / 700)
+      state.countdown = remaining
+    }
     if (state.phaseTimer <= 0) advancePhase(state)
-    return
+    if (state.phase !== 'play') return
   }
 
   const platforms = (state.mapObj?.platforms) || []
@@ -233,6 +253,9 @@ export function tick(state, dtMs) {
       b.vy += GRAVITY * 0.6
       b.x += b.vx; b.y += b.vy
       b.aliveMs += dtMs
+      if (!b.trail) b.trail = []
+      b.trail.push({ x: b.x, y: b.y })
+      if (b.trail.length > 10) b.trail.shift()
       if (b.x < BALL_R) { b.x = BALL_R; b.vx = -b.vx * 0.5 }
       if (b.x > ARENA_W - BALL_R) { b.x = ARENA_W - BALL_R; b.vx = -b.vx * 0.5 }
       if (b.y + b.r >= FLOOR_Y) { b.y = FLOOR_Y - b.r; b.vy *= -0.4; b.vx *= 0.7 }
@@ -289,21 +312,37 @@ function advancePhase(state) {
   if (state.phase === 'roundEnd') {
     state.round++
     resetRound(state)
-    state.phase = 'play'
+    state.phase = 'countdown'
+    state.phaseTimer = 2200
+    state.countdown = 3
   } else if (state.phase === 'setEnd') {
     state.set++
     state.round = 1
     state.roundsP1 = 0; state.roundsP2 = 0
     resetRound(state)
+    state.phase = 'countdown'
+    state.phaseTimer = 2200
+    state.countdown = 3
+  } else if (state.phase === 'countdown') {
     state.phase = 'play'
   }
-  // matchEnd: stays until user acts
 }
 
 function hitPlayer(state, p, b) {
   p.hp -= 1
-  p.hitFlash = 220
+  p.hitFlash = 260
   sfx.hit()
+  state.shake = 220
+  state.stats[b.thrownBy].hits++
+  for (let i = 0; i < 14; i++) {
+    state.particles.push({
+      x: b.x, y: b.y,
+      vx: (Math.random() - 0.5) * 8,
+      vy: (Math.random() - 0.5) * 8 - 2,
+      life: 500 + Math.random() * 300,
+      color: '#ef4444', r: 3 + Math.random() * 3,
+    })
+  }
   b.live = false; b.vx = 0; b.vy = 0
   b.y = FLOOR_Y - b.r
 }

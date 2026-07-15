@@ -19,6 +19,7 @@ export default function GameCanvas({ config, onExit }) {
   const [tick2, setTick2] = useState(0)
   const [scale, setScale] = useState(1)
   const [isMobile, setIsMobile] = useState(false)
+  const [rematchNonce, setRematchNonce] = useState(0)
 
   useEffect(() => {
     const mapObj = MAPS.find(m => m.id === config.map) || MAPS[0]
@@ -40,7 +41,7 @@ export default function GameCanvas({ config, onExit }) {
     resumeAudio()
 
     return () => { cancelAnimationFrame(rafRef.current); stopMusic() }
-  }, [config])
+  }, [config, rematchNonce])
 
   // Input handling
   useEffect(() => {
@@ -83,8 +84,8 @@ export default function GameCanvas({ config, onExit }) {
         const k = keysRef.current
         const pk = prevKeysRef.current
 
-        // Build inputs for each player
-        s.players.forEach((p, i) => {
+        // Only accept inputs while in the play phase
+        if (s.phase === 'play') s.players.forEach((p, i) => {
           if (p.isCPU) {
             const ai = aiRef.current[i]
             if (ai) {
@@ -173,8 +174,11 @@ export default function GameCanvas({ config, onExit }) {
 
         {/* Match end overlay */}
         {matchEnd && (
-          <div className="absolute inset-0 flex flex-col items-center justify-end pb-16 pointer-events-none">
+          <div className="absolute inset-0 flex flex-col items-center justify-end pb-10 pointer-events-none">
             <div className="pointer-events-auto flex gap-3">
+              <button onClick={() => setRematchNonce(n => n + 1)} className="px-6 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg">
+                Rematch
+              </button>
               <button onClick={onExit} className="px-6 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-bold shadow-lg">
                 Main Menu
               </button>

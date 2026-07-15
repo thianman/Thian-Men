@@ -1,6 +1,11 @@
 import { ARENA_W, ARENA_H, FLOOR_Y, BALL_R } from './constants.js'
 
 export function render(ctx, state, mapObj, extras = {}) {
+  ctx.save()
+  if (state.shake > 0) {
+    const s = state.shake / 30
+    ctx.translate((Math.random() - 0.5) * s, (Math.random() - 0.5) * s)
+  }
   // Background gradient
   const g = ctx.createLinearGradient(0, 0, 0, ARENA_H)
   g.addColorStop(0, mapObj.bg[0])
@@ -36,6 +41,17 @@ export function render(ctx, state, mapObj, extras = {}) {
     drawBall(ctx, b)
   }
 
+  // Particles
+  if (state.particles) {
+    for (const p of state.particles) {
+      const alpha = Math.max(0, Math.min(1, p.life / 400))
+      ctx.fillStyle = p.color
+      ctx.globalAlpha = alpha
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r || 3, 0, Math.PI*2); ctx.fill()
+    }
+    ctx.globalAlpha = 1
+  }
+
   // Players
   for (const p of state.players) {
     drawPlayer(ctx, p)
@@ -52,7 +68,44 @@ export function render(ctx, state, mapObj, extras = {}) {
   // Phase overlays
   if (state.phase === 'roundEnd') drawCenterText(ctx, state.winnerSide === 'left' ? 'Round P1!' : 'Round P2!', '#fff')
   else if (state.phase === 'setEnd') drawCenterText(ctx, `Set ${state.set} — ${state.setsP1}-${state.setsP2}`, '#fbbf24')
-  else if (state.phase === 'matchEnd') drawCenterText(ctx, state.matchWinnerSide === 'left' ? 'P1 WINS MATCH!' : 'P2 WINS MATCH!', '#22d3ee')
+  else if (state.phase === 'countdown') {
+    const label = state.countdown > 0 ? String(state.countdown) : 'GO!'
+    drawCenterText(ctx, label, state.countdown > 0 ? '#fff' : '#22c55e')
+  }
+  else if (state.phase === 'matchEnd') drawMatchEnd(ctx, state)
+  ctx.restore()
+}
+
+function drawMatchEnd(ctx, state) {
+  ctx.fillStyle = 'rgba(0,0,0,0.75)'
+  ctx.fillRect(0, 0, ARENA_W, ARENA_H)
+  const winner = state.matchWinnerSide
+  ctx.fillStyle = winner === 'left' ? '#22d3ee' : '#f87171'
+  ctx.font = 'bold 84px system-ui'
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  ctx.fillText(winner === 'left' ? 'P1 WINS!' : 'P2 WINS!', ARENA_W/2, 200)
+  ctx.fillStyle = '#fff'
+  ctx.font = 'bold 28px system-ui'
+  ctx.fillText(`Final: ${state.setsP1} — ${state.setsP2}`, ARENA_W/2, 260)
+
+  // Stats box
+  const s = state.stats
+  const y0 = 320
+  ctx.font = 'bold 22px system-ui'
+  ctx.fillStyle = '#93c5fd'; ctx.textAlign = 'right'
+  ctx.fillText('P1', ARENA_W/2 - 40, y0)
+  ctx.fillStyle = '#fca5a5'; ctx.textAlign = 'left'
+  ctx.fillText('P2', ARENA_W/2 + 40, y0)
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '20px system-ui'
+  const rows = [['Throws', s.left.throws, s.right.throws], ['Catches', s.left.catches, s.right.catches], ['Hits', s.left.hits, s.right.hits]]
+  rows.forEach((r, i) => {
+    ctx.textAlign = 'center'; ctx.fillStyle = '#cbd5e1'
+    ctx.fillText(r[0], ARENA_W/2, y0 + 40 + i * 30)
+    ctx.textAlign = 'right'; ctx.fillStyle = '#fff'
+    ctx.fillText(r[1], ARENA_W/2 - 100, y0 + 40 + i * 30)
+    ctx.textAlign = 'left'
+    ctx.fillText(r[2], ARENA_W/2 + 100, y0 + 40 + i * 30)
+  })
 }
 
 function drawMapDecor(ctx, m) {
@@ -127,12 +180,27 @@ function drawPlayer(ctx, p) {
 
 function drawBall(ctx, b) {
   ctx.save()
+  // trail (charge intensity glow)
+  if (b.live && b.trail && b.trail.length > 1) {
+    const charge = b.chargeAtThrow || 0.5
+    const trailColor = charge > 0.85 ? '#ef4444' : charge > 0.6 ? '#f59e0b' : '#fbbf24'
+    for (let i = 0; i < b.trail.length; i++) {
+      const t = b.trail[i]
+      const alpha = (i / b.trail.length) * 0.6
+      ctx.globalAlpha = alpha
+      ctx.fillStyle = trailColor
+      ctx.beginPath(); ctx.arc(t.x, t.y, b.r * (0.4 + 0.5 * (i / b.trail.length)), 0, Math.PI*2); ctx.fill()
+    }
+    ctx.globalAlpha = 1
+    if (charge > 0.85) {
+      ctx.shadowBlur = 20; ctx.shadowColor = '#ef4444'
+    }
+  }
   ctx.fillStyle = 'rgba(0,0,0,0.35)'
   ctx.beginPath(); ctx.ellipse(b.x, FLOOR_Y + 4, b.r, 4, 0, 0, Math.PI*2); ctx.fill()
   ctx.fillStyle = b.live ? '#ef4444' : '#fbbf24'
   ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI*2); ctx.fill()
   ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 2; ctx.stroke()
-  // seam
   ctx.beginPath(); ctx.arc(b.x, b.y, b.r - 4, -0.4, 0.4); ctx.stroke()
   ctx.restore()
 }
