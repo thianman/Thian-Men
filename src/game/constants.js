@@ -11,12 +11,12 @@ export const CATCH_RANGE = 60
 export const THROW_CHARGE_MS = 1000
 
 export const CHARACTERS = [
-  { id: 'blaze',   name: 'BLAZE',   speed: 6, jump: 30, throwMul: 0.8, color: '#ff5c33', vibe: 'Speed demon' },
-  { id: 'tank',    name: 'TANK',    speed: 3, jump: 15, throwMul: 1.4, color: '#7a4a2a', vibe: 'Heavy hitter' },
-  { id: 'nova',    name: 'NOVA',    speed: 5, jump: 22, throwMul: 1.0, color: '#8a5cf6', vibe: 'All-around' },
-  { id: 'ghost',   name: 'GHOST',   speed: 5, jump: 28, throwMul: 0.7, color: '#9adfff', vibe: 'Aerial specialist' },
-  { id: 'crusher', name: 'CRUSHER', speed: 3, jump: 32, throwMul: 1.2, color: '#22c55e', vibe: 'Jump powerhouse' },
-  { id: 'striker', name: 'STRIKER', speed: 7, jump: 12, throwMul: 0.9, color: '#facc15', vibe: 'Ground speedster' },
+  { id: 'blaze',   name: 'BLAZE',   speed: 6, jump: 30, throwMul: 0.8, color: '#ff5c33', vibe: 'Speed demon',        shape: 'slim',    accent: '#ffd400' },
+  { id: 'tank',    name: 'TANK',    speed: 3, jump: 15, throwMul: 1.4, color: '#7a4a2a', vibe: 'Heavy hitter',       shape: 'bulky',   accent: '#facc15' },
+  { id: 'nova',    name: 'NOVA',    speed: 5, jump: 22, throwMul: 1.0, color: '#8a5cf6', vibe: 'All-around',         shape: 'normal',  accent: '#f0abfc' },
+  { id: 'ghost',   name: 'GHOST',   speed: 5, jump: 28, throwMul: 0.7, color: '#9adfff', vibe: 'Aerial specialist',  shape: 'ghost',   accent: '#ffffff' },
+  { id: 'crusher', name: 'CRUSHER', speed: 3, jump: 32, throwMul: 1.2, color: '#22c55e', vibe: 'Jump powerhouse',    shape: 'tall',    accent: '#166534' },
+  { id: 'striker', name: 'STRIKER', speed: 7, jump: 12, throwMul: 0.9, color: '#facc15', vibe: 'Ground speedster',   shape: 'short',   accent: '#0f172a' },
 ]
 
 export const STAT_STARS = {

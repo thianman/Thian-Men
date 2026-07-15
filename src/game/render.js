@@ -73,6 +73,20 @@ export function render(ctx, state, mapObj, extras = {}) {
     drawCenterText(ctx, label, state.countdown > 0 ? '#fff' : '#22c55e')
   }
   else if (state.phase === 'matchEnd') drawMatchEnd(ctx, state)
+
+  // KO flash (independent of phase overlays)
+  if (state.koFlash > 0 && state.phase === 'play') {
+    const alpha = Math.min(1, state.koFlash / 900)
+    ctx.fillStyle = `rgba(0,0,0,${alpha * 0.35})`
+    ctx.fillRect(0, 0, ARENA_W, ARENA_H)
+    ctx.fillStyle = '#ef4444'
+    ctx.font = `bold ${80 + (1 - alpha) * 30}px system-ui`
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    ctx.globalAlpha = alpha
+    ctx.fillText('K.O.!', ARENA_W/2, ARENA_H/2 - 60)
+    ctx.globalAlpha = 1
+  }
+
   ctx.restore()
 }
 
@@ -132,24 +146,72 @@ function drawMapDecor(ctx, m) {
 
 function drawPlayer(ctx, p) {
   const flash = p.hitFlash > 0
+  const shape = p.char.shape || 'normal'
   ctx.save()
   ctx.translate(p.x, p.y)
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.3)'
   ctx.beginPath(); ctx.ellipse(p.w/2, p.h + 4, p.w/2, 6, 0, 0, Math.PI*2); ctx.fill()
 
+  // Shape-specific body proportions
+  let bodyX = 4, bodyW = p.w - 8, headR = 14
+  if (shape === 'bulky')  { bodyX = 0; bodyW = p.w;      headR = 12 }
+  if (shape === 'slim')   { bodyX = 10; bodyW = p.w - 20; headR = 12 }
+  if (shape === 'tall')   { bodyX = 6; bodyW = p.w - 12; headR = 12 }
+  if (shape === 'short')  { bodyX = 2; bodyW = p.w - 4;  headR = 15 }
+  if (shape === 'ghost')  { bodyX = 6; bodyW = p.w - 12; headR = 15 }
+
   // Body
   ctx.fillStyle = flash ? '#fff' : p.char.color
-  roundRect(ctx, 4, 12, p.w - 8, p.h - 20, 8, true)
+  if (shape === 'ghost') {
+    ctx.globalAlpha = 0.85
+    roundRect(ctx, bodyX, 14, bodyW, p.h - 22, 14, true)
+    ctx.globalAlpha = 1
+  } else {
+    roundRect(ctx, bodyX, 12, bodyW, p.h - 20, 8, true)
+  }
+
+  // Accent stripe
+  if (!flash && shape !== 'ghost') {
+    ctx.fillStyle = p.char.accent
+    ctx.fillRect(bodyX + 4, p.h * 0.4, bodyW - 8, 4)
+  }
 
   // Head
   ctx.fillStyle = flash ? '#fff' : lighten(p.char.color, 20)
-  ctx.beginPath(); ctx.arc(p.w/2, 12, 14, 0, Math.PI*2); ctx.fill()
+  ctx.beginPath(); ctx.arc(p.w/2, 12, headR, 0, Math.PI*2); ctx.fill()
+
+  // Character-specific head decor
+  if (!flash) {
+    if (shape === 'bulky') {
+      // helmet band
+      ctx.fillStyle = '#0f172a'
+      ctx.fillRect(p.w/2 - headR, 8, headR * 2, 4)
+    } else if (shape === 'tall') {
+      // headband
+      ctx.fillStyle = p.char.accent
+      ctx.fillRect(p.w/2 - headR, 6, headR * 2, 3)
+    } else if (shape === 'ghost') {
+      // extra head glow
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      ctx.beginPath(); ctx.arc(p.w/2, 12, headR + 5, 0, Math.PI*2); ctx.fill()
+    } else if (shape === 'slim') {
+      // hair tuft
+      ctx.fillStyle = p.char.accent
+      ctx.beginPath()
+      ctx.moveTo(p.w/2, -6); ctx.lineTo(p.w/2 - 6, 4); ctx.lineTo(p.w/2 + 6, 4)
+      ctx.closePath(); ctx.fill()
+    } else if (shape === 'short') {
+      // cap
+      ctx.fillStyle = p.char.accent
+      roundRect(ctx, p.w/2 - headR, -2, headR * 2, 8, 4, true)
+    }
+  }
 
   // Eye (facing)
   ctx.fillStyle = '#0b0f1a'
   const eyeX = p.w/2 + (p.facing === 1 ? 4 : -4)
-  ctx.beginPath(); ctx.arc(eyeX, 10, 3, 0, Math.PI*2); ctx.fill()
+  ctx.beginPath(); ctx.arc(eyeX, 12, 3, 0, Math.PI*2); ctx.fill()
 
   // Side indicator (P1 blue outline, P2 red outline)
   ctx.strokeStyle = p.side === 'left' ? '#38bdf8' : '#f87171'

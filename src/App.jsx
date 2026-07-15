@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { TitleScreen, InstructionsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect } from './components/Menus.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
+import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
+
+const pick = arr => arr[Math.floor(Math.random() * arr.length)]
 
 export default function App() {
   const [screen, setScreen] = useState('title')
@@ -29,7 +32,20 @@ export default function App() {
   return (
     <>
       {screen === 'title' && (
-        <TitleScreen onPlay={() => setScreen('mode')} onInstructions={() => setScreen('instructions')} />
+        <TitleScreen
+          onPlay={() => setScreen('mode')}
+          onInstructions={() => setScreen('instructions')}
+          onQuickPlay={() => {
+            const p1 = pick(CHARACTERS).id
+            const p2Pool = CHARACTERS.filter(c => c.id !== p1)
+            const p2 = pick(p2Pool).id
+            setCfg({
+              mode: '1p', matchType: '1v1', difficulty: 'medium',
+              p1Char: p1, p2Char: p2, map: pick(MAPS).id,
+            })
+            start()
+          }}
+        />
       )}
       {screen === 'instructions' && (
         <InstructionsScreen onBack={backToTitle} />

@@ -20,11 +20,12 @@ export function Screen({ children, title, subtitle, onBack }) {
   )
 }
 
-export function TitleScreen({ onPlay, onInstructions }) {
+export function TitleScreen({ onPlay, onInstructions, onQuickPlay }) {
   return (
     <Screen title="DODGEBALL" subtitle="Platformer showdown — dodge, catch, throw.">
       <div className="flex flex-col items-center gap-3">
         <button className={btn} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
+        <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
         <button className={btnAlt} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
       </div>
       <p className="text-center text-slate-400 text-sm mt-8">Made for vibe coders. Best of 3 sets. Winner stays king.</p>

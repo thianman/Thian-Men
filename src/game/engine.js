@@ -70,6 +70,8 @@ export function initState({ mode, matchType, map, p1Char, p2Char, difficulty }) 
     isPractice: mode === 'practice',
     shake: 0,
     particles: [],
+    hitstop: 0,
+    koFlash: 0,
     stats: { left: { throws: 0, catches: 0, hits: 0 }, right: { throws: 0, catches: 0, hits: 0 } },
   }
 }
@@ -186,6 +188,11 @@ function attemptCatch(player, state) {
 // ---- Main tick ----
 export function tick(state, dtMs) {
   if (state.shake > 0) state.shake = Math.max(0, state.shake - dtMs)
+  if (state.koFlash > 0) state.koFlash = Math.max(0, state.koFlash - dtMs)
+  if (state.hitstop > 0) {
+    state.hitstop = Math.max(0, state.hitstop - dtMs)
+    return
+  }
   // particles
   for (const pt of state.particles) {
     pt.x += pt.vx; pt.y += pt.vy
@@ -333,6 +340,8 @@ function hitPlayer(state, p, b) {
   p.hitFlash = 260
   sfx.hit()
   state.shake = 220
+  state.hitstop = p.hp <= 0 ? 140 : 70
+  if (p.hp <= 0) state.koFlash = 900
   state.stats[b.thrownBy].hits++
   for (let i = 0; i < 14; i++) {
     state.particles.push({
