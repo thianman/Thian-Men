@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
-import { TitleScreen, InstructionsScreen, SettingsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro } from './components/Menus.jsx'
+import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro } from './components/Menus.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
+import { addRecord, bestForCharacter, getRecords, formatTime } from './game/ladderStore.js'
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)]
 
@@ -24,7 +25,7 @@ export default function App() {
     map: null,
     hideEndButtons: false,
   })
-  const [ladder, setLadder] = useState(null) // { p1, opponents:[{char,difficulty,map}], current:0, victoryOverall:false }
+  const [ladder, setLadder] = useState(null) // { p1, opponents, current, victoryOverall, startedAt, clearMs }
 
   useEffect(() => {
     if (screen === 'game') { stopMusic() } else { playMusic('menu') }
@@ -45,6 +46,7 @@ export default function App() {
           onPlay={() => setScreen('mode')}
           onInstructions={() => setScreen('instructions')}
           onSettings={() => setScreen('settings')}
+          onLeaderboard={() => setScreen('leaderboard')}
           onQuickPlay={() => {
             const p1 = pick(CHARACTERS).id
             const p2Pool = CHARACTERS.filter(c => c.id !== p1)
@@ -63,6 +65,9 @@ export default function App() {
       {screen === 'settings' && (
         <SettingsScreen onBack={backToTitle} />
       )}
+      {screen === 'leaderboard' && (
+        <LeaderboardScreen onBack={backToTitle} />
+      )}
       {screen === 'mode' && (
         <ModeSelect
           onBack={backToTitle}
@@ -80,7 +85,7 @@ export default function App() {
           onBack={() => setScreen('mode')}
           onPick={(id) => {
             const opponents = buildLadder(id)
-            setLadder({ p1: id, opponents, current: 0, victoryOverall: false })
+            setLadder({ p1: id, opponents, current: 0, victoryOverall: false, startedAt: Date.now(), clearMs: null })
             setScreen('ladderIntro')
           }}
         />
@@ -91,6 +96,7 @@ export default function App() {
           opponents={ladder.opponents}
           current={ladder.current}
           victoryOverall={ladder.victoryOverall}
+          clearMs={ladder.clearMs}
           onQuit={backToTitle}
           onNext={() => {
             if (ladder.victoryOverall) { backToTitle(); return }
@@ -167,13 +173,16 @@ export default function App() {
           onMatchEnd={(winnerSide) => {
             if (ladder && cfg.hideEndButtons) {
               if (winnerSide === 'left') {
-                // Won: advance ladder
                 const next = ladder.current + 1
                 const done = next >= ladder.opponents.length
-                setLadder({ ...ladder, current: done ? ladder.current : next, victoryOverall: done })
+                let clearMs = ladder.clearMs
+                if (done) {
+                  clearMs = Date.now() - ladder.startedAt
+                  addRecord({ char: ladder.p1, timeMs: clearMs })
+                }
+                setLadder({ ...ladder, current: done ? ladder.current : next, victoryOverall: done, clearMs })
                 setTimeout(() => setScreen('ladderIntro'), 1600)
               } else {
-                // Lost: end run
                 setTimeout(() => {
                   setLadder(null)
                   setScreen('title')

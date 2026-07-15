@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CHARACTERS, MAPS, DIFFICULTIES, STAT_STARS } from '../game/constants.js'
 import { sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
+import { getRecords, bestForCharacter, formatTime, clearRecords } from '../game/ladderStore.js'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg text-lg border border-cyan-300/40 transition'
 const btnAlt = 'px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold shadow border border-slate-500 transition'
@@ -20,16 +21,55 @@ export function Screen({ children, title, subtitle, onBack }) {
   )
 }
 
-export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings }) {
+export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard }) {
   return (
     <Screen title="DODGEBALL" subtitle="Platformer showdown — dodge, catch, throw.">
       <div className="flex flex-col items-center gap-3">
         <button className={btn} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
         <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
+        <button className={btnAlt} onClick={() => { sfx.click(); onLeaderboard() }}>Leaderboard</button>
         <button className={btnAlt} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
         <button className={btnAlt} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
       </div>
       <p className="text-center text-slate-400 text-sm mt-8">Made for vibe coders. Best of 3 sets. Winner stays king.</p>
+    </Screen>
+  )
+}
+
+export function LeaderboardScreen({ onBack }) {
+  const [nonce, setNonce] = useState(0)
+  const records = getRecords().slice(0, 10)
+  return (
+    <Screen title="LADDER LEADERBOARD" subtitle="Fastest survival ladder clears on this device." onBack={onBack}>
+      {records.length === 0 ? (
+        <div className="text-center text-slate-400 py-10">
+          No clears yet. Beat the Survival Ladder to record your first time.
+        </div>
+      ) : (
+        <div className="max-w-2xl mx-auto bg-slate-900/70 rounded-2xl border border-slate-700 divide-y divide-slate-800 overflow-hidden">
+          {records.map((r, i) => {
+            const c = CHARACTERS.find(ch => ch.id === r.char)
+            const date = new Date(r.date)
+            return (
+              <div key={i} className="flex items-center gap-4 px-4 py-3">
+                <div className={`w-8 text-center font-black text-xl ${i === 0 ? 'text-amber-300' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-orange-400' : 'text-slate-500'}`}>#{i + 1}</div>
+                <div className="w-10 h-10 rounded-lg flex-shrink-0" style={{ background: c?.color || '#666' }} />
+                <div className="flex-1">
+                  <div className="font-bold">{c?.name || r.char}</div>
+                  <div className="text-xs text-slate-400">{date.toLocaleDateString()}</div>
+                </div>
+                <div className="text-2xl font-mono font-black text-cyan-300">{formatTime(r.timeMs)}</div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      {records.length > 0 && (
+        <div className="text-center mt-4">
+          <button onClick={() => { if (confirm('Clear all leaderboard records?')) { clearRecords(); setNonce(n => n + 1) } }}
+            className="text-xs text-red-400 hover:text-red-300 underline">Clear records</button>
+        </div>
+      )}
     </Screen>
   )
 }
@@ -201,12 +241,30 @@ export function CharacterSelect({ label, exclude, onPick, onBack }) {
   )
 }
 
-export function LadderIntro({ p1Char, opponents, current, onNext, onQuit, victoryOverall }) {
+export function LadderIntro({ p1Char, opponents, current, onNext, onQuit, victoryOverall, clearMs }) {
   const opp = opponents[current]
   const oppChar = opp ? CHARACTERS.find(c => c.id === opp.char) : null
+  const best = bestForCharacter(p1Char)
   return (
     <Screen title={victoryOverall ? 'LADDER CLEARED!' : `FIGHT ${current + 1} / ${opponents.length}`}
             subtitle={victoryOverall ? 'You beat every fighter on the ladder.' : 'Prepare for your next opponent.'}>
+      {victoryOverall && clearMs != null && (
+        <div className="max-w-lg mx-auto mb-6 p-6 bg-gradient-to-r from-emerald-900/70 to-cyan-900/70 rounded-2xl border border-emerald-500/60 text-center">
+          <div className="text-slate-200 text-sm uppercase tracking-wide">Clear Time</div>
+          <div className="text-6xl font-black font-mono text-amber-300 mt-1">{formatTime(clearMs)}</div>
+          {best && best.timeMs === clearMs && (
+            <div className="mt-2 text-emerald-300 font-bold">NEW PERSONAL BEST!</div>
+          )}
+          {best && best.timeMs !== clearMs && (
+            <div className="mt-2 text-slate-300 text-sm">Best with this fighter: {formatTime(best.timeMs)}</div>
+          )}
+        </div>
+      )}
+      {!victoryOverall && best && (
+        <div className="text-center text-sm text-slate-300 mb-4">
+          Personal best with <span className="font-bold text-cyan-300">{CHARACTERS.find(c => c.id === p1Char)?.name}</span>: <span className="font-mono text-amber-300">{formatTime(best.timeMs)}</span>
+        </div>
+      )}
       {!victoryOverall && oppChar && (
         <div className="max-w-lg mx-auto p-6 bg-slate-800 rounded-2xl border border-slate-600 flex items-center gap-6">
           <div className="w-24 h-24 rounded-xl flex-shrink-0" style={{ background: oppChar.color }} />
