@@ -370,7 +370,7 @@ export function ModifiersScreen({ onStart, onBack }) {
 export function MapSelect({ onPick, onBack }) {
   return (
     <Screen title="SELECT MAP" onBack={onBack}>
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
         {MAPS.map(m => (
           <button key={m.id} onClick={() => { sfx.click(); onPick(m.id) }}
             className="p-0 rounded-xl overflow-hidden border-2 border-slate-600 hover:border-cyan-400 transition bg-slate-800 text-left">

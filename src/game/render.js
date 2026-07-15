@@ -179,13 +179,43 @@ function drawMapDecor(ctx, m) {
     ctx.fillStyle = 'rgba(0,0,0,0.15)'
     for (let i = 0; i < 8; i++) ctx.fillRect(60, 200 + i * 40, ARENA_W - 120, 4)
   } else if (m.id === 'beach') {
-    // sun
     ctx.fillStyle = '#fef3c7'
     ctx.beginPath(); ctx.arc(1080, 120, 60, 0, Math.PI * 2); ctx.fill()
-    // palm silhouette
     ctx.fillStyle = 'rgba(0,60,40,0.6)'
     ctx.fillRect(140, 300, 12, 240)
     ctx.beginPath(); ctx.arc(146, 300, 50, 0, Math.PI * 2); ctx.fill()
+  } else if (m.id === 'rooftop') {
+    // Moon
+    ctx.fillStyle = '#f5f3ff'
+    ctx.beginPath(); ctx.arc(1080, 120, 44, 0, Math.PI * 2); ctx.fill()
+    ctx.fillStyle = 'rgba(30,20,60,0.9)'
+    ctx.beginPath(); ctx.arc(1096, 108, 44, 0, Math.PI * 2); ctx.fill()
+    // Stars
+    ctx.fillStyle = 'rgba(255,255,255,0.7)'
+    for (let i = 0; i < 30; i++) {
+      const x = (i * 137) % 1280
+      const y = ((i * 53) % 300)
+      ctx.fillRect(x, y, 2, 2)
+    }
+    // City skyline silhouette
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'
+    const buildings = [ [40,380], [120,320], [220,360], [320,280], [430,340], [560,300], [680,360], [790,290], [900,330], [1020,270], [1160,340] ]
+    for (const [x, h] of buildings) {
+      ctx.fillRect(x, 540 - h, 80, h)
+      // Window lights
+      ctx.fillStyle = 'rgba(232,121,249,0.55)'
+      for (let wy = 540 - h + 10; wy < 540; wy += 20) {
+        for (let wx = x + 8; wx < x + 72; wx += 16) {
+          if ((wx * wy) % 7 === 0) ctx.fillRect(wx, wy, 6, 8)
+        }
+      }
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'
+    }
+    // Antenna on the far right platform edge
+    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2
+    ctx.beginPath(); ctx.moveTo(1050, 460); ctx.lineTo(1050, 320); ctx.stroke()
+    ctx.fillStyle = '#ef4444'
+    ctx.beginPath(); ctx.arc(1050, 318, 4, 0, Math.PI * 2); ctx.fill()
   }
 }
 
@@ -312,6 +342,17 @@ function drawHazard(ctx, h) {
     }
     ctx.fillStyle = h.style.ring
     ctx.fillRect(h.x - 2, h.y - h.r - 5, 4, 6)
+  } else if (shape === 'aircon') {
+    // AC unit: grey box with vents and a red LED
+    const w = h.r * 2.2, hh = h.r * 1.6
+    ctx.fillStyle = h.style.color
+    ctx.fillRect(h.x - w/2, h.y - hh/2, w, hh)
+    ctx.fillStyle = '#0f172a'
+    for (let i = -1; i <= 1; i++) ctx.fillRect(h.x - w/2 + 4 + (i + 1) * (w/3), h.y - 6, (w - 8) / 3 - 2, 12)
+    ctx.fillStyle = h.style.ring
+    ctx.beginPath(); ctx.arc(h.x + w/2 - 5, h.y - hh/2 + 5, 2, 0, Math.PI*2); ctx.fill()
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 2
+    ctx.strokeRect(h.x - w/2, h.y - hh/2, w, hh)
   } else {
     // basketball
     ctx.fillStyle = h.style.color

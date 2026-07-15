@@ -92,6 +92,16 @@ export const MAPS = [
       { x: 540, y: 400, w: 200, h: 18 },
     ],
   },
+  {
+    id: 'rooftop', name: 'ROOFTOP',
+    bg: ['#0f172a', '#4c1d95'],
+    accent: '#e879f9',
+    platforms: [
+      { x: 120, y: 460, w: 220, h: 22 },
+      { x: 940, y: 460, w: 220, h: 22 },
+      { x: 560, y: 300, w: 160, h: 18 },
+    ],
+  },
 ]
 
 export const DIFFICULTIES = [
@@ -114,7 +124,8 @@ export const MODIFIERS = [
 ]
 
 export const HAZARD_STYLE = {
-  arena: { color: '#22d3ee', ring: '#67e8f9', shape: 'bolt', dmg: 1 },
-  gym:   { color: '#f97316', ring: '#fdba74', shape: 'ball', dmg: 1 },
-  beach: { color: '#78350f', ring: '#a3e635', shape: 'coconut', dmg: 1 },
+  arena:   { color: '#22d3ee', ring: '#67e8f9', shape: 'bolt', dmg: 1 },
+  gym:     { color: '#f97316', ring: '#fdba74', shape: 'ball', dmg: 1 },
+  beach:   { color: '#78350f', ring: '#a3e635', shape: 'coconut', dmg: 1 },
+  rooftop: { color: '#64748b', ring: '#e879f9', shape: 'aircon', dmg: 1 },
 }
