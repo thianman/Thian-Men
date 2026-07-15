@@ -52,7 +52,7 @@ export function CreditsScreen({ onBack }) {
         </Section>
 
         <Section title="Design & Direction">
-          <p>Hadi — game design, character roster, match pacing, art direction, vibe QA.</p>
+          <p>Raiden — game design, character roster, match pacing, art direction, vibe QA.</p>
         </Section>
 
         <Section title="Engineering">
