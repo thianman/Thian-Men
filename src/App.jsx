@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { TitleScreen, InstructionsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect } from './components/Menus.jsx'
+import { TitleScreen, InstructionsScreen, SettingsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect } from './components/Menus.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
@@ -35,6 +35,7 @@ export default function App() {
         <TitleScreen
           onPlay={() => setScreen('mode')}
           onInstructions={() => setScreen('instructions')}
+          onSettings={() => setScreen('settings')}
           onQuickPlay={() => {
             const p1 = pick(CHARACTERS).id
             const p2Pool = CHARACTERS.filter(c => c.id !== p1)
@@ -49,6 +50,9 @@ export default function App() {
       )}
       {screen === 'instructions' && (
         <InstructionsScreen onBack={backToTitle} />
+      )}
+      {screen === 'settings' && (
+        <SettingsScreen onBack={backToTitle} />
       )}
       {screen === 'mode' && (
         <ModeSelect

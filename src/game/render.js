@@ -71,6 +71,16 @@ export function render(ctx, state, mapObj, extras = {}) {
   else if (state.phase === 'countdown') {
     const label = state.countdown > 0 ? String(state.countdown) : 'GO!'
     drawCenterText(ctx, label, state.countdown > 0 ? '#fff' : '#22c55e')
+    // First round only: controls hint under the number
+    if (state.round === 1 && state.set === 1) {
+      ctx.fillStyle = '#e2e8f0'
+      ctx.font = '18px system-ui'
+      ctx.textAlign = 'center'
+      const hint = state.mode === '2p'
+        ? 'P1: WASD + F/G     P2: Arrows + , / .'
+        : 'Move: A/D   Jump: W   Duck: S   Throw: F (hold)   Catch: G'
+      ctx.fillText(hint, ARENA_W/2, ARENA_H/2 + 90)
+    }
   }
   else if (state.phase === 'matchEnd') drawMatchEnd(ctx, state)
 

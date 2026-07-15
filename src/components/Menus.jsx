@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { CHARACTERS, MAPS, DIFFICULTIES, STAT_STARS } from '../game/constants.js'
-import { sfx } from '../game/sfx.js'
+import { sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg text-lg border border-cyan-300/40 transition'
 const btnAlt = 'px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold shadow border border-slate-500 transition'
@@ -20,15 +20,41 @@ export function Screen({ children, title, subtitle, onBack }) {
   )
 }
 
-export function TitleScreen({ onPlay, onInstructions, onQuickPlay }) {
+export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings }) {
   return (
     <Screen title="DODGEBALL" subtitle="Platformer showdown — dodge, catch, throw.">
       <div className="flex flex-col items-center gap-3">
         <button className={btn} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
         <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
         <button className={btnAlt} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
+        <button className={btnAlt} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
       </div>
       <p className="text-center text-slate-400 text-sm mt-8">Made for vibe coders. Best of 3 sets. Winner stays king.</p>
+    </Screen>
+  )
+}
+
+export function SettingsScreen({ onBack }) {
+  const [music, setMusic] = useState(!isMusicMuted())
+  const [sound, setSound] = useState(!isSfxMuted())
+  const Toggle = ({ on, onChange, label, color }) => (
+    <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800 border border-slate-600">
+      <span className="text-lg font-semibold">{label}</span>
+      <button
+        onClick={() => { sfx.click(); onChange(!on) }}
+        className={`w-16 h-8 rounded-full relative transition ${on ? color : 'bg-slate-600'}`}
+      >
+        <span className={`absolute top-1 ${on ? 'right-1' : 'left-1'} w-6 h-6 rounded-full bg-white shadow transition-all`} />
+      </button>
+    </div>
+  )
+  return (
+    <Screen title="SETTINGS" onBack={onBack}>
+      <div className="max-w-md mx-auto flex flex-col gap-3">
+        <Toggle on={music} color="bg-fuchsia-500" label="Music" onChange={(v) => { setMusic(v); setMusicMuted(!v) }} />
+        <Toggle on={sound} color="bg-cyan-500" label="Sound Effects" onChange={(v) => { setSound(v); setSfxMuted(!v) }} />
+      </div>
+      <p className="text-slate-400 text-sm text-center mt-6">Preferences save automatically.</p>
     </Screen>
   )
 }

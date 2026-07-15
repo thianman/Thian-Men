@@ -2,6 +2,13 @@ let ctx = null
 let musicOsc = null
 let musicGain = null
 let muted = false
+let sfxMuted = false
+let currentMode = null
+
+try {
+  muted = localStorage.getItem('db_music_muted') === '1'
+  sfxMuted = localStorage.getItem('db_sfx_muted') === '1'
+} catch {}
 
 function ac() {
   if (!ctx) {
@@ -14,11 +21,21 @@ export function resumeAudio() {
   const a = ac(); if (a && a.state === 'suspended') a.resume()
 }
 
-export function setMuted(m) { muted = m; if (m) stopMusic() }
-export function isMuted() { return muted }
+export function setMusicMuted(m) {
+  muted = m
+  try { localStorage.setItem('db_music_muted', m ? '1' : '0') } catch {}
+  if (m) stopMusic()
+  else if (currentMode) playMusic(currentMode)
+}
+export function setSfxMuted(m) {
+  sfxMuted = m
+  try { localStorage.setItem('db_sfx_muted', m ? '1' : '0') } catch {}
+}
+export function isMusicMuted() { return muted }
+export function isSfxMuted() { return sfxMuted }
 
 function beep({ freq = 440, dur = 0.1, type = 'square', vol = 0.15, slide = 0 }) {
-  const a = ac(); if (!a || muted) return
+  const a = ac(); if (!a || sfxMuted) return
   const o = a.createOscillator(), g = a.createGain()
   o.type = type; o.frequency.setValueAtTime(freq, a.currentTime)
   if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(60, freq + slide), a.currentTime + dur)
@@ -41,6 +58,7 @@ export const sfx = {
 // Simple procedural looping music using scheduled notes
 let musicTimer = null
 export function playMusic(mode = 'menu') {
+  currentMode = mode
   stopMusic()
   if (muted) return
   const a = ac(); if (!a) return
