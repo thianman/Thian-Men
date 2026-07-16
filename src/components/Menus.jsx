@@ -21,19 +21,195 @@ export function Screen({ children, title, subtitle, onBack }) {
   )
 }
 
+function HeroScene() {
+  return (
+    <div className="relative w-full max-w-3xl mx-auto mb-6">
+      <svg viewBox="0 0 800 320" className="w-full h-auto drop-shadow-2xl">
+        <defs>
+          <linearGradient id="heroBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor="#1e1b4b" />
+            <stop offset="60%"  stopColor="#4c1d95" />
+            <stop offset="100%" stopColor="#831843" />
+          </linearGradient>
+          <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+          <radialGradient id="ballGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stopColor="#fecaca" />
+            <stop offset="60%"  stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#7f1d1d" />
+          </radialGradient>
+          <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#22d3ee" strokeOpacity="0.12" strokeWidth="1" />
+          </pattern>
+        </defs>
+
+        {/* Background */}
+        <rect width="800" height="320" fill="url(#heroBg)" rx="18" />
+        <rect width="800" height="320" fill="url(#grid)" rx="18" />
+
+        {/* Scan line sweep */}
+        <g style={{ overflow: 'hidden' }}>
+          <rect className="hero-scan" x="0" y="0" width="200" height="320" fill="url(#scanFade)" opacity="0.15" />
+        </g>
+        <linearGradient id="scanFade" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%"  stopColor="#22d3ee" stopOpacity="0" />
+          <stop offset="50%" stopColor="#22d3ee" stopOpacity="1" />
+          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+        </linearGradient>
+
+        {/* City silhouette + stars */}
+        {[...Array(24)].map((_, i) => {
+          const x = (i * 91) % 800, y = (i * 37) % 90 + 20
+          return <circle key={i} cx={x} cy={y} r={i % 5 === 0 ? 1.6 : 1} fill="#e0e7ff" opacity={0.6} />
+        })}
+        <path d="M 0 210 L 40 210 L 40 170 L 90 170 L 90 200 L 140 200 L 140 150 L 200 150 L 200 190 L 260 190 L 260 160 L 320 160 L 320 195 L 380 195 L 380 170 L 440 170 L 440 200 L 500 200 L 500 155 L 560 155 L 560 190 L 620 190 L 620 170 L 680 170 L 680 200 L 740 200 L 740 175 L 800 175 L 800 240 L 0 240 Z" fill="rgba(0,0,0,0.55)" />
+        {/* Building window lights */}
+        {[[55, 185], [110, 210], [155, 175], [220, 200], [290, 175], [345, 185], [400, 195], [465, 180], [520, 175], [585, 200], [640, 195], [710, 190], [755, 200]].map(([x, y], i) => (
+          <rect key={i} x={x} y={y} width="4" height="6" fill="#e879f9" opacity="0.85" className={i % 3 === 0 ? 'hero-flick' : ''} />
+        ))}
+
+        {/* Floor */}
+        <rect x="0" y="240" width="800" height="80" fill="url(#floor)" />
+        <rect x="0" y="238" width="800" height="3" fill="#22d3ee" opacity="0.7" />
+        {/* Floor grid perspective lines */}
+        {[...Array(9)].map((_, i) => (
+          <line key={i} x1={i * 100} y1="240" x2={400 + (i - 4) * 260} y2="320" stroke="#22d3ee" strokeOpacity="0.18" strokeWidth="1" />
+        ))}
+        <line x1="0" y1="270" x2="800" y2="270" stroke="#22d3ee" strokeOpacity="0.2" />
+        <line x1="0" y1="300" x2="800" y2="300" stroke="#22d3ee" strokeOpacity="0.12" />
+
+        {/* Center dashed line */}
+        <line x1="400" y1="50" x2="400" y2="240" stroke="white" strokeOpacity="0.15" strokeDasharray="6 8" />
+
+        {/* --- BLAZE on left, mid-throw --- */}
+        <g className="hero-blaze">
+          {/* shadow */}
+          <ellipse cx="180" cy="245" rx="34" ry="6" fill="black" opacity="0.35" />
+          {/* trailing after-images (motion) */}
+          <g opacity="0.25">
+            <rect x="120" y="150" width="46" height="86" rx="10" fill="#ff5c33" />
+            <circle cx="143" cy="150" r="14" fill="#ff7a5c" />
+          </g>
+          <g opacity="0.4">
+            <rect x="140" y="150" width="46" height="86" rx="10" fill="#ff5c33" />
+            <circle cx="163" cy="150" r="14" fill="#ff7a5c" />
+          </g>
+          {/* body */}
+          <rect x="160" y="150" width="46" height="86" rx="10" fill="#ff5c33" />
+          {/* accent stripe */}
+          <rect x="164" y="192" width="38" height="4" fill="#ffd400" />
+          {/* head + hair tuft (slim shape) */}
+          <circle cx="183" cy="150" r="14" fill="#ff7a5c" />
+          <polygon points="183,132 175,143 191,143" fill="#ffd400" />
+          {/* eye facing right */}
+          <circle cx="188" cy="150" r="3" fill="#0b0f1a" />
+          {/* arm mid-throw (extending right toward ball) */}
+          <path d="M 202 175 Q 250 155 285 168" stroke="#ff5c33" strokeWidth="10" strokeLinecap="round" fill="none" />
+          <circle cx="285" cy="168" r="7" fill="#ff7a5c" />
+          {/* outline */}
+          <rect x="158" y="148" width="50" height="90" rx="12" fill="none" stroke="#38bdf8" strokeWidth="2.5" />
+          {/* charge/burst behind body */}
+          <g filter="url(#softGlow)" opacity="0.7">
+            <circle cx="150" cy="200" r="6" fill="#ffd400" />
+            <circle cx="130" cy="180" r="4" fill="#f97316" />
+            <circle cx="145" cy="170" r="3" fill="#facc15" />
+          </g>
+        </g>
+
+        {/* --- BALL in flight with motion trail --- */}
+        <g>
+          {/* arc trail */}
+          <path d="M 292 172 Q 420 90 570 150" stroke="#ef4444" strokeWidth="3" strokeOpacity="0.35" fill="none" strokeDasharray="4 6" />
+          <path d="M 300 172 Q 430 100 560 156" stroke="#fbbf24" strokeWidth="2" strokeOpacity="0.55" fill="none" />
+          {/* trail dots */}
+          {[0.15, 0.3, 0.45, 0.6, 0.75].map((t, i) => {
+            const x = (1 - t) * (1 - t) * 300 + 2 * (1 - t) * t * 430 + t * t * 560
+            const y = (1 - t) * (1 - t) * 172 + 2 * (1 - t) * t * 100 + t * t * 156
+            return <circle key={i} cx={x} cy={y} r={4 + i * 0.8} fill="#f97316" opacity={0.2 + i * 0.12} />
+          })}
+          {/* the ball */}
+          <g className="hero-ball" style={{ transform: 'translate(520px, 140px)' }}>
+            <circle r="14" fill="url(#ballGlow)" filter="url(#softGlow)" />
+            <circle r="14" fill="none" stroke="#7c2d12" strokeWidth="2" />
+            <path d="M -10 0 A 14 14 0 0 1 10 0" stroke="#7c2d12" strokeWidth="1.5" fill="none" />
+          </g>
+          {/* sparks on the ball */}
+          <g style={{ transformOrigin: '540px 148px' }}>
+            <circle cx="548" cy="140" r="2" fill="#fef3c7" className="hero-spark" />
+            <circle cx="558" cy="150" r="1.6" fill="#fde68a" className="hero-spark" style={{ animationDelay: '0.3s' }} />
+            <circle cx="536" cy="158" r="1.5" fill="#fbbf24" className="hero-spark" style={{ animationDelay: '0.6s' }} />
+          </g>
+        </g>
+
+        {/* --- Dodger on right (Ghost silhouette, mid-air backflip dodge) --- */}
+        <g className="hero-ghost">
+          {/* shadow */}
+          <ellipse cx="640" cy="245" rx="34" ry="6" fill="black" opacity="0.3" />
+          {/* motion afterimages leaning back */}
+          <g opacity="0.28">
+            <rect x="655" y="115" width="46" height="82" rx="14" fill="#9adfff" transform="rotate(-14 678 156)" />
+            <circle cx="678" cy="118" r="15" fill="#bde9ff" transform="rotate(-14 678 156)" />
+          </g>
+          <g opacity="0.5">
+            <rect x="648" y="115" width="46" height="82" rx="14" fill="#9adfff" transform="rotate(-10 671 156)" />
+            <circle cx="671" cy="118" r="15" fill="#bde9ff" transform="rotate(-10 671 156)" />
+          </g>
+          {/* body — ghost translucent */}
+          <g opacity="0.9">
+            <rect x="640" y="115" width="46" height="82" rx="14" fill="#9adfff" transform="rotate(-6 663 156)" />
+          </g>
+          {/* head glow */}
+          <circle cx="663" cy="118" r="21" fill="white" opacity="0.25" />
+          <circle cx="663" cy="118" r="15" fill="#bde9ff" />
+          {/* eye facing left */}
+          <circle cx="658" cy="118" r="3" fill="#0b0f1a" />
+          {/* outline */}
+          <rect x="638" y="113" width="50" height="86" rx="16" fill="none" stroke="#f87171" strokeWidth="2.5" transform="rotate(-6 663 156)" />
+          {/* trailing streak lines behind dodger */}
+          <path d="M 720 130 Q 760 140 790 125" stroke="#22d3ee" strokeOpacity="0.55" strokeWidth="3" fill="none" strokeLinecap="round" />
+          <path d="M 720 150 Q 760 158 790 148" stroke="#22d3ee" strokeOpacity="0.35" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M 720 170 Q 760 175 790 168" stroke="#22d3ee" strokeOpacity="0.25" strokeWidth="2" fill="none" strokeLinecap="round" />
+        </g>
+
+        {/* Foreground sparks near ball impact side */}
+        <g>
+          <circle cx="595" cy="120" r="2" fill="#22d3ee" className="hero-spark" style={{ animationDelay: '0.2s' }} />
+          <circle cx="612" cy="105" r="1.5" fill="#a5f3fc" className="hero-spark" style={{ animationDelay: '0.5s' }} />
+          <circle cx="600" cy="140" r="1.8" fill="#67e8f9" className="hero-spark" style={{ animationDelay: '0.8s' }} />
+        </g>
+      </svg>
+    </div>
+  )
+}
+
 export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onCredits }) {
   return (
-    <Screen title="DODGEBALL" subtitle="Platformer showdown — dodge, catch, throw.">
+    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
+      <h1 className="hero-title text-6xl md:text-7xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 mb-1 text-center">
+        DODGEBALL
+      </h1>
+      <p className="text-slate-300 mb-4 text-center">Platformer showdown — dodge, catch, throw.</p>
+
+      <HeroScene />
+
       <div className="flex flex-col items-center gap-3">
         <button className={btn} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
         <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
-        <button className={btnAlt} onClick={() => { sfx.click(); onLeaderboard() }}>Leaderboard</button>
-        <button className={btnAlt} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
-        <button className={btnAlt} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
-        <button className={btnAlt} onClick={() => { sfx.click(); onCredits() }}>Credits</button>
+        <div className="flex flex-wrap justify-center gap-2 mt-2">
+          <button className={btnAlt} onClick={() => { sfx.click(); onLeaderboard() }}>Leaderboard</button>
+          <button className={btnAlt} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
+          <button className={btnAlt} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
+          <button className={btnAlt} onClick={() => { sfx.click(); onCredits() }}>Credits</button>
+        </div>
       </div>
-      <p className="text-center text-slate-400 text-sm mt-8">Made for vibe coders. Best of 3 sets. Winner stays king.</p>
-    </Screen>
+      <p className="text-center text-slate-400 text-sm mt-6">Made for vibe coders. Best of 3 sets. Winner stays king.</p>
+    </div>
   )
 }
 

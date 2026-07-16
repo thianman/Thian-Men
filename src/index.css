@@ -5,3 +5,18 @@
 html, body, #root { height: 100%; margin: 0; padding: 0; }
 body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-user-select: none; user-select: none; }
 canvas { display: block; image-rendering: pixelated; touch-action: none; }
+
+@keyframes hero-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes hero-ball  { 0%, 100% { transform: translate(0, 0) rotate(0) } 50% { transform: translate(4px, -6px) rotate(180deg) } }
+@keyframes hero-flick { 0%, 100% { opacity: 1 } 50% { opacity: 0.75 } }
+@keyframes hero-scan  { 0% { transform: translateX(-100%) } 100% { transform: translateX(100%) } }
+@keyframes hero-title { 0%, 100% { text-shadow: 0 0 18px rgba(34,211,238,0.55), 0 0 40px rgba(232,121,249,0.35) } 50% { text-shadow: 0 0 26px rgba(34,211,238,0.9),  0 0 60px rgba(232,121,249,0.6) } }
+@keyframes hero-spark { 0% { opacity: 0; transform: scale(0.6) } 60% { opacity: 1 } 100% { opacity: 0; transform: scale(1.4) } }
+
+.hero-blaze { animation: hero-float 2.8s ease-in-out infinite; transform-origin: center; }
+.hero-ghost { animation: hero-float 3.4s ease-in-out infinite .3s; transform-origin: center; }
+.hero-ball  { animation: hero-ball  1.6s linear      infinite; transform-origin: center; }
+.hero-flick { animation: hero-flick 1.8s ease-in-out infinite; }
+.hero-scan  { animation: hero-scan  4.2s linear      infinite; }
+.hero-title { animation: hero-title 2.2s ease-in-out infinite; }
+.hero-spark { animation: hero-spark 1.2s ease-out    infinite; }
