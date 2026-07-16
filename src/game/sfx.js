@@ -55,41 +55,67 @@ export const sfx = {
   click:  () => beep({ freq: 400, dur: 0.04, type: 'square', vol: 0.1 }),
 }
 
-// Simple procedural looping music using scheduled notes
+// Procedural looping music — each mode has its own instrument, tempo, and bass layer
 let musicTimer = null
+let musicTimer2 = null
+
+const MUSIC_PRESETS = {
+  menu: {
+    lead:  { notes: [523, 659, 784, 988, 784, 659, 523, 392], type: 'triangle', step: 260, vol: 0.30, attack: 0.03, release: 0.9 },
+    bass:  { notes: [131, 131, 165, 175], type: 'sine',     step: 520, vol: 0.22, attack: 0.02, release: 0.55 },
+  },
+  battle: {
+    lead:  { notes: [220, 262, 330, 262, 349, 330, 262, 220, 262, 330, 392, 330], type: 'sawtooth', step: 140, vol: 0.18, attack: 0.005, release: 0.85 },
+    bass:  { notes: [55, 55, 55, 87, 82, 82, 82, 110], type: 'square', step: 280, vol: 0.16, attack: 0.005, release: 0.6 },
+  },
+  win: {
+    lead:  { notes: [523, 659, 784, 1046, 1318, 1046, 1318, 1568], type: 'triangle', step: 180, vol: 0.32, attack: 0.02, release: 0.7 },
+    bass:  { notes: [131, 165, 196, 262], type: 'sine', step: 360, vol: 0.24, attack: 0.02, release: 0.5 },
+  },
+  loss: {
+    lead:  { notes: [220, 196, 175, 165, 175, 196, 175, 165], type: 'sine', step: 420, vol: 0.28, attack: 0.06, release: 0.95 },
+    bass:  { notes: [55, 55, 49, 44], type: 'triangle', step: 840, vol: 0.20, attack: 0.05, release: 0.75 },
+  },
+}
+
+function scheduleTrack(a, preset, dest, timerHolder) {
+  let i = 0
+  const tick = () => {
+    if (!dest.node) return
+    const o = a.createOscillator()
+    o.type = preset.type
+    o.frequency.setValueAtTime(preset.notes[i % preset.notes.length], a.currentTime)
+    const g = a.createGain()
+    const dur = (preset.step / 1000) * preset.release
+    g.gain.setValueAtTime(0.0001, a.currentTime)
+    g.gain.exponentialRampToValueAtTime(preset.vol, a.currentTime + preset.attack)
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur)
+    o.connect(g).connect(dest.node)
+    o.start(); o.stop(a.currentTime + dur + 0.02)
+    i++
+    timerHolder.h = setTimeout(tick, preset.step)
+  }
+  tick()
+}
+
 export function playMusic(mode = 'menu') {
   currentMode = mode
   stopMusic()
   if (muted) return
   const a = ac(); if (!a) return
-  const scales = {
-    menu:   [261, 329, 392, 523, 392, 329],
-    battle: [220, 262, 330, 392, 330, 262, 196, 262],
-    win:    [523, 659, 784, 1046, 784, 1046],
-    loss:   [220, 196, 174, 164, 174, 196],
-  }
-  const notes = scales[mode] || scales.menu
-  const step = mode === 'battle' ? 180 : 260
-  musicGain = a.createGain(); musicGain.gain.value = 0.12; musicGain.connect(a.destination)
-  let i = 0
-  const tick = () => {
-    if (!musicGain) return
-    const o = a.createOscillator()
-    o.type = 'triangle'
-    o.frequency.setValueAtTime(notes[i % notes.length], a.currentTime)
-    const g = a.createGain()
-    g.gain.setValueAtTime(0.0001, a.currentTime)
-    g.gain.exponentialRampToValueAtTime(0.35, a.currentTime + 0.02)
-    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + step / 1000)
-    o.connect(g).connect(musicGain)
-    o.start(); o.stop(a.currentTime + step / 1000 + 0.02)
-    i++
-    musicTimer = setTimeout(tick, step)
-  }
-  tick()
+  const preset = MUSIC_PRESETS[mode] || MUSIC_PRESETS.menu
+  musicGain = a.createGain(); musicGain.gain.value = 1.0; musicGain.connect(a.destination)
+  const dest = { node: musicGain }
+  const leadT = { h: null }, bassT = { h: null }
+  scheduleTrack(a, preset.lead, dest, leadT)
+  scheduleTrack(a, preset.bass, dest, bassT)
+  musicTimer  = leadT
+  musicTimer2 = bassT
 }
 
 export function stopMusic() {
-  if (musicTimer) { clearTimeout(musicTimer); musicTimer = null }
+  if (musicTimer && musicTimer.h)  { clearTimeout(musicTimer.h)  }
+  if (musicTimer2 && musicTimer2.h) { clearTimeout(musicTimer2.h) }
+  musicTimer = null; musicTimer2 = null
   if (musicGain) { try { musicGain.disconnect() } catch {} musicGain = null }
 }

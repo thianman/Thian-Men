@@ -157,6 +157,9 @@ export default function GameCanvas({ config, onExit, onMatchEnd }) {
   useEffect(() => {
     if (matchEnd && !notifiedRef.current && s) {
       notifiedRef.current = true
+      // Swap battle music for a win/loss theme
+      const p1Won = s.matchWinnerSide === 'left'
+      playMusic(p1Won ? 'win' : 'loss')
       onMatchEnd && onMatchEnd(s.matchWinnerSide)
     }
   }, [matchEnd, s, onMatchEnd])
