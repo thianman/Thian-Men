@@ -34,6 +34,25 @@ export default function App() {
     return () => {}
   }, [screen])
 
+  // Unlock Web Audio on first user gesture (browsers require it before playback)
+  useEffect(() => {
+    const unlock = () => {
+      resumeAudio()
+      if (screen !== 'game') playMusic('menu')
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+      window.removeEventListener('touchstart', unlock)
+    }
+    window.addEventListener('pointerdown', unlock, { once: false })
+    window.addEventListener('keydown', unlock, { once: false })
+    window.addEventListener('touchstart', unlock, { once: false })
+    return () => {
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('keydown', unlock)
+      window.removeEventListener('touchstart', unlock)
+    }
+  }, [])
+
   const start = () => {
     resumeAudio()
     setScreen('game')

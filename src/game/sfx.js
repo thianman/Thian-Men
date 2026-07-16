@@ -70,7 +70,7 @@ export function playMusic(mode = 'menu') {
   }
   const notes = scales[mode] || scales.menu
   const step = mode === 'battle' ? 180 : 260
-  musicGain = a.createGain(); musicGain.gain.value = 0.05; musicGain.connect(a.destination)
+  musicGain = a.createGain(); musicGain.gain.value = 0.12; musicGain.connect(a.destination)
   let i = 0
   const tick = () => {
     if (!musicGain) return
@@ -79,7 +79,7 @@ export function playMusic(mode = 'menu') {
     o.frequency.setValueAtTime(notes[i % notes.length], a.currentTime)
     const g = a.createGain()
     g.gain.setValueAtTime(0.0001, a.currentTime)
-    g.gain.exponentialRampToValueAtTime(0.15, a.currentTime + 0.02)
+    g.gain.exponentialRampToValueAtTime(0.35, a.currentTime + 0.02)
     g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + step / 1000)
     o.connect(g).connect(musicGain)
     o.start(); o.stop(a.currentTime + step / 1000 + 0.02)
