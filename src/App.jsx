@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, CreditsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro, ModifiersScreen } from './components/Menus.jsx'
+import { SignInScreen, RegisterScreen, LegalScreen, AccountMenu } from './components/Auth.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
 import { addRecord, bestForCharacter, getRecords, formatTime } from './game/ladderStore.js'
+import { useAuth } from './lib/useAuth.js'
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)]
 
@@ -28,6 +30,9 @@ export default function App() {
     hideEndButtons: false,
   })
   const [ladder, setLadder] = useState(null) // { p1, opponents, current, victoryOverall, startedAt, clearMs }
+  const auth = useAuth()
+  const [legalKind, setLegalKind] = useState(null) // 'tos' | 'privacy' | null
+  const [showAccountMenu, setShowAccountMenu] = useState(false)
 
   useEffect(() => {
     if (screen === 'game') { stopMusic() } else { playMusic('menu') }
@@ -60,8 +65,67 @@ export default function App() {
 
   const backToTitle = () => setScreen('title')
 
+  // Legal pages take priority — reachable from anywhere
+  if (legalKind) {
+    return <LegalScreen kind={legalKind} onBack={() => setLegalKind(null)} />
+  }
+
+  // If signed in but has no profile, force registration
+  if (auth.session && !auth.loading && !auth.profile) {
+    return (
+      <RegisterScreen
+        session={auth.session}
+        onSave={auth.saveProfile}
+        onOpenLegal={(k) => setLegalKind(k)}
+        onSignOut={auth.signOut}
+      />
+    )
+  }
+
+  // If the sign-in screen is open, show only that
+  if (screen === 'signin') {
+    return (
+      <SignInScreen
+        onBack={backToTitle}
+        onSignIn={auth.signInWithEmail}
+        onOpenLegal={(k) => setLegalKind(k)}
+      />
+    )
+  }
+
+  const accountChip = (
+    <div className="fixed top-2 right-2 z-30">
+      {auth.session && auth.profile ? (
+        <button
+          onClick={() => setShowAccountMenu(v => !v)}
+          className="px-3 py-1.5 rounded-full bg-slate-800/80 border border-cyan-400/40 hover:bg-slate-700 text-white text-sm font-semibold shadow flex items-center gap-2"
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          {auth.profile.display_name}
+        </button>
+      ) : !auth.loading ? (
+        <button
+          onClick={() => { setScreen('signin') }}
+          className="px-3 py-1.5 rounded-full bg-cyan-700 hover:bg-cyan-600 border border-cyan-300/50 text-white text-sm font-semibold shadow"
+        >
+          Sign in
+        </button>
+      ) : null}
+      {showAccountMenu && (
+        <AccountMenu
+          profile={auth.profile}
+          session={auth.session}
+          onEditProfile={() => { setShowAccountMenu(false); auth.saveProfile && setShowAccountMenu(false) }}
+          onSignOut={() => { setShowAccountMenu(false); auth.signOut() }}
+          onClose={() => setShowAccountMenu(false)}
+        />
+      )}
+    </div>
+  )
+
   return (
     <>
+      {screen !== 'game' && accountChip}
       {screen === 'title' && (
         <TitleScreen
           onPlay={() => setScreen('mode')}
