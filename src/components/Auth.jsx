@@ -57,7 +57,7 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
   }
 
   return (
-    <ScreenShell title="SIGN IN" subtitle={sent ? "We sent a magic link + code to your inbox. Use whichever is easier." : 'Enter your email. We\'ll send you a magic link and a code — no password needed.'} onBack={onBack}>
+    <ScreenShell title="SIGN IN" subtitle={sent ? "We sent a code to your inbox. Enter it below to sign in." : 'Enter your email. We\'ll email you a sign-in code — no password needed.'} onBack={onBack}>
       {!sent ? (
         <form onSubmit={submit} className="space-y-4">
           <input
@@ -70,7 +70,7 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
           />
           {error && <div className="text-red-400 text-sm">{error}</div>}
           <button className={btn + ' w-full'} type="submit" disabled={busy}>
-            {busy ? 'Sending…' : 'Send Sign-in Email'}
+            {busy ? 'Sending…' : 'Send Code'}
           </button>
           <p className="text-xs text-slate-400 text-center">
             By continuing you agree to our{' '}
@@ -83,10 +83,9 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
         <div className="space-y-4">
           <div className="bg-slate-800/70 border border-slate-600 rounded-xl p-6 text-center">
             <div className="text-6xl mb-2">📧</div>
-            <div className="text-lg mb-1">Email sent to</div>
-            <div className="font-mono text-cyan-300 mb-4 break-all">{email}</div>
-            <div className="text-sm text-slate-300 mb-1"><b>Option 1:</b> click the link in the email — signs you in on whichever device opened it.</div>
-            <div className="text-sm text-slate-300"><b>Option 2:</b> read the inbox on another device? Enter the code below to sign in <em>right here</em>.</div>
+            <div className="text-lg mb-1">Code sent to</div>
+            <div className="font-mono text-cyan-300 mb-2 break-all">{email}</div>
+            <div className="text-sm text-slate-300">Open your inbox, copy the code from the email, and paste it below.</div>
           </div>
           <form onSubmit={submitCode} className="space-y-3">
             <input
