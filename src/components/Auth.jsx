@@ -36,7 +36,7 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
     setBusy(true); setError('')
     const { error } = await onSignIn(email.trim())
     setBusy(false)
-    if (error) setError(error.message || 'Something went wrong.')
+    if (error) setError(error.message || error.error_description || JSON.stringify(error) || 'Something went wrong.')
     else setSent(true)
   }
 
@@ -48,7 +48,7 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
     setVerifyBusy(true); setError('')
     const { error } = await onVerifyCode(email.trim(), clean)
     setVerifyBusy(false)
-    if (error) setError(error.message || 'Invalid or expired code.')
+    if (error) setError(error.message || error.error_description || JSON.stringify(error) || 'Invalid or expired code.')
     // On success, useAuth session update navigates us away automatically.
   }
 
