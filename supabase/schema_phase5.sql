@@ -23,5 +23,8 @@ create policy "ladder read all"
   on public.ladder_records for select
   using (true);
 
-grant usage  on schema public          to anon, authenticated;
+grant usage  on schema public          to anon, authenticated, service_role;
 grant select on public.ladder_records  to anon, authenticated;
+-- The Worker writes here with the service-role key (Automatically expose new
+-- tables is off, so we grant explicitly).
+grant select, insert on public.ladder_records to service_role;
