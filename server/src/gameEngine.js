@@ -1,6 +1,6 @@
 import {
   ARENA_W, ARENA_H, GRAVITY, FLOOR_Y, PLAYER_W, PLAYER_H, DUCK_H,
-  BALL_R, MAX_HP, CATCH_RANGE, THROW_CHARGE_MS, CHARACTERS, MAPS,
+  BALL_R, MAX_HP, CATCH_RANGE, CATCH_BUFFER_MS, THROW_CHARGE_MS, CHARACTERS, MAPS,
 } from './gameConstants.js'
 
 const ROUNDS_PER_MATCH = 5 // first to this many round wins takes the match
@@ -28,6 +28,7 @@ function makePlayer({ playerId, side, sideSlot = 0, character, name, isCPU = fal
     dashUntil: 0, dashCd: 0, dashDir: 0,
     lastTap: { dir: 0, tick: -1e9 },
     prevInput: emptyInput(),
+    catchBufferMs: 0,
   }
 }
 
@@ -227,8 +228,12 @@ export class GameEngine {
       }
     }
 
-    // Catch attempt (edge)
-    if (input.catchPressed && !p.prevInput.catchPressed) this._attemptCatch(p)
+    // Buffered catch: a press arms the catch for a short window
+    if (input.catchPressed && !p.prevInput.catchPressed) p.catchBufferMs = CATCH_BUFFER_MS
+    if (p.catchBufferMs > 0) {
+      p.catchBufferMs -= dtMs
+      if (this._attemptCatch(p)) p.catchBufferMs = 0
+    }
 
     p.prevInput = { ...input }
   }
@@ -273,9 +278,10 @@ export class GameEngine {
         b.held = true; b.ownerSide = p.side
         p.holdingBallId = b.id
         this.events.push({ t: 'catch', side: p.side })
-        return
+        return true
       }
     }
+    return false
   }
   _hitPlayer(p, b) {
     p.hp -= 1

@@ -8,7 +8,8 @@ export const PLAYER_H = 96
 export const DUCK_H = 48
 export const BALL_R = 14
 export const MAX_HP = 3
-export const CATCH_RANGE = 60
+export const CATCH_RANGE = 80
+export const CATCH_BUFFER_MS = 180
 export const THROW_CHARGE_MS = 1000
 
 export const CHARACTERS = [

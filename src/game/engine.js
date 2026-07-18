@@ -1,6 +1,6 @@
 import {
   ARENA_W, ARENA_H, GRAVITY, FLOOR_Y, PLAYER_W, PLAYER_H, DUCK_H,
-  BALL_R, MAX_HP, CATCH_RANGE, THROW_CHARGE_MS, CHARACTERS, HAZARD_STYLE,
+  BALL_R, MAX_HP, CATCH_RANGE, CATCH_BUFFER_MS, THROW_CHARGE_MS, CHARACTERS, HAZARD_STYLE,
 } from './constants.js'
 import { sfx } from './sfx.js'
 
@@ -31,6 +31,7 @@ export function makePlayer({ side, character, isCPU, kind, skinIndex = 0 }) {
     dashDir: 0,
     afterImages: [],
     doubleJumped: false,
+    catchBufferMs: 0,
   }
 }
 
@@ -191,8 +192,15 @@ export function applyInput(player, input, dtMs, state) {
     }
   }
 
-  // Catch attempt (edge triggered by caller)
-  if (input.catchPressed) attemptCatch(player, state)
+  // Buffered catch: an edge press arms the catch for a short window,
+  // during which we retry catching each frame. That takes the "you had
+  // to press G on the exact perfect frame" edge off without letting
+  // players just hold catch permanently.
+  if (input.catchPressed) player.catchBufferMs = CATCH_BUFFER_MS
+  if (player.catchBufferMs > 0) {
+    player.catchBufferMs -= dtMs
+    if (attemptCatch(player, state)) player.catchBufferMs = 0
+  }
 }
 
 function hasNearbyBall(player, state) {
@@ -242,9 +250,10 @@ function attemptCatch(player, state) {
       player.holdingBall = b
       state.stats[player.side].catches++
       sfx.catch()
-      return
+      return true
     }
   }
+  return false
 }
 
 // ---- Main tick ----
