@@ -288,6 +288,8 @@ export function tick(state, dtMs) {
     p.y += p.vy
 
     const curH = p.ducking ? DUCK_H : PLAYER_H
+    // Keep feet on the ground when the hitbox height changes (crouch/uncrouch).
+    if (p.onGround && curH !== p.h) p.y += (p.h - curH)
     p.h = curH
 
     // Floor collision

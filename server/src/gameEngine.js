@@ -96,7 +96,10 @@ export class GameEngine {
       if (p.side === 'right' && p.x < midX)      p.x = midX
       if (!p.onGround) p.vy += GRAVITY
       p.y += p.vy
-      p.h = p.ducking ? DUCK_H : PLAYER_H
+      const nextH = p.ducking ? DUCK_H : PLAYER_H
+      // Keep feet on the ground when the hitbox height changes (crouch/uncrouch).
+      if (p.onGround && nextH !== p.h) p.y += (p.h - nextH)
+      p.h = nextH
       if (p.y + p.h >= FLOOR_Y) { p.y = FLOOR_Y - p.h; p.vy = 0; p.onGround = true }
       else {
         let landed = false
