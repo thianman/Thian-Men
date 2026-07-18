@@ -59,6 +59,15 @@ export default function App() {
     }
   }, [pendingJoin, auth.session, auth.loading])
 
+  // As soon as a valid session appears, leave the sign-in screen automatically.
+  // If they came from an invite link, the pendingJoin effect above sends them
+  // to the online lobby; otherwise land them on the title with the account chip.
+  useEffect(() => {
+    if (auth.session && screen === 'signin' && !pendingJoin) {
+      setScreen('title')
+    }
+  }, [auth.session, screen, pendingJoin])
+
   // Clear the join code from the URL once consumed, so refresh doesn't loop
   useEffect(() => {
     if (screen === 'online' && pendingJoin) {
