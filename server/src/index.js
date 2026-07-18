@@ -31,15 +31,26 @@ export default {
     const url = new URL(request.url)
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS })
 
-    // POST /matches?type=1v1|2v2 — create a new match room
+    // POST /matches?type=1v1|2v2|ladder — create a new match room
     if (url.pathname === '/matches' && request.method === 'POST') {
-      const type = url.searchParams.get('type') === '2v2' ? '2v2' : '1v1'
+      const raw = url.searchParams.get('type')
+      const type = ['1v1', '2v2', 'ladder'].includes(raw) ? raw : '1v1'
       const code = newRoomCode()
-      // Pre-warm the DO with its type so first join knows the capacity.
       const id = env.MATCHES.idFromName(code)
       const stub = env.MATCHES.get(id)
       await stub.fetch(new Request(`https://internal/setup?type=${type}`))
       return json({ code, type })
+    }
+
+    // GET /leaderboard?character=blaze&limit=20 — top runs
+    if (url.pathname === '/leaderboard' && request.method === 'GET') {
+      const character = url.searchParams.get('character')
+      const limit = Math.min(50, parseInt(url.searchParams.get('limit') || '20', 10))
+      let q = `${env.SUPABASE_URL}/rest/v1/ladder_records?select=id,display_name,country,character,time_ms,created_at&order=time_ms.asc&limit=${limit}`
+      if (character) q += `&character=eq.${encodeURIComponent(character)}`
+      const res = await fetch(q, { headers: { apikey: env.SUPABASE_ANON || env.SUPABASE_SERVICE_ROLE || '' } })
+      const rows = await res.json().catch(() => [])
+      return json({ rows: Array.isArray(rows) ? rows : [] })
     }
 
     // /ws/:code — upgrade to WebSocket, route to the DO

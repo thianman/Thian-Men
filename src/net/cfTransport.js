@@ -12,9 +12,11 @@ function wsBase() {
 }
 
 export class CloudflareTransport extends TransportBase {
-  constructor({ name = 'Player' } = {}) {
+  constructor({ name = 'Player', userId = null, country = 'ZZ' } = {}) {
     super()
     this.name = name
+    this.userId = userId
+    this.country = country
     this.ws = null
     this.code = null
     this.pingTimer = null
@@ -23,6 +25,15 @@ export class CloudflareTransport extends TransportBase {
   }
 
   static get serverUrl() { return SERVER_URL }
+
+  static async fetchLeaderboard({ character = null, limit = 20 } = {}) {
+    const p = new URLSearchParams({ limit: String(limit) })
+    if (character) p.set('character', character)
+    const res = await fetch(`${SERVER_URL}/leaderboard?${p}`)
+    if (!res.ok) return []
+    const { rows } = await res.json()
+    return rows || []
+  }
 
   async createMatch(type = '1v1') {
     const t = type === '2v2' ? '2v2' : '1v1'
@@ -34,7 +45,10 @@ export class CloudflareTransport extends TransportBase {
 
   async join(code) {
     this.code = code.toUpperCase()
-    const url = `${wsBase()}/ws/${encodeURIComponent(this.code)}?name=${encodeURIComponent(this.name)}`
+    const params = new URLSearchParams({ name: this.name })
+    if (this.userId)  params.set('uid', this.userId)
+    if (this.country) params.set('country', this.country)
+    const url = `${wsBase()}/ws/${encodeURIComponent(this.code)}?${params}`
     this.ws = new WebSocket(url)
 
     this.ws.addEventListener('open', () => {

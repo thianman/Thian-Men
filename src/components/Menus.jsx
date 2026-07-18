@@ -188,7 +188,7 @@ function HeroScene() {
   )
 }
 
-export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onCredits }) {
+export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onGlobalLeaderboard, onCredits }) {
   return (
     <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
       <h1 className="hero-title text-6xl md:text-7xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 mb-1 text-center">
@@ -202,7 +202,8 @@ export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, o
         <button className={btn} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
         <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
         <div className="flex flex-wrap justify-center gap-2 mt-2">
-          <button className={btnAlt} onClick={() => { sfx.click(); onLeaderboard() }}>Leaderboard</button>
+          <button className={btnAlt} onClick={() => { sfx.click(); onLeaderboard() }}>Local Leaderboard</button>
+        <button className={btnAlt} onClick={() => { sfx.click(); onGlobalLeaderboard() }}>Global Leaderboard</button>
           <button className={btnAlt} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
           <button className={btnAlt} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
           <button className={btnAlt} onClick={() => { sfx.click(); onCredits() }}>Credits</button>
@@ -371,6 +372,7 @@ export function InstructionsScreen({ onBack }) {
 export function ModeSelect({ onPick, onBack }) {
   const modes = [
     { id: 'online', name: 'Play Online (Beta)', desc: 'Real-time multiplayer preview', highlight: true },
+    { id: 'onlineLadder', name: 'Online Ladder', desc: 'Server-timed 6-fight ladder + global leaderboard', highlight: true },
     { id: '1p', name: '1P vs CPU', desc: 'Play against the AI' },
     { id: '2p', name: '2P Local', desc: 'Two players, one keyboard' },
     { id: 'ladder', name: 'Survival Ladder', desc: 'Beat all 6 fighters, rising difficulty' },

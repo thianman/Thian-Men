@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react'
 import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, CreditsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro, ModifiersScreen } from './components/Menus.jsx'
 import { SignInScreen, RegisterScreen, LegalScreen, AccountMenu } from './components/Auth.jsx'
 import OnlineMatch from './components/OnlineMatch.jsx'
+import OnlineLadder from './components/OnlineLadder.jsx'
+import GlobalLeaderboard from './components/GlobalLeaderboard.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
@@ -166,6 +168,7 @@ export default function App() {
           onInstructions={() => setScreen('instructions')}
           onSettings={() => setScreen('settings')}
           onLeaderboard={() => setScreen('leaderboard')}
+          onGlobalLeaderboard={() => setScreen('globalLeaderboard')}
           onCredits={() => setScreen('credits')}
           onQuickPlay={() => {
             const p1c = pick(CHARACTERS); const p1 = p1c.id
@@ -201,6 +204,16 @@ export default function App() {
           autoJoinCode={pendingJoin}
         />
       )}
+      {screen === 'onlineLadder' && auth.session && auth.profile && (
+        <OnlineLadder
+          profile={auth.profile}
+          session={auth.session}
+          onExit={backToTitle}
+        />
+      )}
+      {screen === 'globalLeaderboard' && (
+        <GlobalLeaderboard onBack={backToTitle} />
+      )}
       {screen === 'mode' && (
         <ModeSelect
           onBack={backToTitle}
@@ -208,6 +221,11 @@ export default function App() {
             if (m === 'online') {
               if (!auth.session || !auth.profile) { setScreen('signin'); return }
               setScreen('online')
+              return
+            }
+            if (m === 'onlineLadder') {
+              if (!auth.session || !auth.profile) { setScreen('signin'); return }
+              setScreen('onlineLadder')
               return
             }
             setCfg(c => ({ ...c, mode: m }))
