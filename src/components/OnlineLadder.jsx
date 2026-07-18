@@ -3,6 +3,7 @@ import { CloudflareTransport } from '../net/cfTransport.js'
 import { CHARACTERS, MAPS, ARENA_W, ARENA_H, FLOOR_Y } from '../game/constants.js'
 import { sfx } from '../game/sfx.js'
 import { countryName } from '../lib/countries.js'
+import { TouchControls, isMobile as detectMobile } from './TouchControls.jsx'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg border border-cyan-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
 const btnBig = 'px-8 py-3 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black text-xl border border-emerald-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
@@ -34,6 +35,8 @@ export default function OnlineLadder({ profile, session, onExit }) {
   const prevKeysRef = useRef({})
   const inputTimerRef = useRef(null)
   const startedAtRef = useRef(null)
+  const touchRef = useRef({})
+  const [isMobile, setIsMobile] = useState(false)
 
   const name = profile?.display_name || 'Guest'
 
@@ -85,23 +88,35 @@ export default function OnlineLadder({ profile, session, onExit }) {
     return () => clearInterval(t)
   }, [screen])
 
-  // Keyboard capture + send loop
+  // Keyboard capture + mobile detection
   useEffect(() => {
     const d = e => { keysRef.current[e.code] = true }
     const u = e => { keysRef.current[e.code] = false }
     window.addEventListener('keydown', d); window.addEventListener('keyup', u)
-    return () => { window.removeEventListener('keydown', d); window.removeEventListener('keyup', u) }
+    const mobileCheck = () => setIsMobile(detectMobile())
+    mobileCheck()
+    window.addEventListener('resize', mobileCheck)
+    return () => {
+      window.removeEventListener('keydown', d); window.removeEventListener('keyup', u)
+      window.removeEventListener('resize', mobileCheck)
+    }
   }, [])
 
   useEffect(() => {
     if (screen !== 'fighting') return
     inputTimerRef.current = setInterval(() => {
-      const k = keysRef.current, pk = prevKeysRef.current, t = transportRef.current
+      const k = keysRef.current, pk = prevKeysRef.current, tc = touchRef.current, t = transportRef.current
       if (!t) return
-      const catchPressed = !!k.KeyG && !pk.KeyG
+      const catchKey = !!k.KeyG && !pk.KeyG
+      const catchPressed = catchKey || !!tc.catchPressedOnce
+      if (tc.catchPressedOnce) tc.catchPressedOnce = false
       t.sendInput({
-        left:  !!k.KeyA, right: !!k.KeyD, jump: !!k.KeyW, duck: !!k.KeyS,
-        throwHeld: !!k.KeyF, catchPressed,
+        left:      !!k.KeyA || !!tc.left,
+        right:     !!k.KeyD || !!tc.right,
+        jump:      !!k.KeyW || !!tc.jump,
+        duck:      !!k.KeyS || !!tc.duck,
+        throwHeld: !!k.KeyF || !!tc.throwHeld,
+        catchPressed,
       })
       prevKeysRef.current = { ...k }
     }, 33)
@@ -243,7 +258,7 @@ export default function OnlineLadder({ profile, session, onExit }) {
         <span className="font-mono text-cyan-300">A/D</span> move · <span className="font-mono text-cyan-300">W</span> jump · <span className="font-mono text-cyan-300">S</span> duck · <span className="font-mono text-cyan-300">F</span> throw (hold) · <span className="font-mono text-cyan-300">G</span> catch
       </p>
       {ladderOpponents.length > 0 && (
-        <div className="mt-2 flex gap-1">
+        <div className="mt-2 flex gap-1 flex-wrap justify-center">
           {ladderOpponents.map((o, i) => {
             const done = (currentFight?.index ?? -1) > i
             const now = (currentFight?.index ?? -1) === i
@@ -256,6 +271,7 @@ export default function OnlineLadder({ profile, session, onExit }) {
           })}
         </div>
       )}
+      {isMobile && <TouchControls touchRef={touchRef} />}
     </div>
   )
 }

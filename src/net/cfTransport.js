@@ -52,6 +52,7 @@ export class CloudflareTransport extends TransportBase {
     this.ws = new WebSocket(url)
 
     this.ws.addEventListener('open', () => {
+      this._reconnectAttempts = 0
       this.emit('connected')
       this.pingTimer = setInterval(() => this._ping(), 2000)
     })
@@ -64,8 +65,19 @@ export class CloudflareTransport extends TransportBase {
     })
 
     this.ws.addEventListener('close', () => {
+      const wasIntentional = this._closedByUser
       this._cleanup()
-      this.emit('disconnected')
+      if (wasIntentional || !this.code) { this.emit('disconnected'); return }
+      // Auto-reconnect attempt: helps mobile browsers that suspend background
+      // tabs and drop the socket. Try a few times with backoff.
+      this._reconnectAttempts = (this._reconnectAttempts || 0) + 1
+      if (this._reconnectAttempts > 5) { this.emit('disconnected'); return }
+      this.emit('reconnecting', this._reconnectAttempts)
+      const delay = Math.min(4000, 500 * this._reconnectAttempts)
+      setTimeout(() => {
+        if (this._closedByUser) return
+        this.join(this.code).catch(() => this.emit('disconnected'))
+      }, delay)
     })
 
     this.ws.addEventListener('error', (e) => this.emit('error', e))
@@ -83,6 +95,7 @@ export class CloudflareTransport extends TransportBase {
   rematch()               { this._send({ t: 'rematch' }) }
 
   disconnect() {
+    this._closedByUser = true
     if (this.ws) { try { this.ws.close() } catch {} }
     this._cleanup()
   }

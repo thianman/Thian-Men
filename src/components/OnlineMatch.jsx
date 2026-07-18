@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { CloudflareTransport } from '../net/cfTransport.js'
 import { CHARACTERS, MAPS, ARENA_W, ARENA_H, FLOOR_Y } from '../game/constants.js'
 import { sfx } from '../game/sfx.js'
+import { TouchControls, isMobile as detectMobile } from './TouchControls.jsx'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg border border-cyan-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
 const btnAlt = 'px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold border border-slate-500'
@@ -26,6 +27,8 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode }) {
   const keysRef = useRef({})
   const prevKeysRef = useRef({})
   const inputTimerRef = useRef(null)
+  const touchRef = useRef({})
+  const [isMobile, setIsMobile] = useState(false)
 
   const name = profile?.display_name || 'Guest'
 
@@ -82,26 +85,34 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode }) {
     catch { alert(url) }
   }
 
-  // Keyboard capture
+  // Keyboard capture + mobile detection
   useEffect(() => {
     const d = e => { keysRef.current[e.code] = true }
     const u = e => { keysRef.current[e.code] = false }
     window.addEventListener('keydown', d); window.addEventListener('keyup', u)
-    return () => { window.removeEventListener('keydown', d); window.removeEventListener('keyup', u) }
+    const mobileCheck = () => setIsMobile(detectMobile())
+    mobileCheck()
+    window.addEventListener('resize', mobileCheck)
+    return () => {
+      window.removeEventListener('keydown', d); window.removeEventListener('keyup', u)
+      window.removeEventListener('resize', mobileCheck)
+    }
   }, [])
 
   useEffect(() => {
     if (screen !== 'match') return
     inputTimerRef.current = setInterval(() => {
-      const k = keysRef.current, pk = prevKeysRef.current, t = transportRef.current
+      const k = keysRef.current, pk = prevKeysRef.current, tc = touchRef.current, t = transportRef.current
       if (!t) return
-      const catchPressed = !!k.KeyG && !pk.KeyG
+      const catchKey = !!k.KeyG && !pk.KeyG
+      const catchPressed = catchKey || !!tc.catchPressedOnce
+      if (tc.catchPressedOnce) tc.catchPressedOnce = false
       t.sendInput({
-        left:  !!k.KeyA,
-        right: !!k.KeyD,
-        jump:  !!k.KeyW,
-        duck:  !!k.KeyS,
-        throwHeld: !!k.KeyF,
+        left:      !!k.KeyA || !!tc.left,
+        right:     !!k.KeyD || !!tc.right,
+        jump:      !!k.KeyW || !!tc.jump,
+        duck:      !!k.KeyS || !!tc.duck,
+        throwHeld: !!k.KeyF || !!tc.throwHeld,
         catchPressed,
       })
       prevKeysRef.current = { ...k }
@@ -205,6 +216,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode }) {
       <p className="text-slate-400 text-sm mt-2">
         <span className="font-mono text-cyan-300">A/D</span> move · <span className="font-mono text-cyan-300">W</span> jump · <span className="font-mono text-cyan-300">S</span> duck · <span className="font-mono text-cyan-300">F</span> throw (hold) · <span className="font-mono text-cyan-300">G</span> catch
       </p>
+      {isMobile && <TouchControls touchRef={touchRef} />}
     </div>
   )
 }
