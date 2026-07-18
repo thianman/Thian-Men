@@ -274,11 +274,15 @@ export function tick(state, dtMs) {
   }
 
   const platforms = (state.mapObj?.platforms) || []
+  const midX = ARENA_W / 2
   for (const p of state.players) {
     if (p.hp <= 0) continue
     p.x += p.vx
     if (p.x < 0) p.x = 0
     if (p.x + p.w > ARENA_W) p.x = ARENA_W - p.w
+    // Center-line barrier: players cannot cross into the opposing half.
+    if (p.side === 'left' && p.x + p.w > midX) p.x = midX - p.w
+    if (p.side === 'right' && p.x < midX)      p.x = midX
 
     if (!p.onGround) p.vy += GRAVITY
     p.y += p.vy

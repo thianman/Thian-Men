@@ -30,10 +30,18 @@ export function render(ctx, state, mapObj, extras = {}) {
     ctx.fillRect(p.x, p.y, p.w, 3)
   }
 
-  // Center line
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)'
-  ctx.setLineDash([8, 10])
-  ctx.beginPath(); ctx.moveTo(ARENA_W/2, 0); ctx.lineTo(ARENA_W/2, FLOOR_Y); ctx.stroke()
+  // Center-line barrier: neon vertical wall players can't cross.
+  const midX = ARENA_W / 2
+  const barrierGrad = ctx.createLinearGradient(midX - 8, 0, midX + 8, 0)
+  barrierGrad.addColorStop(0.0, 'rgba(34,211,238,0)')
+  barrierGrad.addColorStop(0.5, 'rgba(232,121,249,0.35)')
+  barrierGrad.addColorStop(1.0, 'rgba(34,211,238,0)')
+  ctx.fillStyle = barrierGrad
+  ctx.fillRect(midX - 8, 0, 16, FLOOR_Y)
+  ctx.strokeStyle = 'rgba(232,121,249,0.85)'
+  ctx.lineWidth = 2
+  ctx.setLineDash([6, 6])
+  ctx.beginPath(); ctx.moveTo(midX, 0); ctx.lineTo(midX, FLOOR_Y); ctx.stroke()
   ctx.setLineDash([])
 
   // Balls

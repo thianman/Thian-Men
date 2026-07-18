@@ -304,8 +304,15 @@ function drawGame(ctx, snap, me) {
     ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(pl.x, pl.y, pl.w, pl.h)
     ctx.fillStyle = map.accent; ctx.fillRect(pl.x, pl.y, pl.w, 3)
   }
-  ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.setLineDash([8, 10])
-  ctx.beginPath(); ctx.moveTo(ARENA_W / 2, 0); ctx.lineTo(ARENA_W / 2, FLOOR_Y); ctx.stroke()
+  const midX = ARENA_W / 2
+  const barrierGrad = ctx.createLinearGradient(midX - 8, 0, midX + 8, 0)
+  barrierGrad.addColorStop(0.0, 'rgba(34,211,238,0)')
+  barrierGrad.addColorStop(0.5, 'rgba(232,121,249,0.35)')
+  barrierGrad.addColorStop(1.0, 'rgba(34,211,238,0)')
+  ctx.fillStyle = barrierGrad
+  ctx.fillRect(midX - 8, 0, 16, FLOOR_Y)
+  ctx.strokeStyle = 'rgba(232,121,249,0.85)'; ctx.lineWidth = 2; ctx.setLineDash([6, 6])
+  ctx.beginPath(); ctx.moveTo(midX, 0); ctx.lineTo(midX, FLOOR_Y); ctx.stroke()
   ctx.setLineDash([])
   for (const b of snap.balls) {
     ctx.fillStyle = 'rgba(0,0,0,0.35)'
