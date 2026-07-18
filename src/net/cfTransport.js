@@ -5,7 +5,7 @@ import { TransportBase } from './transport.js'
 // Filled in by env or fallback to the deployed default.
 const SERVER_URL =
   import.meta.env.VITE_GAME_SERVER_URL ||
-  'https://thian-men-game.thianman.workers.dev'
+  'https://thian-men-game.thianraiden.workers.dev'
 
 function wsBase() {
   return SERVER_URL.replace(/^http/, 'ws')
