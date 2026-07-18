@@ -61,6 +61,12 @@ export class CloudflareTransport extends TransportBase {
     this._send({ t: 'input', input })
   }
 
+  setCharacter(character) { this._send({ t: 'setCharacter', character }) }
+  setMap(mapId)           { this._send({ t: 'setMap', mapId }) }
+  ready()                 { this._send({ t: 'ready' }) }
+  unready()               { this._send({ t: 'unready' }) }
+  rematch()               { this._send({ t: 'rematch' }) }
+
   disconnect() {
     if (this.ws) { try { this.ws.close() } catch {} }
     this._cleanup()

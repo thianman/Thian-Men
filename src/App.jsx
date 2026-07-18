@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, CreditsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro, ModifiersScreen } from './components/Menus.jsx'
 import { SignInScreen, RegisterScreen, LegalScreen, AccountMenu } from './components/Auth.jsx'
-import OnlineTest from './components/OnlineTest.jsx'
+import OnlineMatch from './components/OnlineMatch.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
@@ -162,7 +162,7 @@ export default function App() {
         <CreditsScreen onBack={backToTitle} />
       )}
       {screen === 'online' && auth.session && auth.profile && (
-        <OnlineTest profile={auth.profile} onExit={backToTitle} />
+        <OnlineMatch profile={auth.profile} onExit={backToTitle} />
       )}
       {screen === 'mode' && (
         <ModeSelect
