@@ -74,10 +74,14 @@ export default function OnlineLadder({ profile, session, onExit }) {
     setScreen('menu'); setMe(null); setLobby(null); setCurrentFight(null); setSnap(null); setLadderEnd(null); setLadderOpponents([]); setElapsedMs(0)
   }
 
-  // Live timer during fight
+  // Live timer during fight (or between fights). The startedAt ref is
+  // populated on ladderFightStart; the interval reads it each tick so
+  // it "wakes up" even if the ref wasn't set when the effect first ran.
   useEffect(() => {
-    if (screen !== 'fighting' || !startedAtRef.current) return
-    const t = setInterval(() => setElapsedMs(Date.now() - startedAtRef.current), 33)
+    if (screen !== 'fighting') return
+    const t = setInterval(() => {
+      if (startedAtRef.current) setElapsedMs(Date.now() - startedAtRef.current)
+    }, 33)
     return () => clearInterval(t)
   }, [screen])
 

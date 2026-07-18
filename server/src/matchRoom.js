@@ -291,11 +291,12 @@ export class MatchRoom {
 
     // Advance to next fight after a short pause
     this._broadcast({ t: 'ladderFightWon', nextIndex: this.ladder.current, elapsedMs: Date.now() - this.ladder.startedAt })
+    // Small pause so the player can see the round-end / GO countdown,
+    // then start the next fight. _startLadderFight resets state_ + tick.
     setTimeout(() => {
-      if (this.state_ === 'match' || this.state_ === 'ended') return
+      if (!this.ladder || this.state_ === 'ended') return
       this._startLadderFight()
     }, 2500)
-    this.state_ = 'match' // will re-enter tick loop in _startLadderFight
   }
 
   _stopTick() {
