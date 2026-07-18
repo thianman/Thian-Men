@@ -48,7 +48,7 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
     e.preventDefault()
     if (verifyBusy) return
     const clean = code.replace(/\s/g, '')
-    if (!/^\d{6}$/.test(clean)) { setError('Enter the 6-digit code from the email.'); return }
+    if (!/^\d{6,8}$/.test(clean)) { setError('Enter the code from the email.'); return }
     setVerifyBusy(true); setError('')
     const { error } = await onVerifyCode(email.trim(), clean)
     setVerifyBusy(false)
@@ -57,7 +57,7 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
   }
 
   return (
-    <ScreenShell title="SIGN IN" subtitle={sent ? "We sent a magic link + 6-digit code to your inbox. Use whichever is easier." : 'Enter your email. We\'ll send you a magic link and a 6-digit code — no password needed.'} onBack={onBack}>
+    <ScreenShell title="SIGN IN" subtitle={sent ? "We sent a magic link + code to your inbox. Use whichever is easier." : 'Enter your email. We\'ll send you a magic link and a code — no password needed.'} onBack={onBack}>
       {!sent ? (
         <form onSubmit={submit} className="space-y-4">
           <input
@@ -86,22 +86,22 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
             <div className="text-lg mb-1">Email sent to</div>
             <div className="font-mono text-cyan-300 mb-4 break-all">{email}</div>
             <div className="text-sm text-slate-300 mb-1"><b>Option 1:</b> click the link in the email — signs you in on whichever device opened it.</div>
-            <div className="text-sm text-slate-300"><b>Option 2:</b> read the inbox on another device? Enter the 6-digit code below to sign in <em>right here</em>.</div>
+            <div className="text-sm text-slate-300"><b>Option 2:</b> read the inbox on another device? Enter the code below to sign in <em>right here</em>.</div>
           </div>
           <form onSubmit={submitCode} className="space-y-3">
             <input
               type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
-              maxLength={6}
-              placeholder="123456"
+              maxLength={8}
+              placeholder="12345678"
               value={code}
-              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 8))}
               className="w-full px-3 py-3 rounded-lg bg-slate-800 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white font-mono text-3xl text-center tracking-widest"
               autoFocus
             />
             {error && <div className="text-red-400 text-sm text-center">{error}</div>}
-            <button className={btn + ' w-full'} type="submit" disabled={verifyBusy || code.length !== 6}>
+            <button className={btn + ' w-full'} type="submit" disabled={verifyBusy || code.length < 6}>
               {verifyBusy ? 'Verifying…' : 'Verify code & sign in'}
             </button>
           </form>
