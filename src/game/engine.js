@@ -468,6 +468,18 @@ function hazardHit(state, p, h) {
 }
 
 function hitPlayer(state, p, b) {
+  // Practice mode: hits still flash / shake / count in stats, but no HP loss
+  // and no KO — the arena is a sandbox, not a match.
+  if (state.isPractice) {
+    p.hitFlash = 260
+    sfx.hit()
+    state.shake = 200
+    state.hitstop = 60
+    state.stats[b.thrownBy].hits++
+    b.live = false; b.vx = 0; b.vy = 0
+    b.y = FLOOR_Y - b.r
+    return
+  }
   p.hp -= 1
   p.hitFlash = 260
   sfx.hit()
