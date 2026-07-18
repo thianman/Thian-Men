@@ -37,10 +37,21 @@ export function useAuth() {
     })
   }, [])
 
-  // Verify a 6-digit code from the email, so users can sign in on a device
-  // that never received the link (e.g. checked their inbox on their phone).
+  // Verify the OTP code from the email. signInWithOtp with an email uses the
+  // magic-link flow, whose OTP is verified with type 'email'. Some Supabase
+  // versions also accept 'magiclink'. Try 'email' first, fall back to
+  // 'magiclink' if that returns an "expired/invalid" error, since the code
+  // could be either depending on the project's auth version.
   const verifyEmailCode = useCallback(async (email, token) => {
-    return supabase.auth.verifyOtp({ email, token, type: 'email' })
+    const first = await supabase.auth.verifyOtp({ email, token, type: 'email' })
+    if (!first.error) return first
+    // Only fall through on the type-mismatch style error, not real failures
+    const msg = (first.error?.message || '').toLowerCase()
+    if (msg.includes('expired') || msg.includes('invalid')) {
+      const second = await supabase.auth.verifyOtp({ email, token, type: 'magiclink' })
+      if (!second.error) return second
+    }
+    return first
   }, [])
 
   const signOut = useCallback(async () => {
