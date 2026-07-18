@@ -1,0 +1,17 @@
+name = "thian-men-game"
+main = "src/index.js"
+compatibility_date = "2025-01-15"
+account_id = "f7092b1f5c1de9211b2805a516d832ae"
+
+# Durable Object: one MatchRoom per active match
+[[durable_objects.bindings]]
+name = "MATCHES"
+class_name = "MatchRoom"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["MatchRoom"]
+
+# Environment variables (public — no secrets here)
+[vars]
+SUPABASE_URL = "https://ubmnqvnxqeovbcwissmw.supabase.co"

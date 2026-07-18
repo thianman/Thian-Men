@@ -370,6 +370,7 @@ export function InstructionsScreen({ onBack }) {
 
 export function ModeSelect({ onPick, onBack }) {
   const modes = [
+    { id: 'online', name: 'Play Online (Beta)', desc: 'Real-time multiplayer preview', highlight: true },
     { id: '1p', name: '1P vs CPU', desc: 'Play against the AI' },
     { id: '2p', name: '2P Local', desc: 'Two players, one keyboard' },
     { id: 'ladder', name: 'Survival Ladder', desc: 'Beat all 6 fighters, rising difficulty' },
@@ -377,11 +378,11 @@ export function ModeSelect({ onPick, onBack }) {
   ]
   return (
     <Screen title="SELECT MODE" onBack={onBack}>
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {modes.map(m => (
           <button key={m.id} onClick={() => { sfx.click(); onPick(m.id) }}
-            className="p-6 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-cyan-400 text-left transition">
-            <div className="text-2xl font-bold text-cyan-300">{m.name}</div>
+            className={`p-6 rounded-xl border text-left transition ${m.highlight ? 'bg-gradient-to-br from-fuchsia-900/70 to-cyan-900/70 border-fuchsia-400 hover:border-fuchsia-300' : 'bg-slate-800 hover:bg-slate-700 border-slate-600 hover:border-cyan-400'}`}>
+            <div className={`text-2xl font-bold ${m.highlight ? 'text-fuchsia-200' : 'text-cyan-300'}`}>{m.name}</div>
             <div className="text-slate-300 mt-1">{m.desc}</div>
           </button>
         ))}
