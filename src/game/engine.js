@@ -404,15 +404,17 @@ export function tick(state, dtMs) {
   }
 
   // Check win conditions
-  if (!state.isPractice) {
-    const leftAlive = sideAlive(state, 'left')
-    const rightAlive = sideAlive(state, 'right')
-    if (!leftAlive || !rightAlive) {
-      const winner = leftAlive ? 'left' : 'right'
-      state.winnerSide = winner
+  const leftAlive = sideAlive(state, 'left')
+  const rightAlive = sideAlive(state, 'right')
+  if (!leftAlive || !rightAlive) {
+    const winner = leftAlive ? 'left' : 'right'
+    state.winnerSide = winner
+    sfx.round()
+    if (state.isPractice) {
+      // Practice: never end the match, just cycle rounds forever.
+      state.phase = 'roundEnd'; state.phaseTimer = 1400
+    } else {
       if (winner === 'left') state.roundsP1++; else state.roundsP2++
-      sfx.round()
-      // Check set win
       if (state.roundsP1 >= state.roundsPerSet || state.roundsP2 >= state.roundsPerSet) {
         if (state.roundsP1 > state.roundsP2) state.setsP1++; else state.setsP2++
         if (state.setsP1 >= state.setsToWin || state.setsP2 >= state.setsToWin) {
@@ -468,18 +470,6 @@ function hazardHit(state, p, h) {
 }
 
 function hitPlayer(state, p, b) {
-  // Practice mode: hits still flash / shake / count in stats, but no HP loss
-  // and no KO — the arena is a sandbox, not a match.
-  if (state.isPractice) {
-    p.hitFlash = 260
-    sfx.hit()
-    state.shake = 200
-    state.hitstop = 60
-    state.stats[b.thrownBy].hits++
-    b.live = false; b.vx = 0; b.vy = 0
-    b.y = FLOOR_Y - b.r
-    return
-  }
   p.hp -= 1
   p.hitFlash = 260
   sfx.hit()
