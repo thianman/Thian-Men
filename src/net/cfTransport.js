@@ -12,11 +12,12 @@ function wsBase() {
 }
 
 export class CloudflareTransport extends TransportBase {
-  constructor({ name = 'Player', userId = null, country = 'ZZ' } = {}) {
+  constructor({ name = 'Player', userId = null, country = 'ZZ', avatarUrl = null } = {}) {
     super()
     this.name = name
     this.userId = userId
     this.country = country
+    this.avatarUrl = avatarUrl
     this.ws = null
     this.code = null
     this.pingTimer = null
@@ -46,8 +47,9 @@ export class CloudflareTransport extends TransportBase {
   async join(code) {
     this.code = code.toUpperCase()
     const params = new URLSearchParams({ name: this.name })
-    if (this.userId)  params.set('uid', this.userId)
-    if (this.country) params.set('country', this.country)
+    if (this.userId)   params.set('uid', this.userId)
+    if (this.country)  params.set('country', this.country)
+    if (this.avatarUrl) params.set('avatar', this.avatarUrl)
     const url = `${wsBase()}/ws/${encodeURIComponent(this.code)}?${params}`
     this.ws = new WebSocket(url)
 

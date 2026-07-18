@@ -229,8 +229,19 @@ function PrivacyBody() {
 export function AccountMenu({ profile, session, onSignOut, onEditProfile, onClose }) {
   return (
     <div className="absolute top-16 right-4 z-40 bg-slate-900/95 border border-slate-600 rounded-xl p-4 w-64 shadow-2xl text-white">
-      <div className="text-xs text-slate-400 uppercase tracking-wide">Signed in as</div>
-      <div className="font-bold text-lg mb-1">{profile?.display_name || '—'}</div>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-800 border-2 border-cyan-400 flex items-center justify-center flex-shrink-0">
+          {profile?.avatar_url ? (
+            <img src={profile.avatar_url} alt="you" className="w-full h-full object-cover" />
+          ) : (
+            <span className="text-2xl">👤</span>
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="text-xs text-slate-400 uppercase tracking-wide">Signed in as</div>
+          <div className="font-bold text-base truncate">{profile?.display_name || '—'}</div>
+        </div>
+      </div>
       <div className="text-xs text-slate-400 mb-1 break-all">{session?.user?.email}</div>
       {profile && (
         <div className="text-xs text-slate-300 mb-3">Country: <span className="font-mono">{countryName(profile.country)}</span></div>

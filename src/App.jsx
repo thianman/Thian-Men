@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { TitleScreen, InstructionsScreen, SettingsScreen, LeaderboardScreen, CreditsScreen, ModeSelect, MatchTypeSelect, DifficultySelect, CharacterSelect, MapSelect, LadderIntro, ModifiersScreen } from './components/Menus.jsx'
 import { SignInScreen, RegisterScreen, LegalScreen, AccountMenu } from './components/Auth.jsx'
+import EditProfile from './components/EditProfile.jsx'
 import OnlineMatch from './components/OnlineMatch.jsx'
 import OnlineLadder from './components/OnlineLadder.jsx'
 import GlobalLeaderboard from './components/GlobalLeaderboard.jsx'
@@ -144,9 +145,15 @@ export default function App() {
       {auth.session && auth.profile ? (
         <button
           onClick={() => setShowAccountMenu(v => !v)}
-          className="px-3 py-1.5 rounded-full bg-slate-800/80 border border-cyan-400/40 hover:bg-slate-700 text-white text-sm font-semibold shadow flex items-center gap-2"
+          className="pl-1 pr-3 py-1 rounded-full bg-slate-800/80 border border-cyan-400/40 hover:bg-slate-700 text-white text-sm font-semibold shadow flex items-center gap-2"
         >
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <span className="w-7 h-7 rounded-full overflow-hidden bg-slate-700 border border-cyan-300 flex items-center justify-center">
+            {auth.profile.avatar_url ? (
+              <img src={auth.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-sm">👤</span>
+            )}
+          </span>
           {auth.profile.display_name}
         </button>
       ) : !auth.loading ? (
@@ -161,7 +168,7 @@ export default function App() {
         <AccountMenu
           profile={auth.profile}
           session={auth.session}
-          onEditProfile={() => { setShowAccountMenu(false); auth.saveProfile && setShowAccountMenu(false) }}
+          onEditProfile={() => { setShowAccountMenu(false); setScreen('editProfile') }}
           onSignOut={() => { setShowAccountMenu(false); auth.signOut() }}
           onClose={() => setShowAccountMenu(false)}
         />
@@ -206,6 +213,14 @@ export default function App() {
       )}
       {screen === 'credits' && (
         <CreditsScreen onBack={backToTitle} />
+      )}
+      {screen === 'editProfile' && auth.session && auth.profile && (
+        <EditProfile
+          session={auth.session}
+          profile={auth.profile}
+          onSave={auth.saveProfile}
+          onDone={backToTitle}
+        />
       )}
       {screen === 'online' && auth.session && auth.profile && (
         <OnlineMatch
@@ -347,6 +362,7 @@ export default function App() {
       {screen === 'game' && cfg.mode && cfg.p1Char && cfg.p2Char && cfg.map && (
         <GameCanvas
           config={cfg}
+          profile={auth.profile}
           onExit={backToTitle}
           onMatchEnd={(winnerSide) => {
             if (ladder && cfg.hideEndButtons) {

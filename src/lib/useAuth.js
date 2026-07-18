@@ -10,7 +10,7 @@ export function useAuth() {
     if (!uid) { setProfile(null); return }
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, display_name, country, email, is_adult, created_at')
+      .select('id, display_name, country, email, is_adult, avatar_url, created_at')
       .eq('id', uid)
       .maybeSingle()
     if (!error) setProfile(data)
@@ -60,7 +60,7 @@ export function useAuth() {
     setSession(null)
   }, [])
 
-  const saveProfile = useCallback(async ({ display_name, country, is_adult }) => {
+  const saveProfile = useCallback(async ({ display_name, country, is_adult, avatar_url }) => {
     if (!session?.user) return { error: new Error('Not signed in') }
     const payload = {
       id: session.user.id,
@@ -69,6 +69,7 @@ export function useAuth() {
       email: session.user.email,
       is_adult: !!is_adult,
     }
+    if (avatar_url !== undefined) payload.avatar_url = avatar_url
     const { error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' })
     if (!error) await loadProfile(session.user.id)
     return { error }

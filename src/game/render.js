@@ -1,4 +1,5 @@
 import { ARENA_W, ARENA_H, FLOOR_Y, BALL_R } from './constants.js'
+import { getAvatarImage } from '../lib/avatars.js'
 
 export function render(ctx, state, mapObj, extras = {}) {
   ctx.save()
@@ -316,11 +317,29 @@ function drawPlayer(ctx, p, opts = {}) {
     ctx.beginPath(); ctx.arc(p.w/2 - 12 + i * 12, -8, 4, 0, Math.PI*2); ctx.fill()
   }
 
-  // Name
+  // Avatar + name plate above head. Human players show their display name
+  // and (if uploaded) their photo; CPUs show the character name.
+  const label = p.displayName || p.char.name
+  const avatarImg = p.avatarUrl ? getAvatarImage(p.avatarUrl) : null
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'
+  const labelW = ctx.measureText(label).width + (avatarImg ? 22 : 8)
+  const plateH = 16
+  const plateY = avatarImg ? -46 : -22
+  ctx.fillRect(p.w/2 - labelW/2, plateY, labelW, plateH)
+  if (avatarImg) {
+    ctx.save()
+    ctx.beginPath(); ctx.arc(p.w/2, -30, 12, 0, Math.PI*2); ctx.clip()
+    ctx.drawImage(avatarImg, p.w/2 - 12, -42, 24, 24)
+    ctx.restore()
+    ctx.strokeStyle = p.side === 'left' ? '#38bdf8' : '#f87171'
+    ctx.lineWidth = 2
+    ctx.beginPath(); ctx.arc(p.w/2, -30, 12, 0, Math.PI*2); ctx.stroke()
+  }
   ctx.fillStyle = '#fff'
   ctx.font = 'bold 12px system-ui'
   ctx.textAlign = 'center'
-  ctx.fillText(p.char.name, p.w/2, -18)
+  ctx.textBaseline = 'middle'
+  ctx.fillText(label, p.w/2, plateY + plateH/2)
 
   ctx.restore()
 }

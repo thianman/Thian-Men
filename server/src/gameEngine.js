@@ -9,11 +9,11 @@ function spawnX(side, sideSlot) {
   if (side === 'left')  return sideSlot === 0 ? 180 : 320
   return sideSlot === 0 ? ARENA_W - 180 - PLAYER_W : ARENA_W - 320 - PLAYER_W
 }
-function makePlayer({ playerId, side, sideSlot = 0, character, name, isCPU = false }) {
+function makePlayer({ playerId, side, sideSlot = 0, character, name, isCPU = false, avatarUrl = null }) {
   const char = CHARACTERS.find(c => c.id === character) || CHARACTERS[0]
   const startX = spawnX(side, sideSlot)
   return {
-    playerId, side, sideSlot, name, character: char.id, char, isCPU,
+    playerId, side, sideSlot, name, character: char.id, char, isCPU, avatarUrl,
     x: startX, y: FLOOR_Y - PLAYER_H,
     vx: 0, vy: 0,
     w: PLAYER_W, h: PLAYER_H,
@@ -329,7 +329,7 @@ export class GameEngine {
       mapId: this.map.id,
       players: this.players.map(p => ({
         playerId: p.playerId, side: p.side, sideSlot: p.sideSlot,
-        name: p.name, character: p.character, isCPU: p.isCPU,
+        name: p.name, character: p.character, isCPU: p.isCPU, avatarUrl: p.avatarUrl,
         x: Math.round(p.x), y: Math.round(p.y),
         facing: p.facing, ducking: p.ducking, onGround: p.onGround,
         hp: p.hp, charging: p.charging, chargeVal: p.chargeVal,

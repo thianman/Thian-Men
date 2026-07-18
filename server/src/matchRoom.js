@@ -57,6 +57,7 @@ export class MatchRoom {
     const name = (url.searchParams.get('name') || 'Player').slice(0, 24)
     const userId = url.searchParams.get('uid') || null
     const country = (url.searchParams.get('country') || 'ZZ').slice(0, 2).toUpperCase()
+    const avatarUrl = url.searchParams.get('avatar') || null
 
     const pair = new WebSocketPair()
     const [clientWs, serverWs] = Object.values(pair)
@@ -73,7 +74,8 @@ export class MatchRoom {
     const isHost = this.sessions.size === 0
     slot.playerId = playerId
     slot.name = name
-    const meta = { playerId, slotIndex: slot.slotIndex, isHost, name, userId, country }
+    slot.avatarUrl = avatarUrl
+    const meta = { playerId, slotIndex: slot.slotIndex, isHost, name, userId, country, avatarUrl }
     this.sessions.set(serverWs, meta)
 
     serverWs.send(JSON.stringify({
@@ -97,7 +99,7 @@ export class MatchRoom {
     if (!this.sessions.has(ws)) return
     this.sessions.delete(ws)
     const slot = this.slots.find(s => s.slotIndex === meta.slotIndex)
-    if (slot) { slot.playerId = null; slot.name = null; slot.character = null; slot.ready = false }
+    if (slot) { slot.playerId = null; slot.name = null; slot.character = null; slot.ready = false; slot.avatarUrl = null }
     if (this.state_ === 'match') this._endMatchAsForfeit(meta.playerId, slot?.side)
     this._broadcast({ t: 'roster', players: this._roster() })
     this._broadcastLobby()
@@ -154,7 +156,7 @@ export class MatchRoom {
       type: this.type,
       playersMeta: this.slots.map(s => ({
         playerId: s.playerId, side: s.side, sideSlot: s.sideSlot,
-        character: s.character, name: s.name || 'Player',
+        character: s.character, name: s.name || 'Player', avatarUrl: s.avatarUrl || null,
       })),
     })
     this.state_ = 'match'
@@ -173,7 +175,7 @@ export class MatchRoom {
       cumulativeMs: 0,
       playerProfile: {
         userId: meta.userId, displayName: p1Slot.name, country: meta.country,
-        character: p1Slot.character,
+        character: p1Slot.character, avatarUrl: p1Slot.avatarUrl || null,
       },
     }
     this._broadcast({ t: 'ladderInfo', opponents })
@@ -191,9 +193,9 @@ export class MatchRoom {
       mapId: map.id, type: '1v1',
       playersMeta: [
         { playerId: this.slots[0].playerId, side: 'left', sideSlot: 0,
-          character: playerProfile.character, name: playerProfile.displayName },
+          character: playerProfile.character, name: playerProfile.displayName, avatarUrl: playerProfile.avatarUrl },
         { playerId: 'cpu-' + current, side: 'right', sideSlot: 0,
-          character: opp.character, name: opponentChar?.id.toUpperCase() || 'CPU', isCPU: true },
+          character: opp.character, name: opponentChar?.id.toUpperCase() || 'CPU', isCPU: true, avatarUrl: null },
       ],
     })
     // Ladder fights are shorter — first to 3 rounds wins
@@ -317,7 +319,7 @@ export class MatchRoom {
       state: this.state_,
       slots: this.slots.map(s => ({
         slotIndex: s.slotIndex, side: s.side, sideSlot: s.sideSlot,
-        character: s.character, ready: s.ready, name: s.name, filled: !!s.playerId,
+        character: s.character, ready: s.ready, name: s.name, avatarUrl: s.avatarUrl || null, filled: !!s.playerId,
       })),
     })
   }

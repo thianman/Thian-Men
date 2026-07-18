@@ -5,7 +5,7 @@ import { render } from '../game/render.js'
 import { makeAIController } from '../game/ai.js'
 import { playMusic, stopMusic, resumeAudio, sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
 
-export default function GameCanvas({ config, onExit, onMatchEnd }) {
+export default function GameCanvas({ config, onExit, onMatchEnd, profile }) {
   const canvasRef = useRef(null)
   const wrapRef = useRef(null)
   const stateRef = useRef(null)
@@ -33,6 +33,8 @@ export default function GameCanvas({ config, onExit, onMatchEnd }) {
       p2Char: config.p2Char,
       p1Skin: config.p1Skin || 0,
       p2Skin: config.p2Skin || 0,
+      p1Name: profile?.display_name || null,
+      p1Avatar: profile?.avatar_url || null,
       difficulty: config.difficulty,
       modifiers: config.modifiers,
     })

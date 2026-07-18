@@ -3,6 +3,7 @@ import { CloudflareTransport } from '../net/cfTransport.js'
 import { CHARACTERS, MAPS, ARENA_W, ARENA_H, FLOOR_Y } from '../game/constants.js'
 import { sfx } from '../game/sfx.js'
 import { TouchControls, isMobile as detectMobile } from './TouchControls.jsx'
+import { getAvatarImage } from '../lib/avatars.js'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg border border-cyan-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
 const btnAlt = 'px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold border border-slate-500'
@@ -42,7 +43,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode }) {
 
   const connect = async (roomCode) => {
     setError('')
-    const t = new CloudflareTransport({ name })
+    const t = new CloudflareTransport({ name, userId: profile?.id, country: profile?.country, avatarUrl: profile?.avatar_url })
     transportRef.current = t
     t.on('connected',   () => setScreen('lobby'))
     t.on('welcome',     (m) => { setMe(m); sfx.click() })
@@ -62,7 +63,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode }) {
   const hostMatch = async (type = '1v1') => {
     setError(''); setScreen('connecting')
     try {
-      const t = new CloudflareTransport({ name })
+      const t = new CloudflareTransport({ name, userId: profile?.id, country: profile?.country, avatarUrl: profile?.avatar_url })
       const c = await t.createMatch(type)
       setCode(c)
       await connect(c)
@@ -364,7 +365,9 @@ function TeamPanel({ title, side, slots, mySide, mySideSlot }) {
           const char = s.character ? CHARACTERS.find(c => c.id === s.character) : null
           return (
             <div key={s.slotIndex} className={`flex items-center gap-3 p-2 rounded ${isMe ? 'bg-slate-800/80 ring-1 ring-amber-400' : 'bg-slate-800/50'}`}>
-              {char ? (
+              {s.avatarUrl ? (
+                <img src={s.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-slate-500" />
+              ) : char ? (
                 <div className="w-10 h-10 rounded flex-shrink-0" style={{ background: char.color }} />
               ) : (
                 <div className="w-10 h-10 rounded flex-shrink-0 bg-slate-700 border border-dashed border-slate-500" />
@@ -444,8 +447,26 @@ function drawGame(ctx, snap, me) {
       ctx.fillStyle = '#22c55e'
       ctx.beginPath(); ctx.arc(p.x + w/2 - 12 + i * 12, p.y - 8, 4, 0, Math.PI * 2); ctx.fill()
     }
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center'
-    ctx.fillText(p.name || '', p.x + w/2, p.y - 20)
+    // Name + avatar plate
+    const label = p.name || (CHARACTERS.find(c => c.id === p.character)?.name || '')
+    const avatarImg = p.avatarUrl ? getAvatarImage(p.avatarUrl) : null
+    ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+    const labelW = ctx.measureText(label).width + (avatarImg ? 22 : 8)
+    const plateH = 16
+    const plateY = avatarImg ? p.y - 46 : p.y - 22
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'
+    ctx.fillRect(p.x + w/2 - labelW/2, plateY, labelW, plateH)
+    if (avatarImg) {
+      ctx.save()
+      ctx.beginPath(); ctx.arc(p.x + w/2, p.y - 30, 12, 0, Math.PI*2); ctx.clip()
+      ctx.drawImage(avatarImg, p.x + w/2 - 12, p.y - 42, 24, 24)
+      ctx.restore()
+      ctx.strokeStyle = p.side === 'left' ? '#38bdf8' : '#f87171'
+      ctx.lineWidth = 2
+      ctx.beginPath(); ctx.arc(p.x + w/2, p.y - 30, 12, 0, Math.PI*2); ctx.stroke()
+    }
+    ctx.fillStyle = '#fff'
+    ctx.fillText(label, p.x + w/2, plateY + plateH/2)
     if (p.holdingBall) {
       ctx.fillStyle = '#fde047'
       ctx.beginPath(); ctx.arc(p.x + w/2 + p.facing * 22, p.y + 34, 14, 0, Math.PI * 2); ctx.fill()

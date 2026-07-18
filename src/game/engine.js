@@ -4,7 +4,7 @@ import {
 } from './constants.js'
 import { sfx } from './sfx.js'
 
-export function makePlayer({ side, character, isCPU, kind, skinIndex = 0 }) {
+export function makePlayer({ side, character, isCPU, kind, skinIndex = 0, displayName = null, avatarUrl = null }) {
   const base = CHARACTERS.find(c => c.id === character) || CHARACTERS[0]
   const skin = (base.skins && base.skins[skinIndex]) || null
   const char = skin ? { ...base, color: skin.color, accent: skin.accent, skinName: skin.name } : base
@@ -12,6 +12,8 @@ export function makePlayer({ side, character, isCPU, kind, skinIndex = 0 }) {
   return {
     side, kind, isCPU: !!isCPU,
     char, name: char.name,
+    displayName: !isCPU ? displayName : null,
+    avatarUrl: !isCPU ? avatarUrl : null,
     x: startX, y: FLOOR_Y - PLAYER_H,
     vx: 0, vy: 0,
     w: PLAYER_W, h: PLAYER_H,
@@ -39,13 +41,13 @@ export function makeBall(x, y, vx = 0, vy = 0) {
   return { x, y, vx, vy, r: BALL_R, held: false, ownerSide: null, live: false, thrownBy: null, aliveMs: 0 }
 }
 
-export function initState({ mode, matchType, map, p1Char, p2Char, difficulty, modifiers, p1Skin = 0, p2Skin = 0 }) {
+export function initState({ mode, matchType, map, p1Char, p2Char, difficulty, modifiers, p1Skin = 0, p2Skin = 0, p1Name = null, p1Avatar = null }) {
   const mods = new Set(modifiers || [])
   const baseBalls = matchType === '2v2' ? 5 : 3
   const numBalls = mods.has('chaos') ? baseBalls * 2 : baseBalls
   const players = []
   if (matchType === '2v2') {
-    players.push(makePlayer({ side: 'left',  kind: 'p1',   character: p1Char, skinIndex: p1Skin }))
+    players.push(makePlayer({ side: 'left',  kind: 'p1',   character: p1Char, skinIndex: p1Skin, displayName: p1Name, avatarUrl: p1Avatar }))
     players.push(makePlayer({ side: 'left',  kind: 'p2',   character: p2Char || pickRandom(p1Char), skinIndex: p2Skin }))
     const cpuA = pickRandom(p1Char)
     const cpuB = pickRandom(cpuA)
@@ -54,10 +56,10 @@ export function initState({ mode, matchType, map, p1Char, p2Char, difficulty, mo
     players[1].x = 320
     players[3].x = ARENA_W - 320 - PLAYER_W
   } else if (mode === '2p') {
-    players.push(makePlayer({ side: 'left',  kind: 'p1', character: p1Char, skinIndex: p1Skin }))
+    players.push(makePlayer({ side: 'left',  kind: 'p1', character: p1Char, skinIndex: p1Skin, displayName: p1Name, avatarUrl: p1Avatar }))
     players.push(makePlayer({ side: 'right', kind: 'p2', character: p2Char, skinIndex: p2Skin }))
   } else {
-    players.push(makePlayer({ side: 'left',  kind: 'p1', character: p1Char, skinIndex: p1Skin }))
+    players.push(makePlayer({ side: 'left',  kind: 'p1', character: p1Char, skinIndex: p1Skin, displayName: p1Name, avatarUrl: p1Avatar }))
     players.push(makePlayer({ side: 'right', kind: 'cpu', character: p2Char, isCPU: true, skinIndex: p2Skin }))
   }
   const balls = []
