@@ -5,11 +5,15 @@ import {
 
 const ROUNDS_PER_MATCH = 5 // first to this many round wins takes the match
 
-function makePlayer({ side, character, name }) {
+function spawnX(side, sideSlot) {
+  if (side === 'left')  return sideSlot === 0 ? 180 : 320
+  return sideSlot === 0 ? ARENA_W - 180 - PLAYER_W : ARENA_W - 320 - PLAYER_W
+}
+function makePlayer({ playerId, side, sideSlot = 0, character, name }) {
   const char = CHARACTERS.find(c => c.id === character) || CHARACTERS[0]
-  const startX = side === 'left' ? 180 : ARENA_W - 180 - PLAYER_W
+  const startX = spawnX(side, sideSlot)
   return {
-    side, name, character: char.id, char,
+    playerId, side, sideSlot, name, character: char.id, char,
     x: startX, y: FLOOR_Y - PLAYER_H,
     vx: 0, vy: 0,
     w: PLAYER_W, h: PLAYER_H,
@@ -34,11 +38,13 @@ function makeBall(id, x, y) {
 }
 
 export class GameEngine {
-  constructor({ mapId, playersMeta }) {
+  constructor({ mapId, playersMeta, type = '1v1' }) {
     this.map = MAPS.find(m => m.id === mapId) || MAPS[0]
     this.tickCount = 0
     this.tickMs = 33
-    this.numBalls = 3
+    this.type = type
+    this.numBalls = type === '2v2' ? 5 : 3
+    this.roundsToWin = type === '2v2' ? 7 : ROUNDS_PER_MATCH
     this.players = []
     for (const meta of playersMeta) {
       this.players.push(makePlayer(meta))
@@ -52,14 +58,13 @@ export class GameEngine {
     this.round = 1
     this.roundsLeft = 0
     this.roundsRight = 0
-    this.roundsToWin = ROUNDS_PER_MATCH
     this.winnerSide = null
     this.matchWinnerSide = null
     this.events = [] // recent events for client SFX
   }
 
-  applyInput(side, input) {
-    const p = this.players.find(pl => pl.side === side)
+  applyInput(playerId, input) {
+    const p = this.players.find(pl => pl.playerId === playerId)
     if (!p) return
     p.input = { ...emptyInput(), ...input }
   }
@@ -286,7 +291,7 @@ export class GameEngine {
   _resetRound() {
     for (const p of this.players) {
       p.hp = MAX_HP
-      p.x = p.side === 'left' ? 180 : ARENA_W - 180 - PLAYER_W
+      p.x = spawnX(p.side, p.sideSlot)
       p.y = FLOOR_Y - PLAYER_H
       p.vx = 0; p.vy = 0; p.holdingBallId = null; p.charging = false; p.chargeVal = 0
       p.hitFlashUntil = 0; p.ducking = false; p.onGround = true
@@ -310,7 +315,8 @@ export class GameEngine {
       matchWinnerSide: this.matchWinnerSide,
       mapId: this.map.id,
       players: this.players.map(p => ({
-        side: p.side, name: p.name, character: p.character,
+        playerId: p.playerId, side: p.side, sideSlot: p.sideSlot,
+        name: p.name, character: p.character,
         x: Math.round(p.x), y: Math.round(p.y),
         facing: p.facing, ducking: p.ducking, onGround: p.onGround,
         hp: p.hp, charging: p.charging, chargeVal: p.chargeVal,

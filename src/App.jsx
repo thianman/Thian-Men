@@ -34,6 +34,39 @@ export default function App() {
   const auth = useAuth()
   const [legalKind, setLegalKind] = useState(null) // 'tos' | 'privacy' | null
   const [showAccountMenu, setShowAccountMenu] = useState(false)
+  const [pendingJoin, setPendingJoin] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('join')
+      return code ? code.toUpperCase().slice(0, 6) : null
+    } catch { return null }
+  })
+
+  // Once we have a session + profile, honor a pending ?join= link
+  useEffect(() => {
+    if (pendingJoin && auth.session && auth.profile && screen !== 'online') {
+      setScreen('online')
+    }
+  }, [pendingJoin, auth.session, auth.profile])
+
+  // If a fresh visitor lands on ?join=CODE without an account,
+  // push them to sign in first
+  useEffect(() => {
+    if (pendingJoin && !auth.session && !auth.loading && screen === 'title') {
+      setScreen('signin')
+    }
+  }, [pendingJoin, auth.session, auth.loading])
+
+  // Clear the join code from the URL once consumed, so refresh doesn't loop
+  useEffect(() => {
+    if (screen === 'online' && pendingJoin) {
+      try {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('join')
+        window.history.replaceState({}, '', url.toString())
+      } catch {}
+    }
+  }, [screen, pendingJoin])
 
   useEffect(() => {
     if (screen === 'game') { stopMusic() } else { playMusic('menu') }
@@ -162,7 +195,11 @@ export default function App() {
         <CreditsScreen onBack={backToTitle} />
       )}
       {screen === 'online' && auth.session && auth.profile && (
-        <OnlineMatch profile={auth.profile} onExit={backToTitle} />
+        <OnlineMatch
+          profile={auth.profile}
+          onExit={() => { setPendingJoin(null); backToTitle() }}
+          autoJoinCode={pendingJoin}
+        />
       )}
       {screen === 'mode' && (
         <ModeSelect

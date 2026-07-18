@@ -7,17 +7,18 @@ const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hov
 const btnAlt = 'px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold border border-slate-500'
 const input = 'w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white font-mono uppercase tracking-widest text-center text-2xl'
 
-export default function OnlineMatch({ profile, onExit }) {
+export default function OnlineMatch({ profile, onExit, autoJoinCode }) {
   const [screen, setScreen] = useState('menu') // 'menu' | 'connecting' | 'lobby' | 'match' | 'ended' | 'error'
-  const [joinCode, setJoinCode] = useState('')
+  const [joinCode, setJoinCode] = useState(autoJoinCode || '')
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [rtt, setRtt] = useState(0)
-  const [me, setMe] = useState(null)          // { playerId, side, isHost }
+  const [me, setMe] = useState(null)          // { playerId, side, sideSlot, isHost, type }
   const [roster, setRoster] = useState([])
-  const [lobby, setLobby] = useState(null)    // { left, right, mapId, state }
-  const [snap, setSnap] = useState(null)      // gameplay snapshot
+  const [lobby, setLobby] = useState(null)    // { type, slots, mapId, state }
+  const [snap, setSnap] = useState(null)
   const [matchEnd, setMatchEnd] = useState(null)
+  const [copied, setCopied] = useState(false)
   const canvasRef = useRef(null)
   const wrapRef = useRef(null)
   const [scale, setScale] = useState(1)
@@ -28,13 +29,20 @@ export default function OnlineMatch({ profile, onExit }) {
 
   const name = profile?.display_name || 'Guest'
 
-  // Connect / disconnect helpers
+  // Auto-join if invite link opened us
+  useEffect(() => {
+    if (autoJoinCode && screen === 'menu') {
+      connect(autoJoinCode)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoJoinCode])
+
   const connect = async (roomCode) => {
     setError('')
     const t = new CloudflareTransport({ name })
     transportRef.current = t
     t.on('connected',   () => setScreen('lobby'))
-    t.on('welcome',     (m) => { setMe({ playerId: m.playerId, side: m.side, isHost: m.isHost }); sfx.click() })
+    t.on('welcome',     (m) => { setMe(m); sfx.click() })
     t.on('roster',      (m) => setRoster(m.players))
     t.on('lobby',       (m) => setLobby(m))
     t.on('matchStart',  () => { setMatchEnd(null); setScreen('match') })
@@ -48,12 +56,11 @@ export default function OnlineMatch({ profile, onExit }) {
     catch (e) { setError(e.message || 'Failed to join'); setScreen('error') }
   }
 
-  const hostMatch = async () => {
+  const hostMatch = async (type = '1v1') => {
     setError(''); setScreen('connecting')
     try {
       const t = new CloudflareTransport({ name })
-      const c = await t.createMatch()
-      transportRef.current = null
+      const c = await t.createMatch(type)
       setCode(c)
       await connect(c)
     } catch (e) { setError(e.message || 'Failed to create match'); setScreen('error') }
@@ -68,6 +75,12 @@ export default function OnlineMatch({ profile, onExit }) {
     transportRef.current = null
     setScreen('menu'); setRoster([]); setSnap(null); setMe(null); setLobby(null); setCode(''); setMatchEnd(null)
   }
+  const copyInvite = async () => {
+    if (!code) return
+    const url = `${window.location.origin}/?join=${code}`
+    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1600) }
+    catch { alert(url) }
+  }
 
   // Keyboard capture
   useEffect(() => {
@@ -77,7 +90,6 @@ export default function OnlineMatch({ profile, onExit }) {
     return () => { window.removeEventListener('keydown', d); window.removeEventListener('keyup', u) }
   }, [])
 
-  // Input send loop (only when match is live)
   useEffect(() => {
     if (screen !== 'match') return
     inputTimerRef.current = setInterval(() => {
@@ -97,7 +109,6 @@ export default function OnlineMatch({ profile, onExit }) {
     return () => { if (inputTimerRef.current) clearInterval(inputTimerRef.current) }
   }, [screen])
 
-  // Fit canvas
   useEffect(() => {
     const fit = () => {
       const el = wrapRef.current; if (!el) return
@@ -110,7 +121,6 @@ export default function OnlineMatch({ profile, onExit }) {
     return () => window.removeEventListener('resize', fit)
   }, [screen])
 
-  // Render snapshot
   useEffect(() => {
     if (screen !== 'match') return
     const c = canvasRef.current; if (!c) return
@@ -124,7 +134,6 @@ export default function OnlineMatch({ profile, onExit }) {
     return () => cancelAnimationFrame(raf)
   }, [screen, snap, me])
 
-  // Play SFX for server events
   const lastEventsTick = useRef(-1)
   useEffect(() => {
     if (!snap || !snap.events || snap.tick === lastEventsTick.current) return
@@ -139,10 +148,12 @@ export default function OnlineMatch({ profile, onExit }) {
     }
   }, [snap])
 
-  // -------- Rendering paths --------
   if (screen === 'menu' || screen === 'error') return (
     <MenuLayout title="PLAY ONLINE" name={name} error={error} onExit={onExit}>
-      <button className={btn} onClick={hostMatch}>Host Match</button>
+      <div className="grid md:grid-cols-2 gap-3">
+        <button className={btn} onClick={() => hostMatch('1v1')}>Host 1v1</button>
+        <button className={btn + ' bg-gradient-to-b from-fuchsia-500 to-fuchsia-700 hover:from-fuchsia-400'} onClick={() => hostMatch('2v2')}>Host 2v2</button>
+      </div>
       <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4">
         <label className="block text-sm text-slate-300 mb-2">Join a friend's match with a code</label>
         <input className={input} value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))} placeholder="ABCDEF" maxLength={6} />
@@ -160,7 +171,8 @@ export default function OnlineMatch({ profile, onExit }) {
   if (screen === 'lobby' || screen === 'ended') return (
     <LobbyScreen
       code={code} rtt={rtt} me={me} roster={roster} lobby={lobby}
-      matchEnd={matchEnd} onLeave={leave} name={name}
+      matchEnd={matchEnd} onLeave={leave} name={name} copied={copied}
+      onCopyInvite={copyInvite}
       onPickCharacter={(id) => transportRef.current?.setCharacter(id)}
       onPickMap={(id) => transportRef.current?.setMap(id)}
       onReady={() => transportRef.current?.ready()}
@@ -172,11 +184,11 @@ export default function OnlineMatch({ profile, onExit }) {
   return (
     <div ref={wrapRef} className="w-screen h-screen flex flex-col items-center justify-start bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-2">
       <div className="w-full max-w-6xl flex items-center justify-between mb-2 text-sm">
-        <div>Room <span className="font-mono text-cyan-300">{code}</span></div>
+        <div>Room <span className="font-mono text-cyan-300">{code}</span> · <span className="uppercase text-fuchsia-300">{me?.type || '1v1'}</span></div>
         <div className="flex items-center gap-3">
           <span>Ping: <span className="font-mono">{rtt}ms</span></span>
           {snap && (
-            <span>Round <span className="font-mono">{snap.round}</span> · P1 <span className="font-mono">{snap.roundsLeft}</span> — <span className="font-mono">{snap.roundsRight}</span> P2</span>
+            <span>Round <span className="font-mono">{snap.round}</span> · Blue <span className="font-mono">{snap.roundsLeft}</span> — <span className="font-mono">{snap.roundsRight}</span> Red</span>
           )}
           <button onClick={leave} className="px-3 py-1 rounded bg-red-800 border border-red-500 text-xs">Leave</button>
         </div>
@@ -211,22 +223,27 @@ function MenuLayout({ title, name, children, error, onExit }) {
   )
 }
 
-function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCharacter, onPickMap, onReady, onUnready, onRematch, name }) {
+function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCharacter, onPickMap, onReady, onUnready, onRematch, name, onCopyInvite, copied }) {
   const mySide = me?.side
-  const myPick = lobby ? lobby[mySide]?.character : null
-  const myReady = lobby ? lobby[mySide]?.ready : false
-  const oppSide = mySide === 'left' ? 'right' : 'left'
-  const oppInfo = lobby ? lobby[oppSide] : null
+  const mySideSlot = me?.sideSlot
+  const mySlot = lobby?.slots?.find(s => s.side === mySide && s.sideSlot === mySideSlot)
+  const myPick = mySlot?.character
+  const myReady = mySlot?.ready
+  const type = lobby?.type || '1v1'
+
+  const leftSlots  = lobby?.slots?.filter(s => s.side === 'left') || []
+  const rightSlots = lobby?.slots?.filter(s => s.side === 'right') || []
 
   return (
     <div className="w-screen h-screen bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
       <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
-            <div className="text-xs text-slate-400 uppercase tracking-wide">Room Code</div>
+            <div className="text-xs text-slate-400 uppercase tracking-wide">Room · {type.toUpperCase()}</div>
             <div className="flex items-center gap-2">
               <div className="font-mono text-3xl tracking-widest text-cyan-300">{code || '—'}</div>
-              <button onClick={() => code && navigator.clipboard?.writeText(code)} className="text-xs bg-slate-800 border border-slate-600 rounded px-2 py-1">Copy</button>
+              <button onClick={() => code && navigator.clipboard?.writeText(code)} className="text-xs bg-slate-800 border border-slate-600 rounded px-2 py-1">Copy code</button>
+              <button onClick={onCopyInvite} className="text-xs bg-cyan-800 border border-cyan-400 rounded px-2 py-1">{copied ? '✓ Link copied!' : 'Copy invite link'}</button>
             </div>
           </div>
           <div className="flex items-center gap-3 text-sm">
@@ -238,16 +255,16 @@ function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCh
         {matchEnd && (
           <div className="mb-4 p-4 rounded-xl bg-slate-900/80 border-2 border-amber-400 text-center">
             <div className="text-3xl font-black">
-              {matchEnd.winner === mySide ? '🏆 You Win!' : 'You Lose'}
+              {matchEnd.winner === mySide ? '🏆 Team Blue Wins!'.replace('Blue', mySide === 'left' ? 'Blue' : 'Red') : 'Your team lost'}
             </div>
-            {matchEnd.forfeit && <div className="text-slate-300 text-sm mt-1">Opponent disconnected — win by forfeit.</div>}
+            {matchEnd.forfeit && <div className="text-slate-300 text-sm mt-1">Opponent(s) disconnected — win by forfeit.</div>}
             <button onClick={onRematch} className="mt-3 px-6 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold">Rematch</button>
           </div>
         )}
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <PlayerSlot title="You" side={mySide} me picks={lobby?.[mySide]} name={name} />
-          <PlayerSlot title="Opponent" side={oppSide} picks={oppInfo} name={oppInfo?.name} waiting={roster.length < 2} />
+          <TeamPanel title="Team Blue" side="left" slots={leftSlots} mySide={mySide} mySideSlot={mySideSlot} />
+          <TeamPanel title="Team Red"  side="right" slots={rightSlots} mySide={mySide} mySideSlot={mySideSlot} />
         </div>
 
         <div className="mb-4">
@@ -264,7 +281,7 @@ function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCh
           </div>
         </div>
 
-        {me?.isHost && (
+        {me?.isHost ? (
           <div className="mb-4">
             <div className="text-sm text-slate-300 mb-2">Map (host picks)</div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
@@ -278,27 +295,45 @@ function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCh
               ))}
             </div>
           </div>
-        )}
-        {!me?.isHost && lobby?.mapId && (
-          <div className="text-sm text-slate-300 mb-4">Map: <span className="font-bold text-cyan-300">{MAPS.find(m => m.id === lobby.mapId)?.name || lobby.mapId}</span> (host chose)</div>
+        ) : (
+          lobby?.mapId && (
+            <div className="text-sm text-slate-300 mb-4">Map: <span className="font-bold text-cyan-300">{MAPS.find(m => m.id === lobby.mapId)?.name || lobby.mapId}</span> (host chose)</div>
+          )
         )}
 
         <div className="text-center">
-          {!myReady ? (
-            <button onClick={onReady} disabled={!myPick || roster.length < 2}
-              className="px-8 py-3 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black text-xl border border-emerald-300/40 disabled:opacity-40 disabled:cursor-not-allowed">
-              {roster.length < 2 ? 'Waiting for opponent…' : (!myPick ? 'Pick a fighter first' : 'READY UP')}
-            </button>
-          ) : (
-            <button onClick={onUnready}
-              className="px-8 py-3 rounded-xl bg-slate-800 border border-amber-400 text-amber-300 font-bold">
-              Ready — click to cancel
-            </button>
-          )}
+          {(() => {
+            const filled = lobby?.slots?.filter(s => s.filled).length || 0
+            const need = lobby?.slots?.length || 0
+            const allFilled = filled === need
+            if (!allFilled) {
+              return (
+                <button disabled className="px-8 py-3 rounded-xl bg-slate-800 border border-slate-600 text-slate-400 font-bold">
+                  Waiting for players ({filled}/{need})…
+                </button>
+              )
+            }
+            if (!myReady) {
+              return (
+                <button onClick={onReady} disabled={!myPick}
+                  className="px-8 py-3 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black text-xl border border-emerald-300/40 disabled:opacity-40 disabled:cursor-not-allowed">
+                  {!myPick ? 'Pick a fighter first' : 'READY UP'}
+                </button>
+              )
+            }
+            return (
+              <button onClick={onUnready}
+                className="px-8 py-3 rounded-xl bg-slate-800 border border-amber-400 text-amber-300 font-bold">
+                Ready — click to cancel
+              </button>
+            )
+          })()}
           <div className="mt-3 text-sm text-slate-400">
-            You: {myReady ? '✅ Ready' : '⏳ Not ready'}
-            {' · '}
-            Opponent: {oppInfo?.ready ? '✅ Ready' : '⏳ Not ready'}
+            {lobby?.slots?.map(s => (
+              <span key={s.slotIndex} className="mx-1">
+                {(s.name || '—')}: {s.ready ? '✅' : '⏳'}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -306,35 +341,40 @@ function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCh
   )
 }
 
-function PlayerSlot({ title, side, picks, name, me, waiting }) {
-  const char = picks?.character ? CHARACTERS.find(c => c.id === picks.character) : null
-  const sideColor = side === 'left' ? 'border-sky-500' : 'border-rose-500'
+function TeamPanel({ title, side, slots, mySide, mySideSlot }) {
+  const border = side === 'left' ? 'border-sky-500' : 'border-rose-500'
   return (
-    <div className={`p-4 rounded-xl border-2 bg-slate-900/60 ${sideColor}`}>
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-xs text-slate-400 uppercase">{title}</div>
-          <div className="text-lg font-bold">{name || (waiting ? '(waiting…)' : '—')}</div>
-          <div className="text-xs text-slate-500 mt-0.5">Side: {side}</div>
-        </div>
-        {char ? (
-          <div className="flex items-center gap-2">
-            <div className="w-14 h-14 rounded-lg" style={{ background: char.color }} />
-            <div>
-              <div className="font-black">{char.name}</div>
-              <div className="text-xs text-slate-400">{char.vibe}</div>
+    <div className={`p-4 rounded-xl border-2 bg-slate-900/60 ${border}`}>
+      <div className="text-xs text-slate-400 uppercase tracking-wide mb-2">{title}</div>
+      <div className="space-y-2">
+        {slots.map(s => {
+          const isMe = mySide === s.side && mySideSlot === s.sideSlot
+          const char = s.character ? CHARACTERS.find(c => c.id === s.character) : null
+          return (
+            <div key={s.slotIndex} className={`flex items-center gap-3 p-2 rounded ${isMe ? 'bg-slate-800/80 ring-1 ring-amber-400' : 'bg-slate-800/50'}`}>
+              {char ? (
+                <div className="w-10 h-10 rounded flex-shrink-0" style={{ background: char.color }} />
+              ) : (
+                <div className="w-10 h-10 rounded flex-shrink-0 bg-slate-700 border border-dashed border-slate-500" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="font-bold truncate">{s.name || <span className="italic text-slate-500">(empty)</span>}</div>
+                <div className="text-xs text-slate-400 truncate">
+                  {char?.name || (s.filled ? 'No fighter yet' : 'Waiting…')}
+                </div>
+              </div>
+              <div className="text-lg">
+                {s.filled ? (s.ready ? '✅' : '⏳') : '—'}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="text-slate-500 italic text-sm">No fighter picked</div>
-        )}
+          )
+        })}
       </div>
     </div>
   )
 }
 
-// ------------------- Canvas draw -------------------
-
+// -------- draw --------
 function drawGame(ctx, snap, me) {
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, ARENA_W, ARENA_H)
   if (!snap) {
@@ -357,7 +397,6 @@ function drawGame(ctx, snap, me) {
   ctx.beginPath(); ctx.moveTo(ARENA_W / 2, 0); ctx.lineTo(ARENA_W / 2, FLOOR_Y); ctx.stroke()
   ctx.setLineDash([])
 
-  // Balls
   for (const b of snap.balls) {
     ctx.fillStyle = 'rgba(0,0,0,0.35)'
     ctx.beginPath(); ctx.ellipse(b.x, FLOOR_Y + 4, 14, 5, 0, 0, Math.PI * 2); ctx.fill()
@@ -366,43 +405,33 @@ function drawGame(ctx, snap, me) {
     ctx.strokeStyle = b.uncatchable ? '#f0abfc' : '#7c2d12'; ctx.lineWidth = 2; ctx.stroke()
   }
 
-  // Players
   for (const p of snap.players) {
     const char = CHARACTERS.find(c => c.id === p.character)
     const color = char?.color || '#888'
     const w = 56, h = p.ducking ? 48 : 96
-    // shadow
     ctx.fillStyle = 'rgba(0,0,0,0.3)'
     ctx.beginPath(); ctx.ellipse(p.x + w/2, p.y + h + 4, w/2, 6, 0, 0, Math.PI * 2); ctx.fill()
-    // body
     ctx.fillStyle = p.hitFlash > 0 ? '#fff' : color
     ctx.fillRect(p.x + 4, p.y + 12, w - 8, h - 20)
-    // head
     ctx.fillStyle = p.hitFlash > 0 ? '#fff' : lighten(color, 20)
     ctx.beginPath(); ctx.arc(p.x + w/2, p.y + 12, 14, 0, Math.PI * 2); ctx.fill()
-    // outline
     ctx.strokeStyle = p.side === 'left' ? '#38bdf8' : '#f87171'
     ctx.lineWidth = 3; ctx.strokeRect(p.x + 2, p.y + 10, w - 4, h - 16)
-    // "you" marker
-    if (me && p.side === me.side) {
+    if (me && p.playerId === me.playerId) {
       ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3
       ctx.strokeRect(p.x - 4, p.y - 4, w + 8, h + 8)
     }
-    // hp dots
     for (let i = 0; i < p.hp; i++) {
       ctx.fillStyle = '#22c55e'
       ctx.beginPath(); ctx.arc(p.x + w/2 - 12 + i * 12, p.y - 8, 4, 0, Math.PI * 2); ctx.fill()
     }
-    // name
     ctx.fillStyle = '#fff'; ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center'
     ctx.fillText(p.name || '', p.x + w/2, p.y - 20)
-    // holding indicator
     if (p.holdingBall) {
       ctx.fillStyle = '#fde047'
       ctx.beginPath(); ctx.arc(p.x + w/2 + p.facing * 22, p.y + 34, 14, 0, Math.PI * 2); ctx.fill()
       ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 2; ctx.stroke()
     }
-    // charge bar
     if (p.charging) {
       const bw = 60, bh = 8
       const bx = p.x + w/2 - bw/2, by = p.y - 34
@@ -414,7 +443,6 @@ function drawGame(ctx, snap, me) {
     }
   }
 
-  // Phase overlays
   if (snap.phase === 'countdown') {
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, ARENA_H/2 - 80, ARENA_W, 160)
     ctx.fillStyle = snap.countdown > 0 ? '#fff' : '#22c55e'
@@ -423,12 +451,12 @@ function drawGame(ctx, snap, me) {
   } else if (snap.phase === 'roundEnd') {
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, ARENA_H/2 - 60, ARENA_W, 120)
     ctx.fillStyle = '#fff'; ctx.font = 'bold 56px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText(snap.winnerSide === 'left' ? 'Round P1!' : 'Round P2!', ARENA_W/2, ARENA_H/2)
+    ctx.fillText(snap.winnerSide === 'left' ? 'Round Blue!' : 'Round Red!', ARENA_W/2, ARENA_H/2)
   } else if (snap.phase === 'matchEnd') {
     ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0, 0, ARENA_W, ARENA_H)
     ctx.fillStyle = snap.matchWinnerSide === 'left' ? '#22d3ee' : '#f87171'
     ctx.font = 'bold 96px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    ctx.fillText(snap.matchWinnerSide === 'left' ? 'P1 WINS' : 'P2 WINS', ARENA_W/2, ARENA_H/2)
+    ctx.fillText(snap.matchWinnerSide === 'left' ? 'BLUE WINS' : 'RED WINS', ARENA_W/2, ARENA_H/2)
   }
 }
 

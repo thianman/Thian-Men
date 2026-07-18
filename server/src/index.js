@@ -31,9 +31,15 @@ export default {
     const url = new URL(request.url)
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS })
 
-    // POST /matches — create a new match room
+    // POST /matches?type=1v1|2v2 — create a new match room
     if (url.pathname === '/matches' && request.method === 'POST') {
-      return json({ code: newRoomCode() })
+      const type = url.searchParams.get('type') === '2v2' ? '2v2' : '1v1'
+      const code = newRoomCode()
+      // Pre-warm the DO with its type so first join knows the capacity.
+      const id = env.MATCHES.idFromName(code)
+      const stub = env.MATCHES.get(id)
+      await stub.fetch(new Request(`https://internal/setup?type=${type}`))
+      return json({ code, type })
     }
 
     // /ws/:code — upgrade to WebSocket, route to the DO
