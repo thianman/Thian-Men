@@ -8,12 +8,12 @@ const btnAlt = 'px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white 
 
 export function Screen({ children, title, subtitle, onBack }) {
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
-      {title && <h1 className="text-5xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 mb-2 text-center">{title}</h1>}
-      {subtitle && <p className="text-slate-300 mb-6 text-center">{subtitle}</p>}
-      <div className="w-full max-w-6xl">{children}</div>
+    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-3 overflow-hidden">
+      {title && <h1 className="text-3xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 mb-1 text-center">{title}</h1>}
+      {subtitle && <p className="text-slate-300 mb-3 text-center text-sm md:text-base">{subtitle}</p>}
+      <div className="w-full max-w-6xl overflow-y-auto" style={{ maxHeight: onBack ? '75vh' : '85vh' }}>{children}</div>
       {onBack && (
-        <button onClick={() => { sfx.click(); onBack() }} className="mt-6 px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sm">
+        <button onClick={() => { sfx.click(); onBack() }} className="mt-3 px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sm">
           ← Back
         </button>
       )}
@@ -23,8 +23,8 @@ export function Screen({ children, title, subtitle, onBack }) {
 
 function HeroScene() {
   return (
-    <div className="relative w-full max-w-3xl mx-auto mb-6">
-      <svg viewBox="0 0 800 320" className="w-full h-auto drop-shadow-2xl">
+    <div className="relative w-full max-w-3xl mx-auto mb-3" style={{ maxHeight: '32vh' }}>
+      <svg viewBox="0 0 800 320" preserveAspectRatio="xMidYMid meet" className="w-full h-auto drop-shadow-2xl" style={{ maxHeight: '32vh' }}>
         <defs>
           <linearGradient id="heroBg" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%"   stopColor="#1e1b4b" />
@@ -190,26 +190,28 @@ function HeroScene() {
 
 export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onGlobalLeaderboard, onCredits }) {
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
-      <h1 className="hero-title text-6xl md:text-7xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 mb-1 text-center">
+    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-3 overflow-hidden">
+      <h1 className="hero-title text-4xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 text-center leading-none">
         DODGEBALL
       </h1>
-      <p className="text-slate-300 mb-4 text-center">Platformer showdown — dodge, catch, throw.</p>
+      <p className="text-slate-300 mb-2 text-center text-sm md:text-base">Platformer showdown — dodge, catch, throw.</p>
 
       <HeroScene />
 
-      <div className="flex flex-col items-center gap-3">
-        <button className={btn} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
-        <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
-        <div className="flex flex-wrap justify-center gap-2 mt-2">
-          <button className={btnAlt} onClick={() => { sfx.click(); onLeaderboard() }}>Local Leaderboard</button>
-        <button className={btnAlt} onClick={() => { sfx.click(); onGlobalLeaderboard() }}>Global Leaderboard</button>
-          <button className={btnAlt} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
-          <button className={btnAlt} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
-          <button className={btnAlt} onClick={() => { sfx.click(); onCredits() }}>Credits</button>
+      <div className="flex flex-col items-center gap-2 mt-1">
+        <div className="flex gap-2">
+          <button className={btn} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
+          <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2 max-w-3xl">
+          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onLeaderboard() }}>Local Leaderboard</button>
+          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onGlobalLeaderboard() }}>Global Leaderboard</button>
+          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
+          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
+          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onCredits() }}>Credits</button>
         </div>
       </div>
-      <p className="text-center text-slate-400 text-sm mt-6">Made for vibe coders. Best of 3 sets. Winner stays king.</p>
+      <p className="text-center text-slate-400 text-xs mt-3">Made for vibe coders. Best of 3 sets. Winner stays king.</p>
     </div>
   )
 }
@@ -223,7 +225,7 @@ export function CreditsScreen({ onBack }) {
   )
   return (
     <Screen title="ABOUT & CREDITS" onBack={onBack}>
-      <div className="max-w-3xl mx-auto space-y-4">
+      <div className="max-w-3xl mx-auto space-y-3 overflow-y-auto pr-2" style={{ maxHeight: '65vh' }}>
         <Section title="About">
           <p>A 2D platformer dodgeball game — solo or local 2P — with 6 fighters, 4 maps, four CPU tiers, a Survival Ladder, cosmetic skins, difficulty modifiers, and arena hazards. Built to be picked up in seconds and mastered over hundreds of matches.</p>
         </Section>
