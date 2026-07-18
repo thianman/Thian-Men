@@ -21,11 +21,13 @@ function ScreenShell({ title, subtitle, onBack, children }) {
   )
 }
 
-export function SignInScreen({ onBack, onSignIn, onOpenLegal }) {
+export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
   const [email, setEmail] = useState('')
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [code, setCode] = useState('')
+  const [verifyBusy, setVerifyBusy] = useState(false)
 
   const submit = async (e) => {
     e.preventDefault()
@@ -38,8 +40,20 @@ export function SignInScreen({ onBack, onSignIn, onOpenLegal }) {
     else setSent(true)
   }
 
+  const submitCode = async (e) => {
+    e.preventDefault()
+    if (verifyBusy) return
+    const clean = code.replace(/\s/g, '')
+    if (!/^\d{6}$/.test(clean)) { setError('Enter the 6-digit code from the email.'); return }
+    setVerifyBusy(true); setError('')
+    const { error } = await onVerifyCode(email.trim(), clean)
+    setVerifyBusy(false)
+    if (error) setError(error.message || 'Invalid or expired code.')
+    // On success, useAuth session update navigates us away automatically.
+  }
+
   return (
-    <ScreenShell title="SIGN IN" subtitle={sent ? 'Magic link sent — check your inbox and click the link to finish signing in.' : 'Enter your email. We\'ll send you a magic link — no password needed.'} onBack={onBack}>
+    <ScreenShell title="SIGN IN" subtitle={sent ? "We sent a magic link + 6-digit code to your inbox. Use whichever is easier." : 'Enter your email. We\'ll send you a magic link and a 6-digit code — no password needed.'} onBack={onBack}>
       {!sent ? (
         <form onSubmit={submit} className="space-y-4">
           <input
@@ -52,7 +66,7 @@ export function SignInScreen({ onBack, onSignIn, onOpenLegal }) {
           />
           {error && <div className="text-red-400 text-sm">{error}</div>}
           <button className={btn + ' w-full'} type="submit" disabled={busy}>
-            {busy ? 'Sending…' : 'Send Magic Link'}
+            {busy ? 'Sending…' : 'Send Sign-in Email'}
           </button>
           <p className="text-xs text-slate-400 text-center">
             By continuing you agree to our{' '}
@@ -62,11 +76,34 @@ export function SignInScreen({ onBack, onSignIn, onOpenLegal }) {
           </p>
         </form>
       ) : (
-        <div className="bg-slate-800/70 border border-slate-600 rounded-xl p-6 text-center">
-          <div className="text-6xl mb-2">📧</div>
-          <div className="text-lg mb-1">Link sent to</div>
-          <div className="font-mono text-cyan-300 mb-4 break-all">{email}</div>
-          <div className="text-sm text-slate-300">Open your inbox, click the link, and you'll be redirected back here signed in.</div>
+        <div className="space-y-4">
+          <div className="bg-slate-800/70 border border-slate-600 rounded-xl p-6 text-center">
+            <div className="text-6xl mb-2">📧</div>
+            <div className="text-lg mb-1">Email sent to</div>
+            <div className="font-mono text-cyan-300 mb-4 break-all">{email}</div>
+            <div className="text-sm text-slate-300 mb-1"><b>Option 1:</b> click the link in the email — signs you in on whichever device opened it.</div>
+            <div className="text-sm text-slate-300"><b>Option 2:</b> read the inbox on another device? Enter the 6-digit code below to sign in <em>right here</em>.</div>
+          </div>
+          <form onSubmit={submitCode} className="space-y-3">
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              placeholder="123456"
+              value={code}
+              onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              className="w-full px-3 py-3 rounded-lg bg-slate-800 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white font-mono text-3xl text-center tracking-widest"
+              autoFocus
+            />
+            {error && <div className="text-red-400 text-sm text-center">{error}</div>}
+            <button className={btn + ' w-full'} type="submit" disabled={verifyBusy || code.length !== 6}>
+              {verifyBusy ? 'Verifying…' : 'Verify code & sign in'}
+            </button>
+          </form>
+          <div className="text-center">
+            <button type="button" onClick={() => { setSent(false); setCode(''); setError('') }} className="text-xs text-slate-400 underline">Use a different email</button>
+          </div>
         </div>
       )}
     </ScreenShell>

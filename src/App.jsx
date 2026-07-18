@@ -124,6 +124,7 @@ export default function App() {
       <SignInScreen
         onBack={backToTitle}
         onSignIn={auth.signInWithEmail}
+        onVerifyCode={auth.verifyEmailCode}
         onOpenLegal={(k) => setLegalKind(k)}
       />
     )

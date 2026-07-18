@@ -33,8 +33,14 @@ export function useAuth() {
   const signInWithEmail = useCallback(async (email) => {
     return supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: window.location.origin, shouldCreateUser: true },
     })
+  }, [])
+
+  // Verify a 6-digit code from the email, so users can sign in on a device
+  // that never received the link (e.g. checked their inbox on their phone).
+  const verifyEmailCode = useCallback(async (email, token) => {
+    return supabase.auth.verifyOtp({ email, token, type: 'email' })
   }, [])
 
   const signOut = useCallback(async () => {
@@ -57,5 +63,5 @@ export function useAuth() {
     return { error }
   }, [session, loadProfile])
 
-  return { session, profile, loading, signInWithEmail, signOut, saveProfile, refreshProfile: () => loadProfile(session?.user?.id) }
+  return { session, profile, loading, signInWithEmail, verifyEmailCode, signOut, saveProfile, refreshProfile: () => loadProfile(session?.user?.id) }
 }
