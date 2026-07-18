@@ -36,7 +36,11 @@ export function SignInScreen({ onBack, onSignIn, onVerifyCode, onOpenLegal }) {
     setBusy(true); setError('')
     const { error } = await onSignIn(email.trim())
     setBusy(false)
-    if (error) setError(error.message || error.error_description || JSON.stringify(error) || 'Something went wrong.')
+    if (error) {
+      console.error('[sign-in] error:', error, 'keys:', Object.keys(error || {}))
+      const raw = error.message || error.error_description || error.msg || (error.status ? `HTTP ${error.status}` : '') || ''
+      setError(raw || 'Sign-in failed. Open the browser console for details.')
+    }
     else setSent(true)
   }
 
