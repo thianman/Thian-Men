@@ -8,7 +8,7 @@ const input = 'w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 
 
 function ScreenShell({ title, subtitle, onBack, children }) {
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
+    <div className="w-screen h-screen flex flex-col items-center justify-center text-white p-4 overflow-y-auto">
       {title && <h1 className="text-4xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 mb-2 text-center">{title}</h1>}
       {subtitle && <p className="text-slate-300 mb-6 text-center max-w-md">{subtitle}</p>}
       <div className="w-full max-w-md">{children}</div>

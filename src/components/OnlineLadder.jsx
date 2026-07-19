@@ -252,7 +252,7 @@ export default function OnlineLadder({ profile, session, onExit, onLadderOver, p
 
   // fighting
   return (
-    <div ref={wrapRef} className="w-screen h-screen flex flex-col items-center justify-start bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-2">
+    <div ref={wrapRef} className="w-screen h-screen flex flex-col items-center justify-start text-white p-2">
       <div className="w-full max-w-6xl flex items-center justify-between mb-2 text-sm">
         <div>
           Fight <span className="font-mono text-amber-300">{(currentFight?.index ?? 0) + 1}</span> / {currentFight?.total || 6}
@@ -296,7 +296,7 @@ export default function OnlineLadder({ profile, session, onExit, onLadderOver, p
 
 function MenuLayout({ title, name, children, error, onExit }) {
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
+    <div className="w-screen h-screen flex flex-col items-center justify-center text-white p-4 overflow-y-auto">
       <h1 className="text-4xl md:text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 text-center">{title}</h1>
       <div className="w-full max-w-md grid gap-4">{children}</div>
       {error && <div className="text-red-400 text-sm mt-3">{error}</div>}

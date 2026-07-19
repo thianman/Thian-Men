@@ -33,7 +33,7 @@ export default function GlobalLeaderboard({ onBack }) {
   }, [filter])
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-start bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
+    <div className="w-screen h-screen flex flex-col items-center justify-start text-white p-4 overflow-y-auto">
       <h1 className="text-4xl md:text-5xl font-black mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 text-center">GLOBAL LEADERBOARD</h1>
       <p className="text-slate-300 mb-4 text-center">Fastest Survival Ladder clears from around the world.</p>
 

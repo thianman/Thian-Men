@@ -3,7 +3,48 @@
 @tailwind utilities;
 
 html, body, #root { height: 100%; margin: 0; padding: 0; }
-body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-user-select: none; user-select: none; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-user-select: none; user-select: none;
+  background:
+    radial-gradient(ellipse at 50% 22%, rgba(253, 224, 71, 0.18), transparent 55%),
+    radial-gradient(ellipse at 50% 8%,  rgba(255, 255, 255, 0.10), transparent 45%),
+    linear-gradient(180deg, #0a1226 0%, #0f1c3d 45%, #0a1226 100%);
+  background-attachment: fixed;
+  color: #f8fafc;
+}
+/* Global arena floor grid tucked under every page */
+body::before {
+  content: '';
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 42vh;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(180, 83, 9, 0.35) 25%, rgba(120, 53, 15, 0.55) 100%),
+    repeating-linear-gradient(90deg, rgba(253, 224, 71, 0.14) 0 2px, transparent 2px 80px),
+    repeating-linear-gradient(0deg,  rgba(253, 224, 71, 0.14) 0 2px, transparent 2px 80px);
+  transform: perspective(700px) rotateX(60deg);
+  transform-origin: top center;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.55;
+}
+/* Global light-rack shadow at the top */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 22vh;
+  background:
+    radial-gradient(ellipse 20% 100% at 12% 0%, rgba(253, 224, 71, 0.16), transparent 70%),
+    radial-gradient(ellipse 20% 100% at 34% 0%, rgba(253, 224, 71, 0.14), transparent 70%),
+    radial-gradient(ellipse 20% 100% at 56% 0%, rgba(253, 224, 71, 0.16), transparent 70%),
+    radial-gradient(ellipse 20% 100% at 78% 0%, rgba(253, 224, 71, 0.14), transparent 70%),
+    radial-gradient(ellipse 20% 100% at 96% 0%, rgba(253, 224, 71, 0.16), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+#root { position: relative; z-index: 1; }
 canvas { display: block; image-rendering: pixelated; touch-action: none; }
 
 @keyframes hero-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
@@ -298,11 +339,30 @@ canvas { display: block; image-rendering: pixelated; touch-action: none; }
 }
 .chip-btn:hover { background: rgba(30, 41, 59, 0.85); border-color: rgba(253, 224, 71, 0.5); color: #fde047; }
 
+/* Arena-styled page heading (used by Screen wrapper) */
+.arena-heading {
+  font-family: 'Bowlby One', 'Bungee', 'Impact', system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  font-size: clamp(1.6rem, 4.2vw, 3rem);
+  margin-top: 0.6em;
+  margin-bottom: 0.5em;
+  background: linear-gradient(180deg, #fff2c2 0%, #fde047 35%, #f59e0b 75%, #b45309 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1.5px #0a1226;
+  filter: drop-shadow(0 3px 0 #0a1226) drop-shadow(0 6px 14px rgba(0,0,0,0.5));
+  text-align: center;
+}
+
 /* Corner brand chip */
 .brand-chip {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  bottom: 12px;
+  right: 12px;
+  z-index: 20;
   font-family: 'Russo One', system-ui, sans-serif;
   letter-spacing: 0.2em;
   text-transform: uppercase;

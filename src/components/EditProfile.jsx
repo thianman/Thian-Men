@@ -51,7 +51,7 @@ export default function EditProfile({ session, profile, onSave, onDone }) {
   }
 
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-3 overflow-hidden">
+    <div className="w-screen h-screen flex flex-col items-center justify-center text-white p-3 overflow-hidden">
       <h1 className="text-3xl md:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 text-center mb-2">EDIT PROFILE</h1>
       <p className="text-slate-300 mb-4 text-sm text-center">Change how you look to other players.</p>
       <form onSubmit={submit} className="w-full max-w-md space-y-4 overflow-y-auto" style={{ maxHeight: '70vh' }}>

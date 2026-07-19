@@ -9,17 +9,39 @@ import { CHARACTER_COIN_PRICE } from '../game/progressionConstants.js'
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg text-lg border border-cyan-300/40 transition'
 const btnAlt = 'px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold shadow border border-slate-500 transition'
 
+// Ambient arena visuals — reused across every non-battle page.
+// Place inside any root container that has `position: relative` (or make it fixed).
+export function ArenaBackdrop({ fixed = false }) {
+  const lights = [10, 30, 50, 70, 90]
+  return (
+    <div className={(fixed ? 'fixed' : 'absolute') + ' inset-0 arena-bg overflow-hidden pointer-events-none'} style={{ zIndex: 0 }}>
+      <div className="arena-lights">
+        {lights.map((left, i) => (
+          <div key={i} className="arena-light" style={{ left: `calc(${left}% - 34px)` }} />
+        ))}
+      </div>
+      <div className="arena-crowd" />
+      <div className="arena-floor" />
+    </div>
+  )
+}
+
 export function Screen({ children, title, subtitle, onBack }) {
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-3 overflow-hidden">
-      {title && <h1 className="text-3xl md:text-5xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 mb-1 text-center">{title}</h1>}
-      {subtitle && <p className="text-slate-300 mb-3 text-center text-sm md:text-base">{subtitle}</p>}
-      <div className="w-full max-w-6xl overflow-y-auto" style={{ maxHeight: onBack ? '75vh' : '85vh' }}>{children}</div>
-      {onBack && (
-        <button onClick={() => { sfx.click(); onBack() }} className="mt-3 px-4 py-2 rounded bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sm">
-          ← Back
-        </button>
-      )}
+    <div className="relative w-screen h-screen flex flex-col items-center text-white overflow-hidden">
+      <ArenaBackdrop />
+      <div className="relative z-10 flex flex-col items-center w-full h-full p-3">
+        {title && (
+          <h1 className="arena-heading">{title}</h1>
+        )}
+        {subtitle && <p className="text-amber-100/80 mb-3 text-center text-sm md:text-base tracking-[0.25em] uppercase">{subtitle}</p>}
+        <div className="w-full max-w-6xl overflow-y-auto" style={{ maxHeight: onBack ? '72vh' : '82vh' }}>{children}</div>
+        {onBack && (
+          <button onClick={() => { sfx.click(); onBack() }} className="chip-btn mt-3">
+            ← Back
+          </button>
+        )}
+      </div>
     </div>
   )
 }

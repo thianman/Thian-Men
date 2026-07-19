@@ -204,7 +204,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver
   )
 
   return (
-    <div ref={wrapRef} className="w-screen h-screen flex flex-col items-center justify-start bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-2">
+    <div ref={wrapRef} className="w-screen h-screen flex flex-col items-center justify-start text-white p-2">
       <div className="w-full max-w-6xl flex items-center justify-between mb-2 text-sm">
         <div>Room <span className="font-mono text-cyan-300">{code}</span> · <span className="uppercase text-fuchsia-300">{me?.type || '1v1'}</span></div>
         <div className="flex items-center gap-3">
@@ -234,7 +234,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver
 
 function MenuLayout({ title, name, children, error, onExit }) {
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4">
+    <div className="w-screen h-screen flex flex-col items-center justify-center text-white p-4">
       <h1 className="text-4xl md:text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300">{title}</h1>
       <div className="w-full max-w-md grid gap-4">{children}</div>
       {error && <div className="text-red-400 text-sm mt-3">{error}</div>}
@@ -258,7 +258,7 @@ function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCh
   const rightSlots = lobby?.slots?.filter(s => s.side === 'right') || []
 
   return (
-    <div className="w-screen h-screen bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-4 overflow-y-auto">
+    <div className="w-screen h-screen text-white p-4 overflow-y-auto">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div>
