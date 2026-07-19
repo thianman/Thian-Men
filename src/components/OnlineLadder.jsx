@@ -6,6 +6,7 @@ import { countryName } from '../lib/countries.js'
 import { TouchControls, isMobile as detectMobile } from './TouchControls.jsx'
 import { getAvatarImage } from '../lib/avatars.js'
 import { characterUnlockInfo } from '../lib/progression.js'
+import { drawHumanFigure } from '../game/render.js'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg border border-cyan-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
 const btnBig = 'px-8 py-3 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black text-xl border border-emerald-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
@@ -339,48 +340,17 @@ function drawGame(ctx, snap, me) {
     ctx.strokeStyle = b.uncatchable ? '#f0abfc' : '#7c2d12'; ctx.lineWidth = 2; ctx.stroke()
   }
   for (const p of snap.players) {
-    const char = CHARACTERS.find(c => c.id === p.character)
-    const color = char?.color || '#888'
+    const char = CHARACTERS.find(c => c.id === p.character) || {}
     const w = 56, h = p.ducking ? 48 : 96
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'
-    ctx.beginPath(); ctx.ellipse(p.x + w/2, p.y + h + 4, w/2, 6, 0, 0, Math.PI * 2); ctx.fill()
-    ctx.fillStyle = p.hitFlash > 0 ? '#fff' : color
-    ctx.fillRect(p.x + 4, p.y + 12, w - 8, h - 20)
-    ctx.fillStyle = p.hitFlash > 0 ? '#fff' : lighten(color, 20)
-    ctx.beginPath(); ctx.arc(p.x + w/2, p.y + 12, 14, 0, Math.PI * 2); ctx.fill()
-    ctx.strokeStyle = p.side === 'left' ? '#38bdf8' : '#f87171'
-    ctx.lineWidth = 3; ctx.strokeRect(p.x + 2, p.y + 10, w - 4, h - 16)
+    drawHumanFigure(ctx, {
+      x: p.x, y: p.y, w, h, char,
+      side: p.side, facing: p.facing, ducking: p.ducking, hitFlash: p.hitFlash,
+      holdingBall: p.holdingBall, hp: p.hp,
+      displayName: p.name, avatarUrl: p.avatarUrl,
+    })
     if (me && p.playerId === me.playerId) {
       ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3
       ctx.strokeRect(p.x - 4, p.y - 4, w + 8, h + 8)
-    }
-    for (let i = 0; i < p.hp; i++) {
-      ctx.fillStyle = '#22c55e'
-      ctx.beginPath(); ctx.arc(p.x + w/2 - 12 + i * 12, p.y - 8, 4, 0, Math.PI * 2); ctx.fill()
-    }
-    const label = p.name || (CHARACTERS.find(c => c.id === p.character)?.name || '')
-    const avatarImg = p.avatarUrl ? getAvatarImage(p.avatarUrl) : null
-    ctx.font = 'bold 12px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-    const labelW = ctx.measureText(label).width + (avatarImg ? 22 : 8)
-    const plateH = 16
-    const plateY = avatarImg ? p.y - 46 : p.y - 22
-    ctx.fillStyle = 'rgba(0,0,0,0.5)'
-    ctx.fillRect(p.x + w/2 - labelW/2, plateY, labelW, plateH)
-    if (avatarImg) {
-      ctx.save()
-      ctx.beginPath(); ctx.arc(p.x + w/2, p.y - 30, 12, 0, Math.PI*2); ctx.clip()
-      ctx.drawImage(avatarImg, p.x + w/2 - 12, p.y - 42, 24, 24)
-      ctx.restore()
-      ctx.strokeStyle = p.side === 'left' ? '#38bdf8' : '#f87171'
-      ctx.lineWidth = 2
-      ctx.beginPath(); ctx.arc(p.x + w/2, p.y - 30, 12, 0, Math.PI*2); ctx.stroke()
-    }
-    ctx.fillStyle = '#fff'
-    ctx.fillText(label, p.x + w/2, plateY + plateH/2)
-    if (p.holdingBall) {
-      ctx.fillStyle = '#fde047'
-      ctx.beginPath(); ctx.arc(p.x + w/2 + p.facing * 22, p.y + 34, 14, 0, Math.PI * 2); ctx.fill()
-      ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 2; ctx.stroke()
     }
     if (p.charging) {
       const bw = 60, bh = 8, bx = p.x + w/2 - bw/2, by = p.y - 34

@@ -229,80 +229,161 @@ function drawMapDecor(ctx, m) {
 }
 
 function drawPlayer(ctx, p, opts = {}) {
+  drawHumanFigure(ctx, {
+    x: p.x, y: p.y, w: p.w, h: p.h,
+    char: p.char, side: p.side, facing: p.facing,
+    ducking: p.ducking, hitFlash: p.hitFlash,
+    bigHead: opts.bigHead, holdingBall: !!p.holdingBall,
+    hp: p.hp, charging: p.charging, chargeVal: p.chargeVal,
+    displayName: p.displayName, avatarUrl: p.avatarUrl,
+  })
+}
+
+// Shared human-figure renderer. Same shape used by offline + online.
+export function drawHumanFigure(ctx, p) {
   const flash = p.hitFlash > 0
   const shape = p.char.shape || 'normal'
-  const headScale = opts.bigHead ? 1.6 : 1
+  const headScale = p.bigHead ? 1.6 : 1
   ctx.save()
   ctx.translate(p.x, p.y)
-  // Shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.3)'
-  ctx.beginPath(); ctx.ellipse(p.w/2, p.h + 4, p.w/2, 6, 0, 0, Math.PI*2); ctx.fill()
+  // Ground shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'
+  ctx.beginPath(); ctx.ellipse(p.w/2, p.h + 3, p.w/2 - 4, 5, 0, 0, Math.PI*2); ctx.fill()
 
-  // Shape-specific body proportions
-  let bodyX = 4, bodyW = p.w - 8, headR = 14
-  if (shape === 'bulky')  { bodyX = 0; bodyW = p.w;      headR = 12 }
-  if (shape === 'slim')   { bodyX = 10; bodyW = p.w - 20; headR = 12 }
-  if (shape === 'tall')   { bodyX = 6; bodyW = p.w - 12; headR = 12 }
-  if (shape === 'short')  { bodyX = 2; bodyW = p.w - 4;  headR = 15 }
-  if (shape === 'ghost')  { bodyX = 6; bodyW = p.w - 12; headR = 15 }
+  const cx = p.w / 2
+  // Vertical layout (top y of each body part). Compressed when ducking.
+  const duckSquish = p.ducking ? 0.5 : 1
+  const headR = (shape === 'short' ? 12 : shape === 'ghost' ? 13 : 11) * headScale
+  const headY = headR + 2
+  const neckY = headY + headR - 2
+  const torsoTop = neckY + 2
+  const torsoH = (34 * duckSquish)
+  const torsoBot = torsoTop + torsoH
+  const legTop = torsoBot
+  const legH = Math.max(6, p.h - legTop - 4)
 
-  // Body
+  // === Legs ===
+  const legColor = flash ? '#fff' : '#1e293b'
+  const shoeColor = flash ? '#fff' : p.char.accent
+  const legW = 8
+  const legXL = cx - 10, legXR = cx + 2
+  // Left leg
+  ctx.fillStyle = legColor
+  roundRect(ctx, legXL, legTop, legW, legH, 3, true)
+  // Right leg
+  roundRect(ctx, legXR, legTop, legW, legH, 3, true)
+  // Shoes
+  ctx.fillStyle = shoeColor
+  roundRect(ctx, legXL - 1, legTop + legH - 4, legW + 3, 4, 2, true)
+  roundRect(ctx, legXR - 1, legTop + legH - 4, legW + 3, 4, 2, true)
+
+  // === Arms (behind torso) ===
+  const armColor = flash ? '#fff' : shade(p.char.color, -25)
+  const armW = 6
+  const armH = torsoH - 4
+  ctx.fillStyle = armColor
+  // Back arm (opposite of facing)
+  const backArmX = p.facing === 1 ? cx - p.w/2 + 4 : cx + p.w/2 - 4 - armW
+  roundRect(ctx, backArmX, torsoTop + 2, armW, armH, 3, true)
+
+  // === Torso / shirt ===
+  const torsoW = shape === 'bulky' ? p.w - 12 : shape === 'slim' ? p.w - 24 : p.w - 18
+  const torsoX = cx - torsoW / 2
   ctx.fillStyle = flash ? '#fff' : p.char.color
-  if (shape === 'ghost') {
-    ctx.globalAlpha = 0.85
-    roundRect(ctx, bodyX, 14, bodyW, p.h - 22, 14, true)
-    ctx.globalAlpha = 1
-  } else {
-    roundRect(ctx, bodyX, 12, bodyW, p.h - 20, 8, true)
-  }
+  if (shape === 'ghost') { ctx.globalAlpha = 0.85 }
+  roundRect(ctx, torsoX, torsoTop, torsoW, torsoH, 6, true)
+  ctx.globalAlpha = 1
 
-  // Accent stripe
+  // Accent belt / stripe
   if (!flash && shape !== 'ghost') {
     ctx.fillStyle = p.char.accent
-    ctx.fillRect(bodyX + 4, p.h * 0.4, bodyW - 8, 4)
+    ctx.fillRect(torsoX, torsoBot - 5, torsoW, 3)
   }
 
-  // Head
-  const drawHeadR = headR * headScale
-  ctx.fillStyle = flash ? '#fff' : lighten(p.char.color, 20)
-  ctx.beginPath(); ctx.arc(p.w/2, 12, drawHeadR, 0, Math.PI*2); ctx.fill()
+  // Number-style shirt panel (subtle inner rect)
+  if (!flash && shape !== 'ghost') {
+    ctx.fillStyle = shade(p.char.color, -15)
+    ctx.fillRect(torsoX + 4, torsoTop + 6, torsoW - 8, torsoH - 12)
+  }
 
-  // Character-specific head decor
+  // === Front arm (in front of torso) ===
+  ctx.fillStyle = armColor
+  const frontArmX = p.facing === 1 ? cx + p.w/2 - 4 - armW : cx - p.w/2 + 4
+  // If holding ball, arm reaches slightly forward
+  const frontArmY = torsoTop + 2 + (p.holdingBall ? -3 : 0)
+  roundRect(ctx, frontArmX, frontArmY, armW, armH, 3, true)
+  // Hand at tip of front arm
+  ctx.fillStyle = flash ? '#fff' : lighten(p.char.color, 25)
+  ctx.beginPath(); ctx.arc(frontArmX + armW/2, frontArmY + armH, 4, 0, Math.PI*2); ctx.fill()
+
+  // === Head ===
+  const skinCol = flash ? '#fff' : '#f2d5b0'
+  ctx.fillStyle = skinCol
+  ctx.beginPath(); ctx.arc(cx, headY, headR, 0, Math.PI*2); ctx.fill()
+
+  // Hair / hat
   if (!flash) {
     if (shape === 'bulky') {
-      // helmet band
+      // buzz cut + helmet band
+      ctx.fillStyle = '#1f2937'
+      ctx.beginPath(); ctx.arc(cx, headY, headR + 1, Math.PI, Math.PI * 2); ctx.fill()
       ctx.fillStyle = '#0f172a'
-      ctx.fillRect(p.w/2 - headR, 8, headR * 2, 4)
+      ctx.fillRect(cx - headR - 1, headY - 2, headR * 2 + 2, 3)
     } else if (shape === 'tall') {
-      // headband
+      // dark hair + headband
+      ctx.fillStyle = '#111827'
+      ctx.beginPath(); ctx.arc(cx, headY - 1, headR, Math.PI, Math.PI * 2); ctx.fill()
       ctx.fillStyle = p.char.accent
-      ctx.fillRect(p.w/2 - headR, 6, headR * 2, 3)
+      ctx.fillRect(cx - headR, headY - 2, headR * 2, 3)
     } else if (shape === 'ghost') {
-      // extra head glow
-      ctx.fillStyle = 'rgba(255,255,255,0.3)'
-      ctx.beginPath(); ctx.arc(p.w/2, 12, headR + 5, 0, Math.PI*2); ctx.fill()
+      // glowing hair
+      ctx.fillStyle = 'rgba(255,255,255,0.7)'
+      ctx.beginPath(); ctx.arc(cx, headY - 2, headR + 2, Math.PI, Math.PI * 2); ctx.fill()
     } else if (shape === 'slim') {
-      // hair tuft
+      // spiky hair up
       ctx.fillStyle = p.char.accent
-      ctx.beginPath()
-      ctx.moveTo(p.w/2, -6); ctx.lineTo(p.w/2 - 6, 4); ctx.lineTo(p.w/2 + 6, 4)
-      ctx.closePath(); ctx.fill()
+      for (let i = -2; i <= 2; i++) {
+        const sx = cx + i * 5
+        ctx.beginPath()
+        ctx.moveTo(sx - 3, headY - headR + 3)
+        ctx.lineTo(sx + 3, headY - headR + 3)
+        ctx.lineTo(sx, headY - headR - 5)
+        ctx.closePath(); ctx.fill()
+      }
     } else if (shape === 'short') {
-      // cap
+      // baseball cap
       ctx.fillStyle = p.char.accent
-      roundRect(ctx, p.w/2 - headR, -2, headR * 2, 8, 4, true)
+      roundRect(ctx, cx - headR, headY - headR - 1, headR * 2, 8, 3, true)
+      // Brim (facing forward)
+      const brimX = p.facing === 1 ? cx : cx - headR - 4
+      ctx.fillRect(brimX, headY - 4, headR + 4, 3)
+    } else {
+      // default: swept hair
+      ctx.fillStyle = '#4b3a2b'
+      ctx.beginPath(); ctx.arc(cx, headY - 1, headR, Math.PI, Math.PI * 2); ctx.fill()
     }
   }
 
-  // Eye (facing)
-  ctx.fillStyle = '#0b0f1a'
-  const eyeX = p.w/2 + (p.facing === 1 ? 4 : -4)
-  ctx.beginPath(); ctx.arc(eyeX, 12, 3, 0, Math.PI*2); ctx.fill()
+  // Eyes (two, facing direction offsets pupils)
+  if (!flash) {
+    ctx.fillStyle = '#fff'
+    const eyeY = headY + 1
+    ctx.beginPath(); ctx.arc(cx - 4, eyeY, 2.5, 0, Math.PI*2); ctx.fill()
+    ctx.beginPath(); ctx.arc(cx + 4, eyeY, 2.5, 0, Math.PI*2); ctx.fill()
+    ctx.fillStyle = '#0b0f1a'
+    const pupilOffset = p.facing === 1 ? 1 : -1
+    ctx.beginPath(); ctx.arc(cx - 4 + pupilOffset, eyeY, 1.4, 0, Math.PI*2); ctx.fill()
+    ctx.beginPath(); ctx.arc(cx + 4 + pupilOffset, eyeY, 1.4, 0, Math.PI*2); ctx.fill()
 
-  // Side indicator (P1 blue outline, P2 red outline)
+    // Mouth
+    ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 1.4
+    ctx.beginPath(); ctx.arc(cx, headY + 5, 3, 0, Math.PI); ctx.stroke()
+  }
+
+  // Team outline halo
   ctx.strokeStyle = p.side === 'left' ? '#38bdf8' : '#f87171'
-  ctx.lineWidth = 3
-  roundRect(ctx, 2, 10, p.w - 4, p.h - 16, 10, false, true)
+  ctx.lineWidth = 2
+  roundRect(ctx, 2, 4, p.w - 4, p.h - 6, 12, false, true)
 
   // Holding ball indicator
   if (p.holdingBall) {
@@ -512,6 +593,7 @@ function roundRect(ctx, x, y, w, h, r, fill, stroke) {
   if (stroke) ctx.stroke()
 }
 function lighten(hex, amt) { return shadeColor(hex, amt) }
+function shade(hex, amt) { return shadeColor(hex, amt) }
 function shadeColor(hex, amt) {
   const c = hex.replace('#','')
   const num = parseInt(c, 16)
