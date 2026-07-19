@@ -90,33 +90,52 @@ function HeroScene() {
         {/* Center dashed line */}
         <line x1="400" y1="50" x2="400" y2="240" stroke="white" strokeOpacity="0.15" strokeDasharray="6 8" />
 
-        {/* --- BLAZE on left, mid-throw --- */}
+        {/* --- BLAZE on left, mid-throw (humanoid, smug) --- */}
         <g className="hero-blaze">
           {/* shadow */}
           <ellipse cx="180" cy="245" rx="34" ry="6" fill="black" opacity="0.35" />
-          {/* trailing after-images (motion) */}
-          <g opacity="0.25">
-            <rect x="120" y="150" width="46" height="86" rx="10" fill="#ff5c33" />
-            <circle cx="143" cy="150" r="14" fill="#ff7a5c" />
+          {/* motion afterimage */}
+          <g opacity="0.28">
+            <rect x="150" y="170" width="30" height="42" rx="6" fill="#ff5c33" />
+            <circle cx="165" cy="158" r="12" fill="#f2d5b0" />
           </g>
-          <g opacity="0.4">
-            <rect x="140" y="150" width="46" height="86" rx="10" fill="#ff5c33" />
-            <circle cx="163" cy="150" r="14" fill="#ff7a5c" />
+          {/* Legs */}
+          <rect x="168" y="205" width="9" height="34" rx="3" fill="#1e293b" />
+          <rect x="187" y="205" width="9" height="34" rx="3" fill="#1e293b" />
+          {/* Shoes */}
+          <rect x="166" y="235" width="13" height="6" rx="2" fill="#ffd400" />
+          <rect x="185" y="235" width="13" height="6" rx="2" fill="#ffd400" />
+          {/* Back arm (behind torso) */}
+          <path d="M 170 175 Q 145 200 138 218" stroke="#c94422" strokeWidth="7" strokeLinecap="round" fill="none" />
+          {/* Torso (slim) */}
+          <rect x="165" y="170" width="35" height="40" rx="6" fill="#ff5c33" />
+          <rect x="167" y="200" width="31" height="4" fill="#ffd400" />
+          <rect x="169" y="176" width="27" height="28" fill="#e2481f" opacity="0.55" />
+          {/* Front arm mid-throw (extending right toward ball) */}
+          <path d="M 195 178 Q 240 158 285 168" stroke="#c94422" strokeWidth="8" strokeLinecap="round" fill="none" />
+          <circle cx="286" cy="168" r="6.5" fill="#f2d5b0" />
+          {/* Head */}
+          <circle cx="183" cy="158" r="12" fill="#f2d5b0" />
+          {/* Spiky hair (slim) */}
+          <g fill="#ffd400">
+            <polygon points="173,148 179,152 176,140" />
+            <polygon points="178,146 184,151 182,138" />
+            <polygon points="184,146 190,150 187,138" />
+            <polygon points="190,148 194,152 194,140" />
           </g>
-          {/* body */}
-          <rect x="160" y="150" width="46" height="86" rx="10" fill="#ff5c33" />
-          {/* accent stripe */}
-          <rect x="164" y="192" width="38" height="4" fill="#ffd400" />
-          {/* head + hair tuft (slim shape) */}
-          <circle cx="183" cy="150" r="14" fill="#ff7a5c" />
-          <polygon points="183,132 175,143 191,143" fill="#ffd400" />
-          {/* eye facing right */}
-          <circle cx="188" cy="150" r="3" fill="#0b0f1a" />
-          {/* arm mid-throw (extending right toward ball) */}
-          <path d="M 202 175 Q 250 155 285 168" stroke="#ff5c33" strokeWidth="10" strokeLinecap="round" fill="none" />
-          <circle cx="285" cy="168" r="7" fill="#ff7a5c" />
-          {/* outline */}
-          <rect x="158" y="148" width="50" height="90" rx="12" fill="none" stroke="#38bdf8" strokeWidth="2.5" />
+          {/* Smug expression, facing right */}
+          {/* Eyes */}
+          <circle cx="180" cy="159" r="2.4" fill="#fff" />
+          <circle cx="188" cy="159" r="2.4" fill="#fff" />
+          <circle cx="181" cy="159" r="1.3" fill="#0b0f1a" />
+          <circle cx="189" cy="159" r="1.3" fill="#0b0f1a" />
+          {/* Level brow + raised brow */}
+          <line x1="177" y1="155" x2="183" y2="155" stroke="#1f2937" strokeWidth="1.6" strokeLinecap="round" />
+          <line x1="185" y1="153" x2="191" y2="153" stroke="#1f2937" strokeWidth="1.6" strokeLinecap="round" />
+          {/* Half-smirk */}
+          <path d="M 180 166 L 187 164" stroke="#7c2d12" strokeWidth="1.6" strokeLinecap="round" fill="none" />
+          {/* Team outline halo */}
+          <rect x="162" y="153" width="42" height="88" rx="10" fill="none" stroke="#38bdf8" strokeWidth="2" opacity="0.7" />
           {/* charge/burst behind body */}
           <g filter="url(#softGlow)" opacity="0.7">
             <circle cx="150" cy="200" r="6" fill="#ffd400" />
@@ -150,35 +169,51 @@ function HeroScene() {
           </g>
         </g>
 
-        {/* --- Dodger on right (Ghost silhouette, mid-air backflip dodge) --- */}
-        <g className="hero-ghost">
+        {/* --- GHOST on right (humanoid, mischievous, leaning back mid-dodge) --- */}
+        <g className="hero-ghost" transform="rotate(-8 660 180)">
           {/* shadow */}
-          <ellipse cx="640" cy="245" rx="34" ry="6" fill="black" opacity="0.3" />
-          {/* motion afterimages leaning back */}
+          <ellipse cx="660" cy="245" rx="34" ry="6" fill="black" opacity="0.3" />
+          {/* motion afterimages */}
           <g opacity="0.28">
-            <rect x="655" y="115" width="46" height="82" rx="14" fill="#9adfff" transform="rotate(-14 678 156)" />
-            <circle cx="678" cy="118" r="15" fill="#bde9ff" transform="rotate(-14 678 156)" />
+            <rect x="655" y="170" width="30" height="42" rx="6" fill="#9adfff" />
+            <circle cx="670" cy="158" r="13" fill="#f2d5b0" />
           </g>
-          <g opacity="0.5">
-            <rect x="648" y="115" width="46" height="82" rx="14" fill="#9adfff" transform="rotate(-10 671 156)" />
-            <circle cx="671" cy="118" r="15" fill="#bde9ff" transform="rotate(-10 671 156)" />
-          </g>
-          {/* body — ghost translucent */}
-          <g opacity="0.9">
-            <rect x="640" y="115" width="46" height="82" rx="14" fill="#9adfff" transform="rotate(-6 663 156)" />
-          </g>
-          {/* head glow */}
-          <circle cx="663" cy="118" r="21" fill="white" opacity="0.25" />
-          <circle cx="663" cy="118" r="15" fill="#bde9ff" />
-          {/* eye facing left */}
-          <circle cx="658" cy="118" r="3" fill="#0b0f1a" />
-          {/* outline */}
-          <rect x="638" y="113" width="50" height="86" rx="16" fill="none" stroke="#f87171" strokeWidth="2.5" transform="rotate(-6 663 156)" />
-          {/* trailing streak lines behind dodger */}
-          <path d="M 720 130 Q 760 140 790 125" stroke="#22d3ee" strokeOpacity="0.55" strokeWidth="3" fill="none" strokeLinecap="round" />
-          <path d="M 720 150 Q 760 158 790 148" stroke="#22d3ee" strokeOpacity="0.35" strokeWidth="2" fill="none" strokeLinecap="round" />
-          <path d="M 720 170 Q 760 175 790 168" stroke="#22d3ee" strokeOpacity="0.25" strokeWidth="2" fill="none" strokeLinecap="round" />
+          {/* Legs */}
+          <rect x="646" y="205" width="9" height="34" rx="3" fill="#1e293b" />
+          <rect x="665" y="205" width="9" height="34" rx="3" fill="#1e293b" />
+          {/* Shoes */}
+          <rect x="644" y="235" width="13" height="6" rx="2" fill="#ffffff" />
+          <rect x="663" y="235" width="13" height="6" rx="2" fill="#ffffff" />
+          {/* Back arm (behind torso) — flung out behind */}
+          <path d="M 673 178 Q 705 195 720 218" stroke="#5da3c4" strokeWidth="7" strokeLinecap="round" fill="none" />
+          {/* Torso — translucent ghost */}
+          <rect x="643" y="170" width="35" height="40" rx="8" fill="#9adfff" opacity="0.9" />
+          {/* Front arm — reaching out, dodging */}
+          <path d="M 648 178 Q 620 172 605 158" stroke="#5da3c4" strokeWidth="7" strokeLinecap="round" fill="none" />
+          <circle cx="604" cy="157" r="6" fill="#f2d5b0" />
+          {/* Head */}
+          <circle cx="661" cy="158" r="13" fill="#f2d5b0" />
+          {/* Glowing hair */}
+          <path d="M 648 152 Q 661 138 674 152" fill="#ffffff" opacity="0.65" />
+          <circle cx="661" cy="150" r="15" fill="#ffffff" opacity="0.18" />
+          {/* Mischievous expression, facing left */}
+          {/* Wink (left eye, since facing left) */}
+          <line x1="653" y1="159" x2="659" y2="159" stroke="#1f2937" strokeWidth="1.6" strokeLinecap="round" />
+          {/* Open right eye */}
+          <circle cx="666" cy="159" r="2.4" fill="#fff" />
+          <circle cx="665" cy="159" r="1.3" fill="#0b0f1a" />
+          {/* Playful brows */}
+          <line x1="650" y1="154" x2="656" y2="155" stroke="#1f2937" strokeWidth="1.6" strokeLinecap="round" />
+          <line x1="663" y1="154" x2="669" y2="153" stroke="#1f2937" strokeWidth="1.6" strokeLinecap="round" />
+          {/* Wide grin */}
+          <path d="M 656 165 Q 660 170 665 165" stroke="#7c2d12" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+          {/* Team outline halo */}
+          <rect x="640" y="153" width="42" height="88" rx="10" fill="none" stroke="#f87171" strokeWidth="2" opacity="0.7" />
         </g>
+        {/* trailing streak lines behind dodger */}
+        <path d="M 720 130 Q 760 140 790 125" stroke="#22d3ee" strokeOpacity="0.55" strokeWidth="3" fill="none" strokeLinecap="round" />
+        <path d="M 720 150 Q 760 158 790 148" stroke="#22d3ee" strokeOpacity="0.35" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path d="M 720 170 Q 760 175 790 168" stroke="#22d3ee" strokeOpacity="0.25" strokeWidth="2" fill="none" strokeLinecap="round" />
 
         {/* Foreground sparks near ball impact side */}
         <g>

@@ -364,20 +364,9 @@ export function drawHumanFigure(ctx, p) {
     }
   }
 
-  // Eyes (two, facing direction offsets pupils)
+  // Eyes + mouth vary by expression to give each character a distinct vibe.
   if (!flash) {
-    ctx.fillStyle = '#fff'
-    const eyeY = headY + 1
-    ctx.beginPath(); ctx.arc(cx - 4, eyeY, 2.5, 0, Math.PI*2); ctx.fill()
-    ctx.beginPath(); ctx.arc(cx + 4, eyeY, 2.5, 0, Math.PI*2); ctx.fill()
-    ctx.fillStyle = '#0b0f1a'
-    const pupilOffset = p.facing === 1 ? 1 : -1
-    ctx.beginPath(); ctx.arc(cx - 4 + pupilOffset, eyeY, 1.4, 0, Math.PI*2); ctx.fill()
-    ctx.beginPath(); ctx.arc(cx + 4 + pupilOffset, eyeY, 1.4, 0, Math.PI*2); ctx.fill()
-
-    // Mouth
-    ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 1.4
-    ctx.beginPath(); ctx.arc(cx, headY + 5, 3, 0, Math.PI); ctx.stroke()
+    drawExpression(ctx, cx, headY, p.facing, p.char.expression || 'smile')
   }
 
   // Team outline halo
@@ -423,6 +412,108 @@ export function drawHumanFigure(ctx, p) {
   ctx.fillText(label, p.w/2, plateY + plateH/2)
 
   ctx.restore()
+}
+
+// Draws eyes, brows, and mouth based on the character's personality tag.
+export function drawExpression(ctx, cx, headY, facing, expression) {
+  const eyeY = headY + 1
+  const pupilOffset = facing === 1 ? 1 : -1
+  const eyeWhite = '#fff'
+  const pupil = '#0b0f1a'
+  const brow = '#1f2937'
+  const mouth = '#7c2d12'
+
+  const drawEye = (ex, ey, r = 2.5, pr = 1.4, closed = false) => {
+    if (closed) {
+      ctx.strokeStyle = brow; ctx.lineWidth = 1.4
+      ctx.beginPath(); ctx.moveTo(ex - r, ey); ctx.lineTo(ex + r, ey); ctx.stroke()
+      return
+    }
+    ctx.fillStyle = eyeWhite
+    ctx.beginPath(); ctx.arc(ex, ey, r, 0, Math.PI*2); ctx.fill()
+    ctx.fillStyle = pupil
+    ctx.beginPath(); ctx.arc(ex + pupilOffset, ey, pr, 0, Math.PI*2); ctx.fill()
+  }
+  const drawBrow = (ex, ey, dx, dy) => {
+    ctx.strokeStyle = brow; ctx.lineWidth = 1.6
+    ctx.beginPath(); ctx.moveTo(ex - dx, ey - dy); ctx.lineTo(ex + dx, ey + dy); ctx.stroke()
+  }
+
+  switch (expression) {
+    case 'smug': {
+      // one raised brow, half-smirk
+      drawEye(cx - 4, eyeY); drawEye(cx + 4, eyeY)
+      drawBrow(cx - 4, headY - 3, 3, 1)          // level brow
+      drawBrow(cx + 4, headY - 4, 3, 0)          // raised brow
+      ctx.strokeStyle = mouth; ctx.lineWidth = 1.4
+      ctx.beginPath(); ctx.moveTo(cx - 3, headY + 6); ctx.lineTo(cx + 4, headY + 4); ctx.stroke()
+      break
+    }
+    case 'angry': {
+      // furrowed V brows, gritted teeth
+      drawEye(cx - 4, eyeY, 2.2, 1.2); drawEye(cx + 4, eyeY, 2.2, 1.2)
+      drawBrow(cx - 4, headY - 3, 3, -2)         // \
+      drawBrow(cx + 4, headY - 3, 3, 2)          // /
+      ctx.fillStyle = mouth
+      ctx.fillRect(cx - 4, headY + 5, 8, 2)
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 0.8
+      for (let i = -3; i <= 3; i += 2) {
+        ctx.beginPath(); ctx.moveTo(cx + i, headY + 5); ctx.lineTo(cx + i, headY + 7); ctx.stroke()
+      }
+      break
+    }
+    case 'focused': {
+      // level brows, neutral tight mouth
+      drawEye(cx - 4, eyeY); drawEye(cx + 4, eyeY)
+      drawBrow(cx - 4, headY - 3, 3, 0)
+      drawBrow(cx + 4, headY - 3, 3, 0)
+      ctx.strokeStyle = mouth; ctx.lineWidth = 1.4
+      ctx.beginPath(); ctx.moveTo(cx - 3, headY + 6); ctx.lineTo(cx + 3, headY + 6); ctx.stroke()
+      break
+    }
+    case 'mischievous': {
+      // wink + wide grin
+      const winkLeft = facing === 1
+      drawEye(cx - 4, eyeY, 2.5, 1.4, winkLeft)
+      drawEye(cx + 4, eyeY, 2.5, 1.4, !winkLeft)
+      drawBrow(cx - 4, headY - 4, 3, 1)
+      drawBrow(cx + 4, headY - 4, 3, -1)
+      ctx.strokeStyle = mouth; ctx.lineWidth = 1.6
+      ctx.beginPath(); ctx.arc(cx, headY + 4, 4, 0, Math.PI); ctx.stroke()
+      break
+    }
+    case 'intense': {
+      // angled brows, gritted teeth
+      drawEye(cx - 4, eyeY, 2.2, 1.4); drawEye(cx + 4, eyeY, 2.2, 1.4)
+      drawBrow(cx - 4, headY - 3, 3, -1)
+      drawBrow(cx + 4, headY - 3, 3, 1)
+      ctx.fillStyle = mouth
+      ctx.fillRect(cx - 4, headY + 5, 8, 2)
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 0.8
+      for (let i = -3; i <= 3; i += 2) {
+        ctx.beginPath(); ctx.moveTo(cx + i, headY + 5); ctx.lineTo(cx + i, headY + 7); ctx.stroke()
+      }
+      break
+    }
+    case 'cocky': {
+      // one raised brow, big sideways smirk (matches facing)
+      drawEye(cx - 4, eyeY); drawEye(cx + 4, eyeY)
+      const raiseRight = facing === 1
+      drawBrow(cx - 4, headY - (raiseRight ? 3 : 4), 3, 0)
+      drawBrow(cx + 4, headY - (raiseRight ? 4 : 3), 3, 0)
+      ctx.strokeStyle = mouth; ctx.lineWidth = 1.6
+      ctx.beginPath()
+      if (facing === 1) { ctx.moveTo(cx - 3, headY + 6); ctx.lineTo(cx + 5, headY + 3) }
+      else               { ctx.moveTo(cx - 5, headY + 3); ctx.lineTo(cx + 3, headY + 6) }
+      ctx.stroke()
+      break
+    }
+    default: {
+      drawEye(cx - 4, eyeY); drawEye(cx + 4, eyeY)
+      ctx.strokeStyle = mouth; ctx.lineWidth = 1.4
+      ctx.beginPath(); ctx.arc(cx, headY + 5, 3, 0, Math.PI); ctx.stroke()
+    }
+  }
 }
 
 function drawHazard(ctx, h) {

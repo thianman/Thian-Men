@@ -12,42 +12,42 @@ export const CATCH_BUFFER_MS = 180 // input-buffer window on catch press
 export const THROW_CHARGE_MS = 1000
 
 export const CHARACTERS = [
-  { id: 'blaze',   name: 'BLAZE',   speed: 6, jump: 30, throwMul: 0.8, color: '#ff5c33', vibe: 'Speed demon',        shape: 'slim',    accent: '#ffd400',
+  { id: 'blaze',   name: 'BLAZE',   speed: 6, jump: 30, throwMul: 0.8, color: '#ff5c33', vibe: 'Speed demon',        shape: 'slim',    accent: '#ffd400', expression: 'smug',
     perk: { dashCdMul: 0.55, label: 'Quick Dash', desc: 'Dash cooldown cut nearly in half.' },
     skins: [
       { name: 'Default', color: '#ff5c33', accent: '#ffd400' },
       { name: 'Ember',   color: '#7f1d1d', accent: '#fb923c' },
       { name: 'Neon',    color: '#f472b6', accent: '#22d3ee' },
     ] },
-  { id: 'tank',    name: 'TANK',    speed: 3, jump: 15, throwMul: 1.4, color: '#7a4a2a', vibe: 'Heavy hitter',       shape: 'bulky',   accent: '#facc15',
+  { id: 'tank',    name: 'TANK',    speed: 3, jump: 15, throwMul: 1.4, color: '#7a4a2a', vibe: 'Heavy hitter',       shape: 'bulky',   accent: '#facc15', expression: 'angry',
     perk: { catchWindowMul: 1.5, label: 'Iron Hands', desc: 'Catch window is 50% bigger.' },
     skins: [
       { name: 'Default', color: '#7a4a2a', accent: '#facc15' },
       { name: 'Bronze',  color: '#92400e', accent: '#fde68a' },
       { name: 'Steel',   color: '#475569', accent: '#e2e8f0' },
     ] },
-  { id: 'nova',    name: 'NOVA',    speed: 5, jump: 22, throwMul: 1.0, color: '#8a5cf6', vibe: 'All-around',         shape: 'normal',  accent: '#f0abfc',
+  { id: 'nova',    name: 'NOVA',    speed: 5, jump: 22, throwMul: 1.0, color: '#8a5cf6', vibe: 'All-around',         shape: 'normal',  accent: '#f0abfc', expression: 'focused',
     perk: { chargeSpeedMul: 1.35, label: 'Quick Draw', desc: 'Throws charge 35% faster.' },
     skins: [
       { name: 'Default', color: '#8a5cf6', accent: '#f0abfc' },
       { name: 'Sunset',  color: '#e11d48', accent: '#fde047' },
       { name: 'Frost',   color: '#0369a1', accent: '#a5f3fc' },
     ] },
-  { id: 'ghost',   name: 'GHOST',   speed: 5, jump: 28, throwMul: 0.7, color: '#9adfff', vibe: 'Aerial specialist',  shape: 'ghost',   accent: '#ffffff',
+  { id: 'ghost',   name: 'GHOST',   speed: 5, jump: 28, throwMul: 0.7, color: '#9adfff', vibe: 'Aerial specialist',  shape: 'ghost',   accent: '#ffffff', expression: 'mischievous',
     perk: { doubleJump: true, label: 'Double Jump', desc: 'Can jump a second time in mid-air.' },
     skins: [
       { name: 'Default', color: '#9adfff', accent: '#ffffff' },
       { name: 'Void',    color: '#312e81', accent: '#a78bfa' },
       { name: 'Mint',    color: '#a7f3d0', accent: '#ecfeff' },
     ] },
-  { id: 'crusher', name: 'CRUSHER', speed: 3, jump: 32, throwMul: 1.2, color: '#22c55e', vibe: 'Jump powerhouse',    shape: 'tall',    accent: '#166534',
+  { id: 'crusher', name: 'CRUSHER', speed: 3, jump: 32, throwMul: 1.2, color: '#22c55e', vibe: 'Jump powerhouse',    shape: 'tall',    accent: '#166534', expression: 'intense',
     perk: { uncatchableAt: 0.9, label: 'Cannon Shot', desc: 'Max-charge throws cannot be caught.' },
     skins: [
       { name: 'Default', color: '#22c55e', accent: '#166534' },
       { name: 'Jungle',  color: '#065f46', accent: '#facc15' },
       { name: 'Storm',   color: '#334155', accent: '#38bdf8' },
     ] },
-  { id: 'striker', name: 'STRIKER', speed: 7, jump: 12, throwMul: 0.9, color: '#facc15', vibe: 'Ground speedster',   shape: 'short',   accent: '#0f172a',
+  { id: 'striker', name: 'STRIKER', speed: 7, jump: 12, throwMul: 0.9, color: '#facc15', vibe: 'Ground speedster',   shape: 'short',   accent: '#0f172a', expression: 'cocky',
     perk: { dashPowerMul: 1.6, label: 'Blitz Dash', desc: 'Dashes travel 60% farther.' },
     skins: [
       { name: 'Default', color: '#facc15', accent: '#0f172a' },
