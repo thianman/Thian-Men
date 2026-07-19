@@ -403,8 +403,8 @@ export function LeaderboardScreen({ onBack }) {
                 <div className={`w-8 text-center font-black text-xl ${i === 0 ? 'text-amber-300' : i === 1 ? 'text-slate-300' : i === 2 ? 'text-orange-400' : 'text-slate-500'}`}>#{i + 1}</div>
                 <div className="w-10 h-10 rounded-lg flex-shrink-0" style={{ background: c?.color || '#666' }} />
                 <div className="flex-1">
-                  <div className="font-bold">{c?.name || r.char}</div>
-                  <div className="text-xs text-slate-400">{date.toLocaleDateString()}</div>
+                  <div className="font-bold">{r.name || c?.name || r.char}</div>
+                  <div className="text-xs text-slate-400">{c?.name || r.char} · {date.toLocaleDateString()}</div>
                 </div>
                 <div className="text-2xl font-mono font-black text-cyan-300">{formatTime(r.timeMs)}</div>
               </div>

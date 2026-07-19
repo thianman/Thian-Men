@@ -416,7 +416,7 @@ export default function App() {
                 let clearMs = ladder.clearMs
                 if (done) {
                   clearMs = Date.now() - ladder.startedAt
-                  addRecord({ char: ladder.p1, timeMs: clearMs })
+                  addRecord({ char: ladder.p1, timeMs: clearMs, name: auth.profile?.username })
                 }
                 setLadder({ ...ladder, current: done ? ladder.current : next, victoryOverall: done, clearMs })
                 setTimeout(() => setScreen('ladderIntro'), 1600)

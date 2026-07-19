@@ -20,9 +20,9 @@ export function bestForCharacter(charId) {
   return rs.reduce((a, b) => a.timeMs < b.timeMs ? a : b)
 }
 
-export function addRecord({ char, timeMs, date }) {
+export function addRecord({ char, timeMs, date, name }) {
   const rs = load()
-  rs.push({ char, timeMs, date: date || Date.now() })
+  rs.push({ char, timeMs, date: date || Date.now(), name: name || null })
   // Keep only top 20 to bound storage
   rs.sort((a, b) => a.timeMs - b.timeMs)
   save(rs.slice(0, 20))
