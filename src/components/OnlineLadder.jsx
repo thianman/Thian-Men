@@ -6,6 +6,8 @@ import { countryName } from '../lib/countries.js'
 import { TouchControls, isMobile as detectMobile } from './TouchControls.jsx'
 import { getAvatarImage } from '../lib/avatars.js'
 import { characterUnlockInfo } from '../lib/progression.js'
+import CharacterPose, { poseVerb } from './CharacterPose.jsx'
+import { STAT_STARS } from '../game/constants.js'
 import { drawHumanFigure } from '../game/render.js'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg border border-cyan-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
@@ -195,7 +197,7 @@ export default function OnlineLadder({ profile, session, onExit, onLadderOver, p
     const picked = slot?.character
     return (
       <MenuLayout title="PICK YOUR FIGHTER" name={name}>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mb-2">
           {CHARACTERS.map(c => {
             const info = progression ? characterUnlockInfo(progression.unlocked, c.id, progression.progression?.level || 1) : { unlocked: true }
             const locked = progression && !info.unlocked
@@ -204,10 +206,18 @@ export default function OnlineLadder({ profile, session, onExit, onLadderOver, p
                 disabled={locked}
                 onClick={() => !locked && pickCharacter(c.id)}
                 title={locked ? (info.kind === 'level' ? `Unlocks at Level ${info.at}` : `Buy in single-player menu (${info.price} coins)`) : c.name}
-                className={`p-3 rounded-xl border-2 relative ${locked ? 'opacity-50 border-slate-700 bg-slate-800/50 cursor-not-allowed' : picked === c.id ? 'border-amber-400 bg-amber-900/30' : 'border-slate-600 bg-slate-800 hover:border-slate-400'}`}>
+                className={`p-2 rounded-xl border-2 relative flex flex-col items-center ${locked ? 'opacity-50 border-slate-700 bg-slate-800/50 cursor-not-allowed' : picked === c.id ? 'border-amber-400 bg-amber-900/30' : 'border-slate-600 bg-slate-800 hover:border-slate-400'}`}>
                 {locked && <span className="absolute top-1 right-1 text-sm">🔒</span>}
-                <div className="w-full h-8 rounded" style={{ background: c.color }} />
+                <div className="w-full flex items-end justify-center rounded pose-hover" style={{ background: `radial-gradient(circle at 50% 30%, ${c.color}44, transparent 70%)`, height: 84 }}>
+                  <CharacterPose character={c} size={60} />
+                </div>
                 <div className="text-xs font-bold mt-1">{c.name}</div>
+                <div className="text-[9px] uppercase tracking-widest text-amber-300">{poseVerb(c.id)}</div>
+                <div className="text-[10px] text-slate-300 mt-1 flex gap-1">
+                  <span>SPD {STAT_STARS.speed[c.id]}</span>·
+                  <span>STR {STAT_STARS.strength[c.id]}</span>·
+                  <span>JMP {STAT_STARS.jump[c.id]}</span>
+                </div>
               </button>
             )
           })}

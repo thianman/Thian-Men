@@ -339,6 +339,12 @@ canvas { display: block; image-rendering: pixelated; touch-action: none; }
 }
 .chip-btn:hover { background: rgba(30, 41, 59, 0.85); border-color: rgba(253, 224, 71, 0.5); color: #fde047; }
 
+/* Pose card idle motion */
+@keyframes pose-hover { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+.pose-hover { animation: pose-hover 3s ease-in-out infinite; }
+@keyframes pose-lean { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(2px); } }
+.pose-lean { animation: pose-lean 2s ease-in-out infinite; }
+
 /* Arena-styled page heading (used by Screen wrapper) */
 .arena-heading {
   font-family: 'Bowlby One', 'Bungee', 'Impact', system-ui, sans-serif;

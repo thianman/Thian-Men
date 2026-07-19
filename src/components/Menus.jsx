@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { CHARACTERS, MAPS, DIFFICULTIES, STAT_STARS, MODIFIERS } from '../game/constants.js'
+import CharacterPose, { poseVerb } from './CharacterPose.jsx'
 import { sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
 import { getRecords, bestForCharacter, formatTime, clearRecords } from '../game/ladderStore.js'
 import { characterUnlockInfo } from '../lib/progression.js'
@@ -612,17 +613,23 @@ export function CharacterSelect({ label, exclude, onPick, onBack, progression, s
                 onClick={() => { if (!(dis || locked)) { sfx.click(); onPick(c.id, skinIdx) } }}
                 className={`w-full text-left ${dis || locked ? 'cursor-not-allowed' : ''}`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-14 h-14 rounded-lg flex-shrink-0 border-2" style={{ background: skin.color, borderColor: skin.accent }} />
-                  <div>
-                    <div className="text-xl font-black">{c.name}</div>
-                    <div className="text-xs text-slate-400 italic">{c.vibe}</div>
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex-shrink-0 rounded-lg border-2 pose-hover flex items-end justify-center overflow-hidden"
+                    style={{ background: `radial-gradient(circle at 50% 30%, ${skin.color}55, ${skin.accent}22 60%, transparent)`, borderColor: skin.accent, width: 96, height: 132 }}
+                  >
+                    <CharacterPose character={{ ...c, color: skin.color, accent: skin.accent }} size={92} />
                   </div>
-                </div>
-                <div className="mt-3 text-sm text-slate-200 space-y-1">
-                  <div>Speed <Stars n={STAT_STARS.speed[c.id]} /></div>
-                  <div>Strength <Stars n={STAT_STARS.strength[c.id]} /></div>
-                  <div>Jump <Stars n={STAT_STARS.jump[c.id]} /></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xl font-black leading-none">{c.name}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-amber-300 mt-0.5">{poseVerb(c.id)}</div>
+                    <div className="text-xs text-slate-400 italic mt-1">{c.vibe}</div>
+                    <div className="mt-2 text-xs text-slate-200 space-y-0.5">
+                      <div className="flex justify-between"><span>Speed</span> <Stars n={STAT_STARS.speed[c.id]} /></div>
+                      <div className="flex justify-between"><span>Strength</span> <Stars n={STAT_STARS.strength[c.id]} /></div>
+                      <div className="flex justify-between"><span>Jump</span> <Stars n={STAT_STARS.jump[c.id]} /></div>
+                    </div>
+                  </div>
                 </div>
                 {c.perk && (
                   <div className="mt-3 rounded-lg px-2 py-1.5 bg-gradient-to-r from-fuchsia-900/60 to-cyan-900/60 border border-fuchsia-500/40">
