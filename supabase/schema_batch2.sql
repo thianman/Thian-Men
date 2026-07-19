@@ -9,7 +9,10 @@ alter table public.progression
   add column if not exists last_streak_reward_at timestamptz;
 
 -- === Daily challenges table ===
-create table if not exists public.daily_challenges (
+-- Drop any prior partial attempt so this migration is idempotent.
+drop table if exists public.daily_challenges cascade;
+
+create table public.daily_challenges (
   user_id       uuid  not null references auth.users(id) on delete cascade,
   date          date  not null,               -- UTC date the challenge is for
   challenge_id  text  not null,               -- 'win_matches' | 'ko_players' | 'catch_balls' | 'play_as_x'
