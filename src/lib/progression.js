@@ -59,6 +59,8 @@ export function characterUnlockInfo(unlocked, characterId, level) {
 // Award XP + coins based on match summary. Returns { levels: newLevels[], unlocked: [charIds] }.
 export async function awardMatchRewards(userId, prevProgress, summary) {
   if (!userId) return { newLevel: null, unlocked: [] }
+  // Fire-and-forget: apply the same summary to any active daily challenges.
+  import('./daily.js').then(m => m.applyMatchToDailies(userId, summary)).catch(() => {})
   const events = [] // {reason, xp, coins}
 
   // Base rewards

@@ -7,6 +7,8 @@ import OnlineLadder from './components/OnlineLadder.jsx'
 import GlobalLeaderboard from './components/GlobalLeaderboard.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
 import LevelUpScreen from './components/LevelUpScreen.jsx'
+import DailyChallengesScreen from './components/DailyChallengesScreen.jsx'
+import StreakReward from './components/StreakReward.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
 import { addRecord, bestForCharacter, getRecords, formatTime } from './game/ladderStore.js'
@@ -197,6 +199,9 @@ export default function App() {
           onLeaderboard={() => setScreen('leaderboard')}
           onGlobalLeaderboard={() => setScreen('globalLeaderboard')}
           onCredits={() => setScreen('credits')}
+          onDaily={auth.session ? () => setScreen('dailyChallenges') : null}
+          dailyUnclaimed={0}
+          streak={auth.progression?.progression?.current_streak || 0}
           onQuickPlay={() => {
             const p1c = pick(CHARACTERS); const p1 = p1c.id
             const p2Pool = CHARACTERS.filter(c => c.id !== p1)
@@ -430,11 +435,27 @@ export default function App() {
           }}
         />
       )}
+      {screen === 'dailyChallenges' && (
+        <DailyChallengesScreen
+          session={auth.session}
+          progression={auth.progression}
+          onProgressionRefresh={auth.refreshProgression}
+          onBack={backToTitle}
+        />
+      )}
       {levelUpResult && (
         <LevelUpScreen
           result={levelUpResult.result}
           characterId={levelUpResult.characterId}
           onDone={() => setLevelUpResult(null)}
+        />
+      )}
+      {auth.streakReward && (
+        <StreakReward
+          streak={auth.streakReward.streak}
+          reward={auth.streakReward.reward}
+          longest={auth.streakReward.longest}
+          onClose={auth.dismissStreak}
         />
       )}
     </>

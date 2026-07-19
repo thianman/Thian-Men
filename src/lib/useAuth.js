@@ -1,18 +1,27 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from './supabase.js'
 import { ensureProgression, loadProgression } from './progression.js'
+import { ensureDailyChallenges, tickLoginStreak } from './daily.js'
 
 export function useAuth() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [progression, setProgression] = useState(null) // { progression, unlocked:Set, mastery }
+  const [streakReward, setStreakReward] = useState(null) // { streak, reward, ... }
   const [loading, setLoading] = useState(true)
 
   const loadProgressionState = useCallback(async (uid) => {
     if (!uid) { setProgression(null); return }
     await ensureProgression(uid)
     const p = await loadProgression(uid)
-    setProgression(p)
+    // Fire the daily streak + daily challenge roll on session ready.
+    // Only reward once per UTC day (tickLoginStreak is idempotent).
+    const streak = await tickLoginStreak(uid, p?.progression)
+    if (streak?.rewarded) setStreakReward(streak)
+    await ensureDailyChallenges(uid)
+    // Reload progression to include the streak reward
+    const p2 = streak?.rewarded ? await loadProgression(uid) : p
+    setProgression(p2)
   }, [])
 
   const loadProfile = useCallback(async (uid) => {
@@ -89,6 +98,8 @@ export function useAuth() {
 
   return {
     session, profile, progression, loading,
+    streakReward,
+    dismissStreak: () => setStreakReward(null),
     signInWithEmail, verifyEmailCode, signOut, saveProfile,
     refreshProfile: () => loadProfile(session?.user?.id),
     refreshProgression: () => loadProgressionState(session?.user?.id),
