@@ -1,4 +1,4 @@
-import { ARENA_W, ARENA_H, FLOOR_Y, BALL_R } from './constants.js'
+import { ARENA_W, ARENA_H, FLOOR_Y, BALL_R, CHARACTERS } from './constants.js'
 import { getAvatarImage } from '../lib/avatars.js'
 
 export function render(ctx, state, mapObj, extras = {}) {
@@ -364,9 +364,12 @@ export function drawHumanFigure(ctx, p) {
     }
   }
 
-  // Eyes + mouth vary by expression to give each character a distinct vibe.
+  // Eyes + mouth vary by expression. Look up from CHARACTERS by id so the
+  // tag can't get lost through a state mutation or a stale spread.
   if (!flash) {
-    drawExpression(ctx, cx, headY, p.facing, p.char.expression || 'smile')
+    const base = CHARACTERS.find(c => c.id === p.char?.id)
+    const expr = base?.expression || p.char?.expression || 'smile'
+    drawExpression(ctx, cx, headY, p.facing, expr)
   }
 
   // Team outline halo
