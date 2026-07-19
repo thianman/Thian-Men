@@ -6,6 +6,7 @@ import OnlineMatch from './components/OnlineMatch.jsx'
 import OnlineLadder from './components/OnlineLadder.jsx'
 import GlobalLeaderboard from './components/GlobalLeaderboard.jsx'
 import GameCanvas from './components/GameCanvas.jsx'
+import LevelUpScreen from './components/LevelUpScreen.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
 import { addRecord, bestForCharacter, getRecords, formatTime } from './game/ladderStore.js'
@@ -39,6 +40,7 @@ export default function App() {
   const auth = useAuth()
   const [legalKind, setLegalKind] = useState(null) // 'tos' | 'privacy' | null
   const [showAccountMenu, setShowAccountMenu] = useState(false)
+  const [levelUpResult, setLevelUpResult] = useState(null) // { result, characterId }
   const [pendingJoin, setPendingJoin] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search)
@@ -238,10 +240,11 @@ export default function App() {
           autoJoinCode={pendingJoin}
           onMatchOver={async ({ won, character }) => {
             if (!auth.session?.user?.id) return
-            await awardMatchRewards(auth.session.user.id, auth.progression?.progression, {
+            const result = await awardMatchRewards(auth.session.user.id, auth.progression?.progression, {
               won, hits: 0, catches: 0, kos: 0, roundWins: 0, character,
             })
             auth.refreshProgression()
+            if (won && result) setLevelUpResult({ result, characterId: character })
           }}
         />
       )}
@@ -253,10 +256,11 @@ export default function App() {
           onExit={backToTitle}
           onLadderOver={async ({ cleared, fightsWon, character }) => {
             if (!auth.session?.user?.id) return
-            await awardLadderRewards(auth.session.user.id, auth.progression?.progression, {
+            const result = await awardLadderRewards(auth.session.user.id, auth.progression?.progression, {
               cleared, fightsWon, character,
             })
             auth.refreshProgression()
+            if (cleared && result) setLevelUpResult({ result, characterId: character })
           }}
         />
       )}
@@ -399,8 +403,9 @@ export default function App() {
           session={auth.session}
           onRewardsEarned={async (summary) => {
             if (!auth.session?.user?.id) return
-            await awardMatchRewards(auth.session.user.id, auth.progression?.progression, summary)
+            const result = await awardMatchRewards(auth.session.user.id, auth.progression?.progression, summary)
             auth.refreshProgression()
+            if (summary.won && result) setLevelUpResult({ result, characterId: summary.character })
           }}
           onExit={backToTitle}
           onMatchEnd={(winnerSide) => {
@@ -423,6 +428,13 @@ export default function App() {
               }
             }
           }}
+        />
+      )}
+      {levelUpResult && (
+        <LevelUpScreen
+          result={levelUpResult.result}
+          characterId={levelUpResult.characterId}
+          onDone={() => setLevelUpResult(null)}
         />
       )}
     </>

@@ -131,7 +131,12 @@ async function _postRewards(userId, prevProgress, events, characterId) {
     )
   }
 
-  return { gainedXp, gainedCoin: gainedCoin + levelUpCoins, prevLevel: prev.level, newLevel, unlocked: grantedCharIds }
+  return {
+    gainedXp, gainedCoin: gainedCoin + levelUpCoins,
+    prevLevel: prev.level, newLevel,
+    prevXp: prev.xp, newXp,
+    unlocked: grantedCharIds,
+  }
 }
 
 // Buy a character with coins. Returns { ok, error, newCoins }.
