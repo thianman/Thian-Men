@@ -227,61 +227,82 @@ function HeroScene() {
 }
 
 export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onGlobalLeaderboard, onCredits }) {
-  const sparkColors = ['#22d3ee', '#a855f7', '#facc15', '#f472b6', '#67e8f9', '#fb923c']
-  const sparks = Array.from({ length: 22 }).map((_, i) => ({
-    left:  (i * 47) % 100,
-    delay: (i * 0.31) % 6,
-    dur:   6 + ((i * 1.7) % 7),
-    size:  4 + (i % 4) * 2,
-    color: sparkColors[i % sparkColors.length],
+  const stars = Array.from({ length: 14 }).map((_, i) => ({
+    left:  (i * 71) % 100,
+    delay: (i * 0.43) % 8,
+    dur:   9 + ((i * 1.3) % 6),
+    size:  10 + (i % 3) * 4,
   }))
-  const beams = [8, 32, 58, 78]
+  const lights = [8, 22, 36, 50, 64, 78, 92]
+
   return (
-    <div className="title-bg relative w-screen h-screen flex flex-col items-center justify-center text-white p-3 overflow-hidden">
-      {/* Behind-everything beams and floating sparks */}
-      {beams.map((left, i) => (
-        <div key={i} className="beam" style={{ left: `${left}%`, animationDelay: `${i * 2}s` }} />
-      ))}
-      <div className="spark-field">
-        {sparks.map((s, i) => (
-          <span key={i} style={{
-            left: `${s.left}%`,
-            width: s.size, height: s.size,
-            background: s.color,
-            boxShadow: `0 0 ${s.size * 3}px ${s.color}`,
-            animationDuration: `${s.dur}s`,
-            animationDelay: `${s.delay}s`,
-          }} />
+    <div className="arena-bg relative w-screen h-screen flex flex-col items-center text-white overflow-hidden">
+      {/* Brand chip corner */}
+      <div className="brand-chip">Season 1 · dodgeballstars.com</div>
+
+      {/* Stadium lights row across the top */}
+      <div className="arena-lights">
+        {lights.map((left, i) => (
+          <div key={i} className="arena-light" style={{ left: `calc(${left}% - 34px)` }} />
         ))}
       </div>
 
-      {/* Logo */}
-      <div className="legend-wrap text-center">
-        <div className="legend-halo" />
-        <div className="legend-title">DODGEBALL</div>
-        <div className="legend-sub">LEGENDS</div>
-        <div className="legend-shine" />
-      </div>
-      <p className="text-slate-300/90 mb-2 mt-2 text-center text-sm md:text-base tracking-widest uppercase">
-        Dodge · Catch · Throw · Reign
-      </p>
+      {/* Crowd silhouette + court */}
+      <div className="arena-crowd" />
+      <div className="arena-floor" />
 
-      <HeroScene />
-
-      <div className="flex flex-col items-center gap-2 mt-1 relative">
-        <div className="flex gap-2">
-          <button className={btn + ' text-xl px-8'} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
-          <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700 text-xl px-8'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
-        </div>
-        <div className="flex flex-wrap justify-center gap-2 max-w-3xl">
-          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onLeaderboard() }}>Local Leaderboard</button>
-          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onGlobalLeaderboard() }}>Global Leaderboard</button>
-          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onInstructions() }}>Instructions</button>
-          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onSettings() }}>Settings</button>
-          <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onCredits() }}>Credits</button>
-        </div>
+      {/* Floating stars */}
+      <div className="star-field">
+        {stars.map((s, i) => (
+          <span key={i} style={{
+            left: `${s.left}%`,
+            fontSize: `${s.size}px`,
+            animationDuration: `${s.dur}s`,
+            animationDelay: `${s.delay}s`,
+          }}>★</span>
+        ))}
       </div>
-      <p className="text-center text-slate-400 text-xs mt-3 tracking-wider">Best of 3 sets · Winner stays king</p>
+
+      {/* Foreground content */}
+      <div className="relative z-10 flex flex-col items-center w-full h-full px-3 pt-6 pb-4">
+        {/* Logo lockup */}
+        <div className="stars-wrap text-center">
+          <div className="stars-halo" />
+          <div className="stars-top">DODGEBALL</div>
+          <div className="stars-banner">
+            <div className="stars-sub">
+              <span className="stars-flank">★</span>
+              STARS
+              <span className="stars-flank">★</span>
+            </div>
+          </div>
+          <div className="stars-shine" />
+        </div>
+        <p className="text-amber-100/80 mt-3 mb-1 text-center text-xs md:text-sm tracking-[0.4em] uppercase">
+          Dodge · Catch · Throw · Reign
+        </p>
+
+        <HeroScene />
+
+        {/* Primary CTA row */}
+        <div className="mt-3 flex flex-wrap justify-center gap-3">
+          <button className="arcade-btn text-xl md:text-2xl" onClick={() => { sfx.click(); onPlay() }}>▶ Play</button>
+          <button className="arcade-btn arcade-btn--cyan text-xl md:text-2xl" onClick={() => { sfx.click(); onQuickPlay() }}>⚡ Quick Play</button>
+        </div>
+
+        {/* Secondary chip row */}
+        <div className="mt-3 flex flex-wrap justify-center gap-2 max-w-3xl">
+          <button className="chip-btn" onClick={() => { sfx.click(); onLeaderboard() }}>Local Board</button>
+          <button className="chip-btn" onClick={() => { sfx.click(); onGlobalLeaderboard() }}>Global Board</button>
+          <button className="chip-btn" onClick={() => { sfx.click(); onInstructions() }}>How To Play</button>
+          <button className="chip-btn" onClick={() => { sfx.click(); onSettings() }}>Settings</button>
+          <button className="chip-btn" onClick={() => { sfx.click(); onCredits() }}>Credits</button>
+        </div>
+
+        <p className="text-center text-amber-100/50 text-xs mt-auto tracking-[0.3em] uppercase pb-1">
+          Best of 3 · Winner stays king
+        </p>
+      </div>
     </div>
   )
 }

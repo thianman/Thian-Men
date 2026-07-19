@@ -21,135 +21,297 @@ canvas { display: block; image-rendering: pixelated; touch-action: none; }
 .hero-title { animation: hero-title 2.2s ease-in-out infinite; }
 .hero-spark { animation: hero-spark 1.2s ease-out    infinite; }
 
-/* === Dodgeball Legends logo === */
-.legend-wrap {
+/* === Dodgeball Stars logo lockup === */
+.stars-wrap {
   position: relative;
   display: inline-block;
-  padding: 0.2em 0.6em;
-  line-height: 0.9;
+  padding: 0.2em 0.4em 0.6em;
+  line-height: 0.88;
   isolation: isolate;
+  transform-origin: center;
 }
-.legend-title {
+.stars-top {
   font-family: 'Bowlby One', 'Bungee', 'Impact', system-ui, sans-serif;
-  font-weight: 900;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   line-height: 0.88;
-  font-size: clamp(3rem, 10vw, 8rem);
+  font-size: clamp(2.2rem, 6.5vw, 5.2rem);
   background: linear-gradient(180deg,
-    #fff7c2 0%,
-    #fde047 22%,
-    #f97316 55%,
-    #ef4444 82%,
-    #b91c1c 100%);
+    #fff2c2 0%,
+    #fde047 28%,
+    #f59e0b 62%,
+    #b45309 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-stroke: 2px #0b0f1a;
+  -webkit-text-stroke: 2px #0a1226;
   filter:
-    drop-shadow(0 4px 0 #0b0f1a)
-    drop-shadow(0 10px 22px rgba(239, 68, 68, 0.45))
-    drop-shadow(0 0 40px rgba(34, 211, 238, 0.35));
+    drop-shadow(0 3px 0 #0a1226)
+    drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55));
 }
-.legend-sub {
-  font-family: 'Russo One', 'Bungee', 'Impact', system-ui, sans-serif;
-  font-weight: 900;
-  letter-spacing: 0.35em;
+.stars-banner {
+  position: relative;
+  display: inline-block;
+  margin-top: 0.25em;
+  padding: 0.08em 1.4em 0.14em;
+  transform: rotate(-3deg);
+  background: linear-gradient(180deg, #b91c1c 0%, #7f1d1d 100%);
+  border: 3px solid #0a1226;
+  box-shadow:
+    0 4px 0 #0a1226,
+    0 10px 22px rgba(0, 0, 0, 0.55),
+    inset 0 -6px 0 rgba(0, 0, 0, 0.3),
+    inset 0 3px 0 rgba(255, 255, 255, 0.15);
+  clip-path: polygon(3% 0, 97% 0, 100% 50%, 97% 100%, 3% 100%, 0 50%);
+}
+.stars-sub {
+  font-family: 'Bowlby One', 'Bungee', 'Impact', system-ui, sans-serif;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  font-size: clamp(1rem, 3.2vw, 2rem);
+  font-size: clamp(1.3rem, 3.6vw, 2.6rem);
   line-height: 1;
-  margin-top: 0.15em;
-  background: linear-gradient(180deg, #67e8f9 0%, #22d3ee 45%, #a855f7 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-stroke: 1.5px #0b0f1a;
-  filter:
-    drop-shadow(0 3px 0 #0b0f1a)
-    drop-shadow(0 0 22px rgba(168, 85, 247, 0.55));
+  color: #fff;
+  -webkit-text-stroke: 1px #0a1226;
+  text-shadow: 0 2px 0 #0a1226, 0 0 12px rgba(253, 224, 71, 0.55);
+}
+.stars-flank {
+  color: #fde047;
+  -webkit-text-stroke: 1px #0a1226;
+  filter: drop-shadow(0 2px 0 #0a1226);
+  font-size: 0.9em;
+  margin: 0 0.35em;
+  vertical-align: middle;
 }
 
-/* Shine sweep across the title */
-.legend-shine {
+/* Shine sweep across the top word */
+.stars-shine {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto 0;
+  height: 60%;
   pointer-events: none;
   overflow: hidden;
   mix-blend-mode: overlay;
 }
-.legend-shine::after {
+.stars-shine::after {
   content: '';
   position: absolute;
   top: -20%;
   left: -30%;
-  width: 40%;
+  width: 35%;
   height: 140%;
   background: linear-gradient(115deg,
     transparent 0%,
     rgba(255, 255, 255, 0.0) 35%,
-    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.8) 50%,
     rgba(255, 255, 255, 0.0) 65%,
     transparent 100%);
   transform: skewX(-18deg);
-  animation: legend-sweep 3.6s ease-in-out infinite;
+  animation: stars-sweep 4s ease-in-out infinite;
 }
-@keyframes legend-sweep {
+@keyframes stars-sweep {
   0%   { left: -30%; opacity: 0; }
   10%  { opacity: 1; }
   60%  { left: 110%; opacity: 1; }
   100% { left: 110%; opacity: 0; }
 }
 
-/* Halo pulse behind the logo */
-.legend-halo {
+/* Warm halo behind logo */
+.stars-halo {
   position: absolute;
-  inset: -15% -8%;
+  inset: -20% -10%;
   z-index: -1;
   background:
-    radial-gradient(closest-side, rgba(251, 191, 36, 0.35), transparent 65%),
-    radial-gradient(closest-side, rgba(168, 85, 247, 0.30) 15%, transparent 70%);
-  filter: blur(18px);
-  animation: legend-halo 3.4s ease-in-out infinite;
+    radial-gradient(closest-side, rgba(251, 191, 36, 0.45), transparent 65%),
+    radial-gradient(closest-side, rgba(239, 68, 68, 0.20) 20%, transparent 75%);
+  filter: blur(16px);
+  animation: stars-halo 3.4s ease-in-out infinite;
 }
-@keyframes legend-halo {
+@keyframes stars-halo {
   0%, 100% { opacity: 0.7; transform: scale(1); }
-  50%      { opacity: 1;   transform: scale(1.06); }
+  50%      { opacity: 1;   transform: scale(1.05); }
 }
 
-/* Confetti / floating sparks in the title backdrop */
-.spark-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.spark-field span {
+/* === Arena background === */
+.arena-bg {
+  background:
+    radial-gradient(ellipse at 50% 22%, rgba(253, 224, 71, 0.18), transparent 55%),
+    radial-gradient(ellipse at 50% 8%,  rgba(255, 255, 255, 0.12), transparent 45%),
+    linear-gradient(180deg, #0a1226 0%, #0f1c3d 45%, #0a1226 100%);
+  overflow: hidden;
+}
+
+/* Perspective court floor at the bottom */
+.arena-floor {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 42%;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(180, 83, 9, 0.35) 25%, rgba(120, 53, 15, 0.55) 100%);
+  transform: perspective(700px) rotateX(60deg);
+  transform-origin: top center;
+  pointer-events: none;
+}
+.arena-floor::before,
+.arena-floor::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(90deg,
+      rgba(253, 224, 71, 0.18) 0 2px,
+      transparent 2px 80px),
+    repeating-linear-gradient(0deg,
+      rgba(253, 224, 71, 0.18) 0 2px,
+      transparent 2px 80px);
+}
+.arena-floor::after {
+  background-image:
+    linear-gradient(90deg, transparent 49.5%, rgba(253, 224, 71, 0.7) 49.5% 50.5%, transparent 50.5%);
+  filter: drop-shadow(0 0 8px rgba(253, 224, 71, 0.5));
+}
+
+/* Crowd silhouette rows at the horizon */
+.arena-crowd {
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 38%;
+  height: 90px;
+  pointer-events: none;
+  background:
+    radial-gradient(6px 8px at 10px 60px, #06122b 60%, transparent 61%),
+    radial-gradient(6px 8px at 30px 55px, #06122b 60%, transparent 61%),
+    radial-gradient(6px 8px at 50px 62px, #06122b 60%, transparent 61%),
+    radial-gradient(6px 8px at 70px 58px, #06122b 60%, transparent 61%),
+    radial-gradient(6px 8px at 90px 63px, #06122b 60%, transparent 61%),
+    radial-gradient(6px 8px at 110px 56px, #06122b 60%, transparent 61%),
+    linear-gradient(180deg, transparent 0%, #050b1e 70%);
+  background-size: 130px 90px, 130px 90px, 130px 90px, 130px 90px, 130px 90px, 130px 90px, 100% 100%;
+  opacity: 0.9;
+}
+.arena-crowd::before {
+  content: '';
+  position: absolute;
+  inset: -20px 0 0 0;
+  background:
+    radial-gradient(5px 6px at 5px 55px, #08152f 60%, transparent 61%),
+    radial-gradient(5px 6px at 25px 60px, #08152f 60%, transparent 61%),
+    radial-gradient(5px 6px at 45px 52px, #08152f 60%, transparent 61%),
+    radial-gradient(5px 6px at 65px 58px, #08152f 60%, transparent 61%),
+    radial-gradient(5px 6px at 85px 62px, #08152f 60%, transparent 61%);
+  background-size: 100px 70px;
+  opacity: 0.7;
+}
+
+/* Stadium spotlight panels at the top */
+.arena-lights {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 30%;
+  pointer-events: none;
+}
+.arena-light {
+  position: absolute;
+  top: 0;
+  width: 68px;
+  height: 22px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 2px solid #0a1226;
+  border-radius: 0 0 8px 8px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.4);
+}
+.arena-light::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: -60%;
+  width: 220%;
+  height: 380px;
+  background: linear-gradient(180deg, rgba(253, 224, 71, 0.28), transparent 80%);
+  clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
+  filter: blur(6px);
+  animation: light-flicker 5s ease-in-out infinite;
+}
+@keyframes light-flicker {
+  0%, 100% { opacity: 0.9; }
+  50%      { opacity: 0.6; }
+}
+
+/* Star confetti (fewer, warmer) drifting up from below */
+.star-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+.star-field span {
   position: absolute;
   bottom: -10%;
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  opacity: 0.7;
+  color: #fde047;
+  font-size: 12px;
+  opacity: 0.75;
   animation: float-up linear infinite;
+  text-shadow: 0 0 8px rgba(253, 224, 71, 0.9);
 }
 @keyframes float-up {
-  0%   { transform: translateY(0)    scale(1);   opacity: 0; }
+  0%   { transform: translateY(0)    scale(1)   rotate(0deg);   opacity: 0; }
   10%  { opacity: 0.9; }
-  100% { transform: translateY(-110vh) scale(0.6); opacity: 0; }
+  100% { transform: translateY(-110vh) scale(0.6) rotate(360deg); opacity: 0; }
 }
 
-/* Title screen background gradient wash */
-.title-bg {
-  background:
-    radial-gradient(circle at 20% 15%, rgba(168, 85, 247, 0.35), transparent 45%),
-    radial-gradient(circle at 82% 20%, rgba(34, 211, 238, 0.30), transparent 50%),
-    radial-gradient(circle at 50% 100%, rgba(251, 113, 133, 0.28), transparent 55%),
-    linear-gradient(180deg, #0b0522 0%, #12042e 45%, #0b0f1a 100%);
+/* Arcade-style primary button */
+.arcade-btn {
+  position: relative;
+  font-family: 'Bowlby One', 'Bungee', 'Impact', system-ui, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+  padding: 0.75em 1.6em;
+  border-radius: 12px;
+  border: 3px solid #0a1226;
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+  box-shadow:
+    0 5px 0 #78350f,
+    0 10px 20px rgba(0, 0, 0, 0.45),
+    inset 0 3px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.25);
+  text-shadow: 0 2px 0 #78350f;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+.arcade-btn:hover { transform: translateY(-1px); }
+.arcade-btn:active {
+  transform: translateY(3px);
+  box-shadow:
+    0 2px 0 #78350f,
+    0 4px 10px rgba(0, 0, 0, 0.35),
+    inset 0 3px 0 rgba(255, 255, 255, 0.25);
+}
+.arcade-btn--cyan { background: linear-gradient(180deg, #22d3ee 0%, #0e7490 100%); box-shadow: 0 5px 0 #164e63, 0 10px 20px rgba(0,0,0,0.45), inset 0 3px 0 rgba(255,255,255,0.3), inset 0 -4px 0 rgba(0,0,0,0.25); text-shadow: 0 2px 0 #164e63; }
+
+/* Small ghost buttons in the row */
+.chip-btn {
+  font-family: 'Russo One', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  padding: 0.5em 1em;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  backdrop-filter: blur(6px);
+  transition: background 120ms ease, border-color 120ms ease;
+  font-size: 0.85rem;
+}
+.chip-btn:hover { background: rgba(30, 41, 59, 0.85); border-color: rgba(253, 224, 71, 0.5); color: #fde047; }
+
+/* Corner brand chip */
+.brand-chip {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-family: 'Russo One', system-ui, sans-serif;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 10px;
+  color: #fde047;
+  padding: 4px 10px;
+  border: 1px solid rgba(253, 224, 71, 0.5);
+  border-radius: 4px;
+  background: rgba(10, 18, 38, 0.65);
+  backdrop-filter: blur(4px);
 }
 
-/* Big vertical spotlight streams sliding behind everything */
-.beam { position: absolute; top: -20%; height: 140%; width: 60px; opacity: 0.28;
-  background: linear-gradient(180deg, transparent, #22d3ee 30%, #a855f7 65%, transparent);
-  filter: blur(14px);
-  transform: skewX(-14deg);
-  animation: beam-slide 9s linear infinite;
-}
-@keyframes beam-slide {
-  0%   { transform: translateX(-30vw) skewX(-14deg); }
-  100% { transform: translateX(130vw) skewX(-14deg); }
-}
