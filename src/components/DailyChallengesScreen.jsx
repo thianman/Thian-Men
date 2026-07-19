@@ -9,18 +9,22 @@ export default function DailyChallengesScreen({ session, progression, onProgress
   const uid = session?.user?.id
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
+  const [err, setErr] = useState('')
   const [busy, setBusy] = useState(null)
   const [claimResult, setClaimResult] = useState(null)
 
   useEffect(() => {
     if (!uid) { setLoading(false); return }
     let cancelled = false
-    setLoading(true)
+    setLoading(true); setErr('')
     // Roll today's challenges if they don't exist yet, then load.
     ensureDailyChallenges(uid)
-      .then(() => loadDailyChallenges(uid))
-      .then((r) => { if (!cancelled) { setRows(r); setLoading(false) } })
-      .catch(() => { if (!cancelled) setLoading(false) })
+      .then((created) => {
+        if (created && created.length) return created
+        return loadDailyChallenges(uid)
+      })
+      .then((r) => { if (!cancelled) { setRows(r || []); setLoading(false) } })
+      .catch((e) => { if (!cancelled) { setErr(e?.message || 'Failed to load'); setLoading(false) } })
     return () => { cancelled = true }
   }, [uid])
 
@@ -92,7 +96,10 @@ export default function DailyChallengesScreen({ session, progression, onProgress
             {loading && (
               <div className="text-center text-slate-300 py-10">Loading today's challenges…</div>
             )}
-            {!loading && !rows.length && (
+            {!loading && err && (
+              <div className="text-center text-red-400 py-10 whitespace-pre-wrap">Error: {err}</div>
+            )}
+            {!loading && !err && !rows.length && (
               <div className="text-center text-slate-300 py-10">No challenges available. Try again in a moment.</div>
             )}
           </div>

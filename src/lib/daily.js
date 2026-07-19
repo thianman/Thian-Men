@@ -8,20 +8,21 @@ import { rollDailyChallenges, todayUtcKey, findChallenge, streakReward } from '.
 export async function ensureDailyChallenges(userId) {
   if (!userId) return []
   const today = todayUtcKey()
-  const { data: existing, error } = await supabase
+  const { data: existing, error: selErr } = await supabase
     .from('daily_challenges')
     .select('*')
     .eq('user_id', userId)
     .eq('date', today)
-  if (error) return []
+  if (selErr) { console.warn('daily select failed', selErr); return [] }
   if (existing && existing.length >= 3) return existing
 
   const rolls = rollDailyChallenges(3).map(r => ({ ...r, user_id: userId, date: today }))
-  const { data: inserted } = await supabase
+  const { data: inserted, error: insErr } = await supabase
     .from('daily_challenges')
     .insert(rolls)
     .select()
-  return inserted || rolls
+  if (insErr) { console.warn('daily insert failed', insErr); return existing || [] }
+  return inserted || existing || []
 }
 
 export async function loadDailyChallenges(userId) {
