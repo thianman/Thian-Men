@@ -17,7 +17,7 @@ function formatTime(ms) {
   return `${m}:${String(rem).padStart(2, '0')}.${String(hun).padStart(2, '0')}`
 }
 
-export default function OnlineLadder({ profile, session, onExit }) {
+export default function OnlineLadder({ profile, session, onExit, onLadderOver }) {
   const [screen, setScreen] = useState('menu') // 'menu' | 'connecting' | 'select' | 'fighting' | 'end'
   const [error, setError] = useState('')
   const [rtt, setRtt] = useState(0)
@@ -60,7 +60,13 @@ export default function OnlineLadder({ profile, session, onExit }) {
       t.on('ladderFightWon', (m) => {
         setElapsedMs(m.elapsedMs)
       })
-      t.on('ladderEnd',    (m) => { setLadderEnd(m); setScreen('end') })
+      t.on('ladderEnd',    (m) => {
+        setLadderEnd(m); setScreen('end')
+        if (onLadderOver) {
+          const fightsWon = m.ok ? ladderOpponents.length : (m.atFight ?? 0)
+          onLadderOver({ cleared: !!m.ok, fightsWon, character: lobby?.slots?.[0]?.character || null })
+        }
+      })
       t.on('state',        (m) => setSnap(m.snap))
       t.on('pong',         (r) => setRtt(r))
       t.on('error',        () => { setError('Connection error'); setScreen('menu') })

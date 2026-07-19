@@ -226,9 +226,21 @@ function PrivacyBody() {
   )
 }
 
-export function AccountMenu({ profile, session, onSignOut, onEditProfile, onClose }) {
+export function AccountMenu({ profile, session, progression, onSignOut, onEditProfile, onClose }) {
+  const prog = progression?.progression
+  const level = prog?.level || 1
+  const xp = prog?.xp || 0
+  const coins = prog?.coins || 0
+  // XP progress within current level
+  let xpProg = 0, xpNext = 100
+  if (prog) {
+    const cur = 50 * level * (level + 1) - 100 // xpToLevel(level)
+    const next = 50 * (level + 1) * (level + 2) - 100
+    xpProg = xp - cur
+    xpNext = next - cur
+  }
   return (
-    <div className="absolute top-16 right-4 z-40 bg-slate-900/95 border border-slate-600 rounded-xl p-4 w-64 shadow-2xl text-white">
+    <div className="absolute top-16 right-4 z-40 bg-slate-900/95 border border-slate-600 rounded-xl p-4 w-72 shadow-2xl text-white">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-slate-800 border-2 border-cyan-400 flex items-center justify-center flex-shrink-0">
           {profile?.avatar_url ? (
@@ -237,11 +249,26 @@ export function AccountMenu({ profile, session, onSignOut, onEditProfile, onClos
             <span className="text-2xl">👤</span>
           )}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="text-xs text-slate-400 uppercase tracking-wide">Signed in as</div>
           <div className="font-bold text-base truncate">{profile?.display_name || '—'}</div>
         </div>
       </div>
+      {prog && (
+        <div className="mb-3">
+          <div className="flex justify-between text-xs mb-1">
+            <span className="text-amber-300 font-bold">Lv {level}</span>
+            <span className="text-slate-400 font-mono">{xpProg} / {xpNext} XP</span>
+          </div>
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-amber-500 to-amber-300" style={{ width: `${Math.min(100, (xpProg / xpNext) * 100)}%` }} />
+          </div>
+          <div className="flex justify-between text-xs mt-2">
+            <span className="text-slate-400">Coins</span>
+            <span className="text-amber-200 font-bold">🪙 {coins.toLocaleString()}</span>
+          </div>
+        </div>
+      )}
       <div className="text-xs text-slate-400 mb-1 break-all">{session?.user?.email}</div>
       {profile && (
         <div className="text-xs text-slate-300 mb-3">Country: <span className="font-mono">{countryName(profile.country)}</span></div>

@@ -1,10 +1,19 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from './supabase.js'
+import { ensureProgression, loadProgression } from './progression.js'
 
 export function useAuth() {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
+  const [progression, setProgression] = useState(null) // { progression, unlocked:Set, mastery }
   const [loading, setLoading] = useState(true)
+
+  const loadProgressionState = useCallback(async (uid) => {
+    if (!uid) { setProgression(null); return }
+    await ensureProgression(uid)
+    const p = await loadProgression(uid)
+    setProgression(p)
+  }, [])
 
   const loadProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); return }
@@ -21,14 +30,17 @@ export function useAuth() {
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return
       setSession(data.session || null)
-      loadProfile(data.session?.user?.id).finally(() => setLoading(false))
+      const uid = data.session?.user?.id
+      Promise.all([loadProfile(uid), loadProgressionState(uid)])
+        .finally(() => setLoading(false))
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s)
       loadProfile(s?.user?.id)
+      loadProgressionState(s?.user?.id)
     })
     return () => { mounted = false; sub.subscription.unsubscribe() }
-  }, [loadProfile])
+  }, [loadProfile, loadProgressionState])
 
   const signInWithEmail = useCallback(async (email) => {
     return supabase.auth.signInWithOtp({
@@ -75,5 +87,10 @@ export function useAuth() {
     return { error }
   }, [session, loadProfile])
 
-  return { session, profile, loading, signInWithEmail, verifyEmailCode, signOut, saveProfile, refreshProfile: () => loadProfile(session?.user?.id) }
+  return {
+    session, profile, progression, loading,
+    signInWithEmail, verifyEmailCode, signOut, saveProfile,
+    refreshProfile: () => loadProfile(session?.user?.id),
+    refreshProgression: () => loadProgressionState(session?.user?.id),
+  }
 }

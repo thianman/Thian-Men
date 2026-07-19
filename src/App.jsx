@@ -9,6 +9,8 @@ import GameCanvas from './components/GameCanvas.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
 import { addRecord, bestForCharacter, getRecords, formatTime } from './game/ladderStore.js'
+import { xpToLevel, xpForNextLevel } from './game/progressionConstants.js'
+import { awardMatchRewards, awardLadderRewards } from './lib/progression.js'
 import { useAuth } from './lib/useAuth.js'
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)]
@@ -147,11 +149,16 @@ export default function App() {
           onClick={() => setShowAccountMenu(v => !v)}
           className="pl-1 pr-3 py-1 rounded-full bg-slate-800/80 border border-cyan-400/40 hover:bg-slate-700 text-white text-sm font-semibold shadow flex items-center gap-2"
         >
-          <span className="w-7 h-7 rounded-full overflow-hidden bg-slate-700 border border-cyan-300 flex items-center justify-center">
+          <span className="w-7 h-7 rounded-full overflow-hidden bg-slate-700 border border-cyan-300 flex items-center justify-center relative">
             {auth.profile.avatar_url ? (
               <img src={auth.profile.avatar_url} alt="" className="w-full h-full object-cover" />
             ) : (
               <span className="text-sm">👤</span>
+            )}
+            {auth.progression?.progression && (
+              <span className="absolute -bottom-1 -right-1 bg-amber-500 text-black text-[10px] font-black rounded-full w-4 h-4 flex items-center justify-center border border-slate-900">
+                {auth.progression.progression.level}
+              </span>
             )}
           </span>
           {auth.profile.display_name}
@@ -168,6 +175,7 @@ export default function App() {
         <AccountMenu
           profile={auth.profile}
           session={auth.session}
+          progression={auth.progression}
           onEditProfile={() => { setShowAccountMenu(false); setScreen('editProfile') }}
           onSignOut={() => { setShowAccountMenu(false); auth.signOut() }}
           onClose={() => setShowAccountMenu(false)}
@@ -227,6 +235,13 @@ export default function App() {
           profile={auth.profile}
           onExit={() => { setPendingJoin(null); backToTitle() }}
           autoJoinCode={pendingJoin}
+          onMatchOver={async ({ won, character }) => {
+            if (!auth.session?.user?.id) return
+            await awardMatchRewards(auth.session.user.id, auth.progression?.progression, {
+              won, hits: 0, catches: 0, kos: 0, roundWins: 0, character,
+            })
+            auth.refreshProgression()
+          }}
         />
       )}
       {screen === 'onlineLadder' && auth.session && auth.profile && (
@@ -234,6 +249,13 @@ export default function App() {
           profile={auth.profile}
           session={auth.session}
           onExit={backToTitle}
+          onLadderOver={async ({ cleared, fightsWon, character }) => {
+            if (!auth.session?.user?.id) return
+            await awardLadderRewards(auth.session.user.id, auth.progression?.progression, {
+              cleared, fightsWon, character,
+            })
+            auth.refreshProgression()
+          }}
         />
       )}
       {screen === 'globalLeaderboard' && (
@@ -314,6 +336,9 @@ export default function App() {
         <CharacterSelect
           label={cfg.mode === '2p' ? 'PLAYER 1 — PICK CHARACTER' : 'PICK YOUR CHARACTER'}
           onBack={() => setScreen('mode')}
+          progression={auth.progression}
+          session={auth.session}
+          onProgressionRefresh={auth.refreshProgression}
           onPick={(id, skinIdx) => {
             setCfg(c => ({ ...c, p1Char: id, p1Skin: skinIdx || 0 }))
             if (cfg.mode === '2p') setScreen('p2')
@@ -363,6 +388,12 @@ export default function App() {
         <GameCanvas
           config={cfg}
           profile={auth.profile}
+          session={auth.session}
+          onRewardsEarned={async (summary) => {
+            if (!auth.session?.user?.id) return
+            await awardMatchRewards(auth.session.user.id, auth.progression?.progression, summary)
+            auth.refreshProgression()
+          }}
           onExit={backToTitle}
           onMatchEnd={(winnerSide) => {
             if (ladder && cfg.hideEndButtons) {

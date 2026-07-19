@@ -5,7 +5,7 @@ import { render } from '../game/render.js'
 import { makeAIController } from '../game/ai.js'
 import { playMusic, stopMusic, resumeAudio, sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
 
-export default function GameCanvas({ config, onExit, onMatchEnd, profile }) {
+export default function GameCanvas({ config, onExit, onMatchEnd, profile, session, onRewardsEarned }) {
   const canvasRef = useRef(null)
   const wrapRef = useRef(null)
   const stateRef = useRef(null)
@@ -159,12 +159,22 @@ export default function GameCanvas({ config, onExit, onMatchEnd, profile }) {
   useEffect(() => {
     if (matchEnd && !notifiedRef.current && s) {
       notifiedRef.current = true
-      // Swap battle music for a win/loss theme
       const p1Won = s.matchWinnerSide === 'left'
       playMusic(p1Won ? 'win' : 'loss')
       onMatchEnd && onMatchEnd(s.matchWinnerSide)
+      // Award XP+coins if signed in and not practice/ladder-in-offline
+      if (session?.user?.id && !s.isPractice && onRewardsEarned) {
+        onRewardsEarned({
+          won: p1Won,
+          hits:    s.stats?.left?.hits    || 0,
+          catches: s.stats?.left?.catches || 0,
+          kos:     s.stats?.left?.hits    || 0, // treat every KO-worthy hit as a KO for MVP
+          roundWins: s.roundsP1 || 0,
+          character: config.p1Char,
+        })
+      }
     }
-  }, [matchEnd, s, onMatchEnd])
+  }, [matchEnd, s, onMatchEnd, session, config, onRewardsEarned])
 
   const touchStart = (side, action) => () => {
     if (side === 'p1') touchRef.current.p1[action] = true

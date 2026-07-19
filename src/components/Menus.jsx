@@ -2,6 +2,9 @@ import React, { useState } from 'react'
 import { CHARACTERS, MAPS, DIFFICULTIES, STAT_STARS, MODIFIERS } from '../game/constants.js'
 import { sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
 import { getRecords, bestForCharacter, formatTime, clearRecords } from '../game/ladderStore.js'
+import { characterUnlockInfo } from '../lib/progression.js'
+import { buyCharacterWithCoins } from '../lib/progression.js'
+import { CHARACTER_COIN_PRICE } from '../game/progressionConstants.js'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg text-lg border border-cyan-300/40 transition'
 const btnAlt = 'px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold shadow border border-slate-500 transition'
@@ -449,25 +452,55 @@ function saveLastSkin(charId, idx) {
   } catch {}
 }
 
-export function CharacterSelect({ label, exclude, onPick, onBack }) {
+export function CharacterSelect({ label, exclude, onPick, onBack, progression, session, onProgressionRefresh }) {
   const [skins, setSkins] = useState(loadLastSkins())
+  const [buyBusy, setBuyBusy] = useState(null)
+  const [buyErr, setBuyErr] = useState('')
   const setSkin = (id, idx) => {
     const next = { ...skins, [id]: idx }; setSkins(next); saveLastSkin(id, idx); sfx.click()
   }
+  const unlocked = progression?.unlocked
+  const level = progression?.progression?.level || 1
+  const coins = progression?.progression?.coins || 0
+  const requireUnlocks = !!progression // only gate if we know their progression (signed in)
+
+  const doBuy = async (charId) => {
+    if (!session?.user?.id) return
+    setBuyBusy(charId); setBuyErr('')
+    const res = await buyCharacterWithCoins(session.user.id, charId, coins)
+    setBuyBusy(null)
+    if (!res.ok) { setBuyErr(res.error || 'Purchase failed'); return }
+    sfx.match()
+    onProgressionRefresh && await onProgressionRefresh()
+  }
+
   return (
     <Screen title={label} subtitle="Choose your fighter. Tap a color dot for a skin." onBack={onBack}>
+      {progression?.progression && (
+        <div className="text-center text-sm text-slate-300 mb-3">
+          <span className="font-bold text-amber-300">Lv {level}</span>
+          <span className="mx-3 text-slate-500">·</span>
+          <span className="text-amber-200">🪙 {coins.toLocaleString()}</span>
+        </div>
+      )}
+      {buyErr && <div className="text-red-400 text-sm text-center mb-2">{buyErr}</div>}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {CHARACTERS.map(c => {
           const dis = exclude === c.id
+          const info = requireUnlocks ? characterUnlockInfo(unlocked, c.id, level) : { unlocked: true }
+          const locked = requireUnlocks && !info.unlocked
           const skinIdx = skins[c.id] || 0
           const skin = (c.skins && c.skins[skinIdx]) || c
           return (
             <div key={c.id}
-              className={`p-4 rounded-xl border text-left transition ${dis ? 'opacity-40 border-slate-700 bg-slate-800/50' : 'border-slate-600 bg-slate-800 hover:border-cyan-400'}`}>
+              className={`p-4 rounded-xl border text-left transition relative ${dis || locked ? 'opacity-60 border-slate-700 bg-slate-800/50' : 'border-slate-600 bg-slate-800 hover:border-cyan-400'}`}>
+              {locked && (
+                <div className="absolute top-2 right-2 text-xl">🔒</div>
+              )}
               <button
-                disabled={dis}
-                onClick={() => { if (!dis) { sfx.click(); onPick(c.id, skinIdx) } }}
-                className={`w-full text-left ${dis ? 'cursor-not-allowed' : ''}`}
+                disabled={dis || locked}
+                onClick={() => { if (!(dis || locked)) { sfx.click(); onPick(c.id, skinIdx) } }}
+                className={`w-full text-left ${dis || locked ? 'cursor-not-allowed' : ''}`}
               >
                 <div className="flex items-center gap-3">
                   <div className="w-14 h-14 rounded-lg flex-shrink-0 border-2" style={{ background: skin.color, borderColor: skin.accent }} />
@@ -488,7 +521,7 @@ export function CharacterSelect({ label, exclude, onPick, onBack }) {
                   </div>
                 )}
               </button>
-              {!dis && c.skins && (
+              {!dis && !locked && c.skins && (
                 <div className="mt-3 flex gap-2 items-center">
                   <span className="text-xs text-slate-400 uppercase tracking-wide">Skin:</span>
                   {c.skins.map((s, i) => (
@@ -500,6 +533,25 @@ export function CharacterSelect({ label, exclude, onPick, onBack }) {
                       title={s.name}
                     />
                   ))}
+                </div>
+              )}
+              {locked && (
+                <div className="mt-3 rounded-lg px-3 py-2 bg-slate-900/70 border border-amber-500/50 text-xs text-slate-200">
+                  {info.kind === 'level' && (
+                    <>Unlocks at <span className="font-bold text-amber-300">Level {info.at}</span></>
+                  )}
+                  {info.kind === 'coins' && (
+                    <div className="flex items-center justify-between gap-2">
+                      <span>🪙 {CHARACTER_COIN_PRICE.toLocaleString()}</span>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); doBuy(c.id) }}
+                        disabled={buyBusy === c.id || coins < CHARACTER_COIN_PRICE}
+                        className="px-3 py-1 rounded bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed font-bold text-white text-xs"
+                      >
+                        {buyBusy === c.id ? 'Buying…' : coins < CHARACTER_COIN_PRICE ? 'Not enough' : 'Buy'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

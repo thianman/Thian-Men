@@ -9,7 +9,7 @@ const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hov
 const btnAlt = 'px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold border border-slate-500'
 const input = 'w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white font-mono uppercase tracking-widest text-center text-2xl'
 
-export default function OnlineMatch({ profile, onExit, autoJoinCode }) {
+export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver }) {
   const [screen, setScreen] = useState('menu') // 'menu' | 'connecting' | 'lobby' | 'match' | 'ended' | 'error'
   const [joinCode, setJoinCode] = useState(autoJoinCode || '')
   const [code, setCode] = useState('')
@@ -51,7 +51,14 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode }) {
     t.on('lobby',       (m) => setLobby(m))
     t.on('matchStart',  () => { setMatchEnd(null); setScreen('match') })
     t.on('state',       (m) => setSnap(m.snap))
-    t.on('matchEnd',    (m) => { setMatchEnd(m); setScreen('ended') })
+    t.on('matchEnd',    (m) => {
+      setMatchEnd(m); setScreen('ended')
+      if (onMatchOver && me && lobby) {
+        const mySlot = lobby?.slots?.find(s => s.side === me.side && s.sideSlot === me.sideSlot)
+        const won = m.winner === me.side
+        onMatchOver({ won, character: mySlot?.character || null })
+      }
+    })
     t.on('pong',        (r) => setRtt(r))
     t.on('error',       () => { setError('Connection error'); setScreen('error') })
     t.on('disconnected', () => { setScreen('menu'); setRoster([]); setSnap(null); setMe(null); setLobby(null) })
