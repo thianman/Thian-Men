@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Screen } from './Menus.jsx'
-import { loadDailyChallenges, claimDailyChallenge } from '../lib/daily.js'
+import { loadDailyChallenges, claimDailyChallenge, ensureDailyChallenges } from '../lib/daily.js'
 import { findChallenge } from '../game/dailyConstants.js'
 import { sfx } from '../game/sfx.js'
 import LevelUpScreen from './LevelUpScreen.jsx'
@@ -8,12 +8,20 @@ import LevelUpScreen from './LevelUpScreen.jsx'
 export default function DailyChallengesScreen({ session, progression, onProgressionRefresh, onBack }) {
   const uid = session?.user?.id
   const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
   const [busy, setBusy] = useState(null)
   const [claimResult, setClaimResult] = useState(null)
 
   useEffect(() => {
-    if (!uid) return
-    loadDailyChallenges(uid).then(setRows)
+    if (!uid) { setLoading(false); return }
+    let cancelled = false
+    setLoading(true)
+    // Roll today's challenges if they don't exist yet, then load.
+    ensureDailyChallenges(uid)
+      .then(() => loadDailyChallenges(uid))
+      .then((r) => { if (!cancelled) { setRows(r); setLoading(false) } })
+      .catch(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
   }, [uid])
 
   const doClaim = async (row) => {
@@ -81,8 +89,11 @@ export default function DailyChallengesScreen({ session, progression, onProgress
                 </div>
               )
             })}
-            {!rows.length && (
+            {loading && (
               <div className="text-center text-slate-300 py-10">Loading today's challenges…</div>
+            )}
+            {!loading && !rows.length && (
+              <div className="text-center text-slate-300 py-10">No challenges available. Try again in a moment.</div>
             )}
           </div>
         )}
