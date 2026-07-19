@@ -41,7 +41,8 @@ drop policy if exists "daily_challenges self update" on public.daily_challenges;
 create policy "daily_challenges self update"
   on public.daily_challenges for update using (auth.uid() = user_id);
 
--- Service role also needs read/write for server-side reward paths
+-- Base table grants (RLS still gates rows to the caller's user_id)
+grant select, insert, update on public.daily_challenges to authenticated;
 grant select, insert, update on public.daily_challenges to service_role;
 
 create index if not exists daily_challenges_user_date_idx
