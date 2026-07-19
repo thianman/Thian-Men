@@ -5,6 +5,7 @@ import { sfx } from '../game/sfx.js'
 import { countryName } from '../lib/countries.js'
 import { TouchControls, isMobile as detectMobile } from './TouchControls.jsx'
 import { getAvatarImage } from '../lib/avatars.js'
+import { characterUnlockInfo } from '../lib/progression.js'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg border border-cyan-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
 const btnBig = 'px-8 py-3 rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600 text-white font-black text-xl border border-emerald-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
@@ -17,7 +18,7 @@ function formatTime(ms) {
   return `${m}:${String(rem).padStart(2, '0')}.${String(hun).padStart(2, '0')}`
 }
 
-export default function OnlineLadder({ profile, session, onExit, onLadderOver }) {
+export default function OnlineLadder({ profile, session, onExit, onLadderOver, progression }) {
   const [screen, setScreen] = useState('menu') // 'menu' | 'connecting' | 'select' | 'fighting' | 'end'
   const [error, setError] = useState('')
   const [rtt, setRtt] = useState(0)
@@ -194,13 +195,21 @@ export default function OnlineLadder({ profile, session, onExit, onLadderOver })
     return (
       <MenuLayout title="PICK YOUR FIGHTER" name={name}>
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-2">
-          {CHARACTERS.map(c => (
-            <button key={c.id} onClick={() => pickCharacter(c.id)}
-              className={`p-3 rounded-xl border-2 ${picked === c.id ? 'border-amber-400 bg-amber-900/30' : 'border-slate-600 bg-slate-800 hover:border-slate-400'}`}>
-              <div className="w-full h-8 rounded" style={{ background: c.color }} />
-              <div className="text-xs font-bold mt-1">{c.name}</div>
-            </button>
-          ))}
+          {CHARACTERS.map(c => {
+            const info = progression ? characterUnlockInfo(progression.unlocked, c.id, progression.progression?.level || 1) : { unlocked: true }
+            const locked = progression && !info.unlocked
+            return (
+              <button key={c.id}
+                disabled={locked}
+                onClick={() => !locked && pickCharacter(c.id)}
+                title={locked ? (info.kind === 'level' ? `Unlocks at Level ${info.at}` : `Buy in single-player menu (${info.price} coins)`) : c.name}
+                className={`p-3 rounded-xl border-2 relative ${locked ? 'opacity-50 border-slate-700 bg-slate-800/50 cursor-not-allowed' : picked === c.id ? 'border-amber-400 bg-amber-900/30' : 'border-slate-600 bg-slate-800 hover:border-slate-400'}`}>
+                {locked && <span className="absolute top-1 right-1 text-sm">🔒</span>}
+                <div className="w-full h-8 rounded" style={{ background: c.color }} />
+                <div className="text-xs font-bold mt-1">{c.name}</div>
+              </button>
+            )
+          })}
         </div>
         <button className={btnBig} disabled={!picked} onClick={readyUp}>
           {picked ? 'BEGIN RUN' : 'Pick a fighter first'}

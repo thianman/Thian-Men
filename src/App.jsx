@@ -233,6 +233,7 @@ export default function App() {
       {screen === 'online' && auth.session && auth.profile && (
         <OnlineMatch
           profile={auth.profile}
+          progression={auth.progression}
           onExit={() => { setPendingJoin(null); backToTitle() }}
           autoJoinCode={pendingJoin}
           onMatchOver={async ({ won, character }) => {
@@ -248,6 +249,7 @@ export default function App() {
         <OnlineLadder
           profile={auth.profile}
           session={auth.session}
+          progression={auth.progression}
           onExit={backToTitle}
           onLadderOver={async ({ cleared, fightsWon, character }) => {
             if (!auth.session?.user?.id) return
@@ -286,6 +288,9 @@ export default function App() {
         <CharacterSelect
           label="LADDER — PICK YOUR FIGHTER"
           onBack={() => setScreen('mode')}
+          progression={auth.progression}
+          session={auth.session}
+          onProgressionRefresh={auth.refreshProgression}
           onPick={(id, skinIdx) => {
             const opponents = buildLadder(id)
             setLadder({ p1: id, p1Skin: skinIdx || 0, opponents, current: 0, victoryOverall: false, startedAt: Date.now(), clearMs: null })
@@ -357,6 +362,9 @@ export default function App() {
         <CharacterSelect
           label="PLAYER 2 — PICK CHARACTER"
           onBack={() => setScreen('p1')}
+          progression={auth.progression}
+          session={auth.session}
+          onProgressionRefresh={auth.refreshProgression}
           onPick={(id, skinIdx) => { setCfg(c => ({ ...c, p2Char: id, p2Skin: skinIdx || 0 })); setScreen('map') }}
         />
       )}

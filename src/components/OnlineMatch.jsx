@@ -4,12 +4,13 @@ import { CHARACTERS, MAPS, ARENA_W, ARENA_H, FLOOR_Y } from '../game/constants.j
 import { sfx } from '../game/sfx.js'
 import { TouchControls, isMobile as detectMobile } from './TouchControls.jsx'
 import { getAvatarImage } from '../lib/avatars.js'
+import { characterUnlockInfo } from '../lib/progression.js'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg border border-cyan-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
 const btnAlt = 'px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold border border-slate-500'
 const input = 'w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white font-mono uppercase tracking-widest text-center text-2xl'
 
-export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver }) {
+export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver, progression }) {
   const [screen, setScreen] = useState('menu') // 'menu' | 'connecting' | 'lobby' | 'match' | 'ended' | 'error'
   const [joinCode, setJoinCode] = useState(autoJoinCode || '')
   const [code, setCode] = useState('')
@@ -192,6 +193,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver
       code={code} rtt={rtt} me={me} roster={roster} lobby={lobby}
       matchEnd={matchEnd} onLeave={leave} name={name} copied={copied}
       onCopyInvite={copyInvite}
+      progression={progression}
       onPickCharacter={(id) => transportRef.current?.setCharacter(id)}
       onPickMap={(id) => transportRef.current?.setMap(id)}
       onReady={() => transportRef.current?.ready()}
@@ -243,7 +245,7 @@ function MenuLayout({ title, name, children, error, onExit }) {
   )
 }
 
-function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCharacter, onPickMap, onReady, onUnready, onRematch, name, onCopyInvite, copied }) {
+function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCharacter, onPickMap, onReady, onUnready, onRematch, name, onCopyInvite, copied, progression }) {
   const mySide = me?.side
   const mySideSlot = me?.sideSlot
   const mySlot = lobby?.slots?.find(s => s.side === mySide && s.sideSlot === mySideSlot)
@@ -290,14 +292,21 @@ function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCh
         <div className="mb-4">
           <div className="text-sm text-slate-300 mb-2">Pick your fighter</div>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-            {CHARACTERS.map(c => (
-              <button key={c.id}
-                onClick={() => onPickCharacter(c.id)}
-                className={`p-3 rounded-xl border-2 ${myPick === c.id ? 'border-amber-400 bg-amber-900/30' : 'border-slate-600 bg-slate-800 hover:border-slate-400'}`}>
-                <div className="w-full h-8 rounded" style={{ background: c.color }} />
-                <div className="text-xs font-bold mt-1">{c.name}</div>
-              </button>
-            ))}
+            {CHARACTERS.map(c => {
+              const info = progression ? characterUnlockInfo(progression.unlocked, c.id, progression.progression?.level || 1) : { unlocked: true }
+              const locked = progression && !info.unlocked
+              return (
+                <button key={c.id}
+                  disabled={locked}
+                  onClick={() => !locked && onPickCharacter(c.id)}
+                  title={locked ? (info.kind === 'level' ? `Unlocks at Level ${info.at}` : `Buy in single-player menu (${info.price} coins)`) : c.name}
+                  className={`p-3 rounded-xl border-2 relative ${locked ? 'opacity-50 border-slate-700 bg-slate-800/50 cursor-not-allowed' : myPick === c.id ? 'border-amber-400 bg-amber-900/30' : 'border-slate-600 bg-slate-800 hover:border-slate-400'}`}>
+                  {locked && <span className="absolute top-1 right-1 text-sm">🔒</span>}
+                  <div className="w-full h-8 rounded" style={{ background: c.color }} />
+                  <div className="text-xs font-bold mt-1">{c.name}</div>
+                </button>
+              )
+            })}
           </div>
         </div>
 
