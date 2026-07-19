@@ -227,19 +227,51 @@ function HeroScene() {
 }
 
 export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onGlobalLeaderboard, onCredits }) {
+  const sparkColors = ['#22d3ee', '#a855f7', '#facc15', '#f472b6', '#67e8f9', '#fb923c']
+  const sparks = Array.from({ length: 22 }).map((_, i) => ({
+    left:  (i * 47) % 100,
+    delay: (i * 0.31) % 6,
+    dur:   6 + ((i * 1.7) % 7),
+    size:  4 + (i % 4) * 2,
+    color: sparkColors[i % sparkColors.length],
+  }))
+  const beams = [8, 32, 58, 78]
   return (
-    <div className="w-screen h-screen flex flex-col items-center justify-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 text-white p-3 overflow-hidden">
-      <h1 className="hero-title text-4xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 text-center leading-none">
-        DODGEBALL
-      </h1>
-      <p className="text-slate-300 mb-2 text-center text-sm md:text-base">Platformer showdown — dodge, catch, throw.</p>
+    <div className="title-bg relative w-screen h-screen flex flex-col items-center justify-center text-white p-3 overflow-hidden">
+      {/* Behind-everything beams and floating sparks */}
+      {beams.map((left, i) => (
+        <div key={i} className="beam" style={{ left: `${left}%`, animationDelay: `${i * 2}s` }} />
+      ))}
+      <div className="spark-field">
+        {sparks.map((s, i) => (
+          <span key={i} style={{
+            left: `${s.left}%`,
+            width: s.size, height: s.size,
+            background: s.color,
+            boxShadow: `0 0 ${s.size * 3}px ${s.color}`,
+            animationDuration: `${s.dur}s`,
+            animationDelay: `${s.delay}s`,
+          }} />
+        ))}
+      </div>
+
+      {/* Logo */}
+      <div className="legend-wrap text-center">
+        <div className="legend-halo" />
+        <div className="legend-title">DODGEBALL</div>
+        <div className="legend-sub">LEGENDS</div>
+        <div className="legend-shine" />
+      </div>
+      <p className="text-slate-300/90 mb-2 mt-2 text-center text-sm md:text-base tracking-widest uppercase">
+        Dodge · Catch · Throw · Reign
+      </p>
 
       <HeroScene />
 
-      <div className="flex flex-col items-center gap-2 mt-1">
+      <div className="flex flex-col items-center gap-2 mt-1 relative">
         <div className="flex gap-2">
-          <button className={btn} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
-          <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
+          <button className={btn + ' text-xl px-8'} onClick={() => { sfx.click(); onPlay() }}>PLAY</button>
+          <button className={btn + ' bg-gradient-to-b from-emerald-500 to-emerald-700 text-xl px-8'} onClick={() => { sfx.click(); onQuickPlay() }}>QUICK PLAY</button>
         </div>
         <div className="flex flex-wrap justify-center gap-2 max-w-3xl">
           <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onLeaderboard() }}>Local Leaderboard</button>
@@ -249,7 +281,7 @@ export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, o
           <button className={btnAlt + ' text-sm'} onClick={() => { sfx.click(); onCredits() }}>Credits</button>
         </div>
       </div>
-      <p className="text-center text-slate-400 text-xs mt-3">Made for vibe coders. Best of 3 sets. Winner stays king.</p>
+      <p className="text-center text-slate-400 text-xs mt-3 tracking-wider">Best of 3 sets · Winner stays king</p>
     </div>
   )
 }

@@ -20,3 +20,136 @@ canvas { display: block; image-rendering: pixelated; touch-action: none; }
 .hero-scan  { animation: hero-scan  4.2s linear      infinite; }
 .hero-title { animation: hero-title 2.2s ease-in-out infinite; }
 .hero-spark { animation: hero-spark 1.2s ease-out    infinite; }
+
+/* === Dodgeball Legends logo === */
+.legend-wrap {
+  position: relative;
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  line-height: 0.9;
+  isolation: isolate;
+}
+.legend-title {
+  font-family: 'Bowlby One', 'Bungee', 'Impact', system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 0.88;
+  font-size: clamp(3rem, 10vw, 8rem);
+  background: linear-gradient(180deg,
+    #fff7c2 0%,
+    #fde047 22%,
+    #f97316 55%,
+    #ef4444 82%,
+    #b91c1c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 2px #0b0f1a;
+  filter:
+    drop-shadow(0 4px 0 #0b0f1a)
+    drop-shadow(0 10px 22px rgba(239, 68, 68, 0.45))
+    drop-shadow(0 0 40px rgba(34, 211, 238, 0.35));
+}
+.legend-sub {
+  font-family: 'Russo One', 'Bungee', 'Impact', system-ui, sans-serif;
+  font-weight: 900;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  font-size: clamp(1rem, 3.2vw, 2rem);
+  line-height: 1;
+  margin-top: 0.15em;
+  background: linear-gradient(180deg, #67e8f9 0%, #22d3ee 45%, #a855f7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1.5px #0b0f1a;
+  filter:
+    drop-shadow(0 3px 0 #0b0f1a)
+    drop-shadow(0 0 22px rgba(168, 85, 247, 0.55));
+}
+
+/* Shine sweep across the title */
+.legend-shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  mix-blend-mode: overlay;
+}
+.legend-shine::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -30%;
+  width: 40%;
+  height: 140%;
+  background: linear-gradient(115deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.0) 35%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.0) 65%,
+    transparent 100%);
+  transform: skewX(-18deg);
+  animation: legend-sweep 3.6s ease-in-out infinite;
+}
+@keyframes legend-sweep {
+  0%   { left: -30%; opacity: 0; }
+  10%  { opacity: 1; }
+  60%  { left: 110%; opacity: 1; }
+  100% { left: 110%; opacity: 0; }
+}
+
+/* Halo pulse behind the logo */
+.legend-halo {
+  position: absolute;
+  inset: -15% -8%;
+  z-index: -1;
+  background:
+    radial-gradient(closest-side, rgba(251, 191, 36, 0.35), transparent 65%),
+    radial-gradient(closest-side, rgba(168, 85, 247, 0.30) 15%, transparent 70%);
+  filter: blur(18px);
+  animation: legend-halo 3.4s ease-in-out infinite;
+}
+@keyframes legend-halo {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.06); }
+}
+
+/* Confetti / floating sparks in the title backdrop */
+.spark-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.spark-field span {
+  position: absolute;
+  bottom: -10%;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  opacity: 0.7;
+  animation: float-up linear infinite;
+}
+@keyframes float-up {
+  0%   { transform: translateY(0)    scale(1);   opacity: 0; }
+  10%  { opacity: 0.9; }
+  100% { transform: translateY(-110vh) scale(0.6); opacity: 0; }
+}
+
+/* Title screen background gradient wash */
+.title-bg {
+  background:
+    radial-gradient(circle at 20% 15%, rgba(168, 85, 247, 0.35), transparent 45%),
+    radial-gradient(circle at 82% 20%, rgba(34, 211, 238, 0.30), transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(251, 113, 133, 0.28), transparent 55%),
+    linear-gradient(180deg, #0b0522 0%, #12042e 45%, #0b0f1a 100%);
+}
+
+/* Big vertical spotlight streams sliding behind everything */
+.beam { position: absolute; top: -20%; height: 140%; width: 60px; opacity: 0.28;
+  background: linear-gradient(180deg, transparent, #22d3ee 30%, #a855f7 65%, transparent);
+  filter: blur(14px);
+  transform: skewX(-14deg);
+  animation: beam-slide 9s linear infinite;
+}
+@keyframes beam-slide {
+  0%   { transform: translateX(-30vw) skewX(-14deg); }
+  100% { transform: translateX(130vw) skewX(-14deg); }
+}
