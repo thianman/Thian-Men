@@ -10,6 +10,8 @@ import LevelUpScreen from './components/LevelUpScreen.jsx'
 import DailyChallengesScreen from './components/DailyChallengesScreen.jsx'
 import StreakReward from './components/StreakReward.jsx'
 import FriendsScreen from './components/FriendsScreen.jsx'
+import InviteToast from './components/InviteToast.jsx'
+import { acceptInvite as libAcceptInvite } from './lib/party.js'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
 import { addRecord, bestForCharacter, getRecords, formatTime } from './game/ladderStore.js'
@@ -244,6 +246,7 @@ export default function App() {
         <OnlineMatch
           profile={auth.profile}
           progression={auth.progression}
+          session={auth.session}
           onExit={() => { setPendingJoin(null); backToTitle() }}
           autoJoinCode={pendingJoin}
           onMatchOver={async ({ won, character }) => {
@@ -465,6 +468,18 @@ export default function App() {
           reward={auth.streakReward.reward}
           longest={auth.streakReward.longest}
           onClose={auth.dismissStreak}
+        />
+      )}
+      {screen !== 'game' && (
+        <InviteToast
+          invites={auth.partyInvites || []}
+          onAccept={async (inv) => {
+            await libAcceptInvite(inv.id)
+            setPendingJoin(inv.join_code)
+            setScreen('online')
+            auth.refreshInvites?.()
+          }}
+          onDecline={(inv) => auth.dismissInvite?.(inv.id)}
         />
       )}
     </>

@@ -8,12 +8,13 @@ import { characterUnlockInfo } from '../lib/progression.js'
 import CharacterPose, { poseVerb } from './CharacterPose.jsx'
 import { STAT_STARS } from '../game/constants.js'
 import { drawHumanFigure } from '../game/render.js'
+import FriendPicker from './FriendPicker.jsx'
 
 const btn = 'px-6 py-3 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600 text-white font-bold shadow-lg border border-cyan-300/40 disabled:opacity-40 disabled:cursor-not-allowed'
 const btnAlt = 'px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 text-white font-semibold border border-slate-500'
 const input = 'w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 focus:border-cyan-400 focus:outline-none text-white font-mono uppercase tracking-widest text-center text-2xl'
 
-export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver, progression }) {
+export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver, progression, session }) {
   const [screen, setScreen] = useState('menu') // 'menu' | 'connecting' | 'lobby' | 'match' | 'ended' | 'error'
   const [joinCode, setJoinCode] = useState(autoJoinCode || '')
   const [code, setCode] = useState('')
@@ -197,6 +198,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver
       matchEnd={matchEnd} onLeave={leave} name={name} copied={copied}
       onCopyInvite={copyInvite}
       progression={progression}
+      session={session}
       onPickCharacter={(id) => transportRef.current?.setCharacter(id)}
       onPickMap={(id) => transportRef.current?.setMap(id)}
       onReady={() => transportRef.current?.ready()}
@@ -248,7 +250,8 @@ function MenuLayout({ title, name, children, error, onExit }) {
   )
 }
 
-function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCharacter, onPickMap, onReady, onUnready, onRematch, name, onCopyInvite, copied, progression }) {
+function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCharacter, onPickMap, onReady, onUnready, onRematch, name, onCopyInvite, copied, progression, session }) {
+  const [showPicker, setShowPicker] = useState(false)
   const mySide = me?.side
   const mySideSlot = me?.sideSlot
   const mySlot = lobby?.slots?.find(s => s.side === mySide && s.sideSlot === mySideSlot)
@@ -269,6 +272,17 @@ function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCh
               <div className="font-mono text-3xl tracking-widest text-cyan-300">{code || '—'}</div>
               <button onClick={() => code && navigator.clipboard?.writeText(code)} className="text-xs bg-slate-800 border border-slate-600 rounded px-2 py-1">Copy code</button>
               <button onClick={onCopyInvite} className="text-xs bg-cyan-800 border border-cyan-400 rounded px-2 py-1">{copied ? '✓ Link copied!' : 'Copy invite link'}</button>
+              {session?.user?.id && code && (
+                <button onClick={() => { sfx.click(); setShowPicker(true) }} className="text-xs bg-amber-700 border border-amber-400 rounded px-2 py-1">👥 Invite friend</button>
+              )}
+              {showPicker && (
+                <FriendPicker
+                  session={session}
+                  joinCode={code}
+                  matchType={me?.type || lobby?.type || '1v1'}
+                  onClose={() => setShowPicker(false)}
+                />
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3 text-sm">

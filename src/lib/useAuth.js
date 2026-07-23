@@ -3,6 +3,7 @@ import { supabase } from './supabase.js'
 import { ensureProgression, loadProgression } from './progression.js'
 import { ensureDailyChallenges, tickLoginStreak } from './daily.js'
 import { startPresenceHeartbeat, stopPresenceHeartbeat, loadFriendsAndRequests } from './friends.js'
+import { loadIncomingInvites, declineInvite as libDeclineInvite } from './party.js'
 
 export function useAuth() {
   const [session, setSession] = useState(null)
@@ -12,10 +13,16 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   const [pendingFriendCount, setPendingFriendCount] = useState(0)
+  const [partyInvites, setPartyInvites] = useState([])
   const refreshFriendCount = useCallback(async (uid) => {
     if (!uid) { setPendingFriendCount(0); return }
     const d = await loadFriendsAndRequests(uid)
     setPendingFriendCount(d.incoming.length)
+  }, [])
+  const refreshInvites = useCallback(async (uid) => {
+    if (!uid) { setPartyInvites([]); return }
+    const invs = await loadIncomingInvites(uid)
+    setPartyInvites(invs)
   }, [])
 
   const loadProgressionState = useCallback(async (uid) => {
@@ -32,7 +39,24 @@ export function useAuth() {
     setProgression(p2)
     startPresenceHeartbeat(uid)
     refreshFriendCount(uid)
-  }, [refreshFriendCount])
+    refreshInvites(uid)
+  }, [refreshFriendCount, refreshInvites])
+
+  // Poll party invites every 20s + on window focus.
+  useEffect(() => {
+    const uid = session?.user?.id
+    if (!uid) return
+    const tick = () => refreshInvites(uid)
+    const iv = setInterval(tick, 20 * 1000)
+    const onFocus = () => tick()
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      clearInterval(iv)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [session, refreshInvites])
 
   const loadProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); return }
@@ -112,6 +136,12 @@ export function useAuth() {
     dismissStreak: () => setStreakReward(null),
     pendingFriendCount,
     refreshFriends: () => refreshFriendCount(session?.user?.id),
+    partyInvites,
+    refreshInvites: () => refreshInvites(session?.user?.id),
+    dismissInvite: async (rowId) => {
+      await libDeclineInvite(rowId)
+      setPartyInvites(list => list.filter(i => i.id !== rowId))
+    },
     signInWithEmail, verifyEmailCode, signOut, saveProfile,
     refreshProfile: () => loadProfile(session?.user?.id),
     refreshProgression: () => loadProgressionState(session?.user?.id),
