@@ -38,14 +38,33 @@ export function makeAIController(difficulty = 'medium') {
 
     const input = { left:false, right:false, jump:false, duck:false, throw:false, catchPressed:false }
 
+    // Find the nearest idle ball on the CPU's own half — CPUs can't cross the
+    // center line, so any ball on the enemy side is unreachable.
+    const midX = 640
+    let idleBall = null, idleDist = Infinity
+    for (const b of state.balls) {
+      if (b.held || b.live) continue
+      const onMySide = cpu.side === 'right' ? b.x >= midX - 8 : b.x <= midX + 8
+      if (!onMySide) continue
+      const d = Math.abs(b.x - (cpu.x + cpu.w/2))
+      if (d < idleDist) { idleDist = d; idleBall = b }
+    }
+
     // Movement
     if (Math.random() < cfg.moveChance) {
-      const targetX = target.x + target.w/2
       const myX = cpu.x + cpu.w/2
-      // Keep firing distance ~ 350-500
-      const preferred = enemySide === 'right' ? targetX - 420 : targetX + 420
-      if (myX < preferred - 20) input.right = true
-      else if (myX > preferred + 20) input.left = true
+      // If we don't have a ball and there's an idle one on our side, prefer
+      // walking toward it — no distance cap, so back-wall balls get fetched.
+      if (!cpu.holdingBall && idleBall) {
+        if (idleBall.x < myX - 8) input.left = true
+        else if (idleBall.x > myX + 8) input.right = true
+      } else {
+        // Keep firing distance ~ 350-500 from target
+        const targetX = target.x + target.w/2
+        const preferred = enemySide === 'right' ? targetX - 420 : targetX + 420
+        if (myX < preferred - 20) input.right = true
+        else if (myX > preferred + 20) input.left = true
+      }
     } else if (difficulty === 'easy') {
       // wander
       if (Math.random() < 0.5) input.left = true; else input.right = true
@@ -79,17 +98,7 @@ export function makeAIController(difficulty = 'medium') {
 
     // Throw logic - pickup, hold, release
     if (!cpu.holdingBall) {
-      // walk toward nearest idle ball if close-ish
-      let idle = null, id = Infinity
-      for (const b of state.balls) {
-        if (b.held || b.live) continue
-        const d = Math.abs(b.x - (cpu.x + cpu.w/2))
-        if (d < id) { id = d; idle = b }
-      }
-      if (idle && id < 80) input.throw = true
-      else if (idle && id < 300 && Math.random() < 0.4) {
-        if (idle.x < cpu.x) input.left = true; else input.right = true
-      }
+      if (idleBall && idleDist < 80) input.throw = true
       mem.throwHold = false
     } else {
       // Charge and release
