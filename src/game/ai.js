@@ -50,23 +50,31 @@ export function makeAIController(difficulty = 'medium') {
       if (d < idleDist) { idleDist = d; idleBall = b }
     }
 
-    // Movement
-    if (Math.random() < cfg.moveChance) {
-      const myX = cpu.x + cpu.w/2
-      // If we don't have a ball and there's an idle one on our side, prefer
-      // walking toward it — no distance cap, so back-wall balls get fetched.
+    // Movement — commit to a direction for a short window so the CPU can't
+    // flicker left/right every frame. Recompute the desired direction on
+    // a timer, then hold it until we're within the deadzone.
+    if (mem.moveDecideCd === undefined) mem.moveDecideCd = 0
+    mem.moveDecideCd -= dtMs
+    const myX = cpu.x + cpu.w/2
+    const DEADZONE = 28
+    if (mem.moveDecideCd <= 0) {
+      let goal
       if (!cpu.holdingBall && idleBall) {
-        if (idleBall.x < myX - 8) input.left = true
-        else if (idleBall.x > myX + 8) input.right = true
+        goal = idleBall.x
       } else {
-        // Keep firing distance ~ 350-500 from target
         const targetX = target.x + target.w/2
-        const preferred = enemySide === 'right' ? targetX - 420 : targetX + 420
-        if (myX < preferred - 20) input.right = true
-        else if (myX > preferred + 20) input.left = true
+        goal = enemySide === 'right' ? targetX - 420 : targetX + 420
       }
-    } else if (difficulty === 'easy') {
-      // wander
+      mem.moveGoalX = goal
+      mem.moveDecideCd = 220 + Math.random() * 180
+    }
+    const goalX = mem.moveGoalX ?? myX
+    if (Math.random() < cfg.moveChance) {
+      if (myX < goalX - DEADZONE) input.right = true
+      else if (myX > goalX + DEADZONE) input.left = true
+      // else: within deadzone → stand still, no jitter
+    } else if (difficulty === 'easy' && Math.random() < 0.02) {
+      // occasional wander tick for easy CPUs; rare enough not to jitter
       if (Math.random() < 0.5) input.left = true; else input.right = true
     }
 
