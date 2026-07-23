@@ -9,6 +9,7 @@ import GameCanvas from './components/GameCanvas.jsx'
 import LevelUpScreen from './components/LevelUpScreen.jsx'
 import DailyChallengesScreen from './components/DailyChallengesScreen.jsx'
 import StreakReward from './components/StreakReward.jsx'
+import FriendsScreen from './components/FriendsScreen.jsx'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
 import { addRecord, bestForCharacter, getRecords, formatTime } from './game/ladderStore.js'
@@ -200,6 +201,8 @@ export default function App() {
           onGlobalLeaderboard={() => setScreen('globalLeaderboard')}
           onCredits={() => setScreen('credits')}
           onDaily={auth.session ? () => setScreen('dailyChallenges') : null}
+          onFriends={auth.session ? () => setScreen('friends') : null}
+          friendRequests={auth.pendingFriendCount || 0}
           dailyUnclaimed={0}
           streak={auth.progression?.progression?.current_streak || 0}
           onQuickPlay={() => {
@@ -441,6 +444,12 @@ export default function App() {
           progression={auth.progression}
           onProgressionRefresh={auth.refreshProgression}
           onBack={backToTitle}
+        />
+      )}
+      {screen === 'friends' && (
+        <FriendsScreen
+          session={auth.session}
+          onBack={() => { auth.refreshFriends?.(); backToTitle() }}
         />
       )}
       {levelUpResult && (

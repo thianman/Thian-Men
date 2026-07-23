@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from './supabase.js'
 import { ensureProgression, loadProgression } from './progression.js'
 import { ensureDailyChallenges, tickLoginStreak } from './daily.js'
+import { startPresenceHeartbeat, stopPresenceHeartbeat, loadFriendsAndRequests } from './friends.js'
 
 export function useAuth() {
   const [session, setSession] = useState(null)
@@ -10,8 +11,15 @@ export function useAuth() {
   const [streakReward, setStreakReward] = useState(null) // { streak, reward, ... }
   const [loading, setLoading] = useState(true)
 
+  const [pendingFriendCount, setPendingFriendCount] = useState(0)
+  const refreshFriendCount = useCallback(async (uid) => {
+    if (!uid) { setPendingFriendCount(0); return }
+    const d = await loadFriendsAndRequests(uid)
+    setPendingFriendCount(d.incoming.length)
+  }, [])
+
   const loadProgressionState = useCallback(async (uid) => {
-    if (!uid) { setProgression(null); return }
+    if (!uid) { setProgression(null); stopPresenceHeartbeat(); setPendingFriendCount(0); return }
     await ensureProgression(uid)
     const p = await loadProgression(uid)
     // Fire the daily streak + daily challenge roll on session ready.
@@ -22,7 +30,9 @@ export function useAuth() {
     // Reload progression to include the streak reward
     const p2 = streak?.rewarded ? await loadProgression(uid) : p
     setProgression(p2)
-  }, [])
+    startPresenceHeartbeat(uid)
+    refreshFriendCount(uid)
+  }, [refreshFriendCount])
 
   const loadProfile = useCallback(async (uid) => {
     if (!uid) { setProfile(null); return }
@@ -100,6 +110,8 @@ export function useAuth() {
     session, profile, progression, loading,
     streakReward,
     dismissStreak: () => setStreakReward(null),
+    pendingFriendCount,
+    refreshFriends: () => refreshFriendCount(session?.user?.id),
     signInWithEmail, verifyEmailCode, signOut, saveProfile,
     refreshProfile: () => loadProfile(session?.user?.id),
     refreshProgression: () => loadProgressionState(session?.user?.id),

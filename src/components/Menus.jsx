@@ -249,7 +249,7 @@ function HeroScene() {
   )
 }
 
-export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onGlobalLeaderboard, onCredits, onDaily, dailyUnclaimed = 0, streak = 0 }) {
+export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onGlobalLeaderboard, onCredits, onDaily, onFriends, friendRequests = 0, dailyUnclaimed = 0, streak = 0 }) {
   const stars = Array.from({ length: 14 }).map((_, i) => ({
     left:  (i * 71) % 100,
     delay: (i * 0.43) % 8,
@@ -320,6 +320,14 @@ export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, o
               🎯 Daily
               {dailyUnclaimed > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400 text-slate-900 text-[10px] font-black flex items-center justify-center">{dailyUnclaimed}</span>
+              )}
+            </button>
+          )}
+          {onFriends && (
+            <button className="chip-btn relative" onClick={() => { sfx.click(); onFriends() }}>
+              👥 Friends
+              {friendRequests > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">{friendRequests}</span>
               )}
             </button>
           )}
