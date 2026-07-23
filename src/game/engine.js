@@ -247,6 +247,16 @@ function attemptCatch(player, state) {
     const baseWindow = CATCH_RANGE * (1 - 0.4 * (b.chargeAtThrow || 0.5))
     const window = baseWindow * (perk.catchWindowMul || 1)
     if (d < window) {
+      // If we're already holding a ball, drop it to the floor as idle so
+      // it can't be orphaned mid-air by this catch overwriting the ref.
+      if (player.holdingBall && player.holdingBall !== b) {
+        const old = player.holdingBall
+        old.held = false; old.ownerSide = null
+        old.live = false; old.vx = 0; old.vy = 0
+        old.x = player.x + player.w/2
+        old.y = FLOOR_Y - old.r
+      }
+      player.charging = false; player.chargeVal = 0
       b.live = false; b.vx = 0; b.vy = 0
       b.held = true; b.ownerSide = player.side
       player.holdingBall = b
@@ -332,7 +342,15 @@ export function tick(state, dtMs) {
   for (const b of state.balls) {
     if (b.held) {
       const owner = state.players.find(pl => pl.holdingBall === b)
-      if (owner) { b.x = owner.x + owner.w/2 + owner.facing * 20; b.y = owner.y + 30 }
+      if (owner) {
+        b.x = owner.x + owner.w/2 + owner.facing * 20; b.y = owner.y + 30
+        continue
+      }
+      // Safety valve: ball says it's held but no player references it.
+      // Drop it to the floor as idle so it can't get stuck mid-air.
+      b.held = false; b.ownerSide = null
+      b.live = false; b.vx = 0; b.vy = 0
+      b.y = FLOOR_Y - b.r
       continue
     }
     if (b.live) {
