@@ -29,12 +29,24 @@ export function stopPresenceHeartbeat() {
 export async function searchUsers(query, selfId) {
   const q = (query || '').trim()
   if (q.length < 2) return []
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('id, display_name, avatar_url, last_seen_at, country')
     .ilike('display_name', `%${q}%`)
     .neq('id', selfId)
     .limit(20)
+  if (error) {
+    console.warn('searchUsers failed', error)
+    // Retry with a minimal column set in case avatar_url/last_seen_at are missing
+    const fallback = await supabase
+      .from('profiles')
+      .select('id, display_name, country')
+      .ilike('display_name', `%${q}%`)
+      .neq('id', selfId)
+      .limit(20)
+    if (fallback.error) console.warn('searchUsers fallback failed', fallback.error)
+    return fallback.data || []
+  }
   return data || []
 }
 
