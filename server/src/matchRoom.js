@@ -44,7 +44,7 @@ export class MatchRoom {
 
     if (url.pathname === '/setup' && this.sessions.size === 0) {
       const type = url.searchParams.get('type')
-      const t = ['1v1', '2v2', 'ladder'].includes(type) ? type : '1v1'
+      const t = ['1v1', '2v2', 'ladder', 'ranked'].includes(type) ? type : '1v1'
       this.type = t
       this.slots = this._emptySlots(t)
       return new Response(JSON.stringify({ ok: true, type: t }))

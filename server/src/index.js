@@ -34,7 +34,7 @@ export default {
     // POST /matches?type=1v1|2v2|ladder — create a new match room
     if (url.pathname === '/matches' && request.method === 'POST') {
       const raw = url.searchParams.get('type')
-      const type = ['1v1', '2v2', 'ladder'].includes(raw) ? raw : '1v1'
+      const type = ['1v1', '2v2', 'ladder', 'ranked'].includes(raw) ? raw : '1v1'
       const code = newRoomCode()
       const id = env.MATCHES.idFromName(code)
       const stub = env.MATCHES.get(id)

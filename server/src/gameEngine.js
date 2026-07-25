@@ -45,7 +45,8 @@ export class GameEngine {
     this.tickMs = 33
     this.type = type
     this.numBalls = type === '2v2' ? 5 : 3
-    this.roundsToWin = type === '2v2' ? 7 : ROUNDS_PER_MATCH
+    // Ranked matches are shorter — first to 3 rounds wins.
+    this.roundsToWin = type === '2v2' ? 7 : type === 'ranked' ? 3 : ROUNDS_PER_MATCH
     this.players = []
     for (const meta of playersMeta) {
       this.players.push(makePlayer(meta))

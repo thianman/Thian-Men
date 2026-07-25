@@ -37,7 +37,7 @@ export class CloudflareTransport extends TransportBase {
   }
 
   async createMatch(type = '1v1') {
-    const t = ['1v1', '2v2', 'ladder'].includes(type) ? type : '1v1'
+    const t = ['1v1', '2v2', 'ladder', 'ranked'].includes(type) ? type : '1v1'
     const res = await fetch(`${SERVER_URL}/matches?type=${t}`, { method: 'POST' })
     if (!res.ok) throw new Error(`create failed: ${res.status}`)
     const { code } = await res.json()

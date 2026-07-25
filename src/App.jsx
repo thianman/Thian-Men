@@ -13,6 +13,8 @@ import FriendsScreen from './components/FriendsScreen.jsx'
 import InviteToast from './components/InviteToast.jsx'
 import { acceptInvite as libAcceptInvite } from './lib/party.js'
 import TutorialCanvas, { isTutorialDone } from './components/TutorialCanvas.jsx'
+import RankedScreen from './components/RankedScreen.jsx'
+import { reportRankedResult } from './lib/ranked.js'
 import { supabase } from './lib/supabase.js'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
@@ -48,6 +50,7 @@ export default function App() {
   const [legalKind, setLegalKind] = useState(null) // 'tos' | 'privacy' | null
   const [showAccountMenu, setShowAccountMenu] = useState(false)
   const [levelUpResult, setLevelUpResult] = useState(null) // { result, characterId }
+  const [rankedRoom, setRankedRoom] = useState(null) // roomCode when a ranked match starts
   const [pendingJoin, setPendingJoin] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search)
@@ -209,6 +212,7 @@ export default function App() {
           friendRequests={auth.pendingFriendCount || 0}
           onTutorial={() => setScreen('tutorial')}
           tutorialDone={isTutorialDone()}
+          onRanked={auth.session ? () => setScreen('ranked') : null}
           dailyUnclaimed={0}
           streak={auth.progression?.progression?.current_streak || 0}
           onQuickPlay={() => {
@@ -260,6 +264,10 @@ export default function App() {
             })
             auth.refreshProgression()
             if (won && result) setLevelUpResult({ result, characterId: character })
+            if (rankedRoom) {
+              await reportRankedResult(auth.session.user.id, !!won)
+              setRankedRoom(null)
+            }
           }}
         />
       )}
@@ -457,6 +465,17 @@ export default function App() {
         <FriendsScreen
           session={auth.session}
           onBack={() => { auth.refreshFriends?.(); backToTitle() }}
+        />
+      )}
+      {screen === 'ranked' && (
+        <RankedScreen
+          session={auth.session}
+          onBack={backToTitle}
+          onEnterMatch={(code) => {
+            setRankedRoom(code)
+            setPendingJoin(code)
+            setScreen('online')
+          }}
         />
       )}
       {screen === 'tutorial' && (
