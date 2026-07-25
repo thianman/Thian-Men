@@ -42,17 +42,31 @@ export const TUTORIAL_STEPS = [
     id: 'catch',
     title: 'CATCH',
     text: 'Press G right as a ball reaches you.',
-    // Setup: server-side we throw a ball at the player from the dummy.
-    setup: (state) => {
+    setup: (state, ctx) => {
       for (const b of state.balls) {
         b.held = false; b.ownerSide = null; b.vx = 0; b.vy = 0; b.live = false
       }
-      // Fire one slow ball toward the player from the right
+      ctx.throwCd = 0
+    },
+    // Recurring throw: fire a well-aimed ball at the player every 3s while
+    // there's no live incoming ball. Guarantees the player gets several tries.
+    onTick: (state, ctx, dtMs) => {
+      ctx.throwCd = (ctx.throwCd || 0) - dtMs
+      const anyLive = state.balls.some(b => b.live && b.thrownBy === 'right')
+      if (anyLive) return
+      if (ctx.throwCd > 0) return
       const b = state.balls[0]
-      b.x = 1050; b.y = 520
-      b.vx = -6; b.vy = -3
+      const p1 = state.players[0]
+      const targetX = p1.x + p1.w / 2
+      b.x = 1000; b.y = 500
+      b.vx = -20; b.vy = -8
       b.live = true; b.thrownBy = 'right'; b.chargeAtThrow = 0.4; b.aliveMs = 0
       b.uncatchable = false
+      b.held = false; b.ownerSide = null
+      // 3.5s until we throw the next one if this one goes uncaught
+      ctx.throwCd = 3500
+      // Silence unused var (would be used for smarter aim later)
+      void targetX
     },
     check: (state) => state.stats.left.catches > 0,
   },
@@ -71,6 +85,6 @@ export function checkStep(step, state, p1, ctx) {
   try { return !!step.check(state, p1, ctx) } catch { return false }
 }
 
-export function runStepSetup(step, state) {
-  try { step.setup && step.setup(state) } catch {}
+export function runStepSetup(step, state, ctx) {
+  try { step.setup && step.setup(state, ctx) } catch {}
 }

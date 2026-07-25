@@ -49,9 +49,9 @@ export default function TutorialCanvas({ onComplete, onExit, onReward }) {
   // First step setup + on-step-change setup
   useEffect(() => {
     const s = stateRef.current; if (!s || !step) return
-    runStepSetup(step, s)
     // Reset scratch counters between steps
     scratchRef.current = {}
+    runStepSetup(step, s, scratchRef.current)
   }, [stepIdx])
 
   // Input handling
@@ -97,6 +97,11 @@ export default function TutorialCanvas({ onComplete, onExit, onReward }) {
         // Never end the tutorial via HP loss — refill both players.
         for (const p of s.players) { if (p.hp < 3) p.hp = 3 }
         if (s.phase !== 'play') { s.phase = 'play'; s.phaseTimer = 0 }
+
+        // Per-step recurring hook (e.g. re-throwing a ball on cooldown)
+        if (step && !done && step.onTick) {
+          try { step.onTick(s, scratchRef.current, dt) } catch {}
+        }
 
         // Step-complete check
         if (step && !done) {
