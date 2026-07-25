@@ -501,6 +501,27 @@ export function InstructionsScreen({ onBack }) {
           <Row k="Catch" v="." />
         </div>
       </div>
+
+      <div className="mt-5 bg-slate-900/60 p-5 rounded-xl border border-amber-500/40">
+        <h3 className="text-xl font-bold mb-2 text-amber-300">📱 Mobile / Touch</h3>
+        <p className="text-slate-300 text-sm mb-3">On phones and tablets the on-screen controls appear automatically once a match starts. No keyboard needed.</p>
+        <div className="grid sm:grid-cols-2 gap-3 text-sm">
+          <div>
+            <div className="text-slate-400 uppercase tracking-widest text-xs mb-1">Left side (D-pad)</div>
+            <Row k="Move Left / Right" v="← / →" />
+            <Row k="Jump" v="↑" />
+            <Row k="Duck" v="↓" />
+          </div>
+          <div>
+            <div className="text-slate-400 uppercase tracking-widest text-xs mb-1">Right side (Action)</div>
+            <Row k="Throw (hold to charge)" v="THROW" />
+            <Row k="Catch (timed)" v="CATCH" />
+            <Row k="Dash" v="Double-tap ← or →" />
+          </div>
+        </div>
+        <p className="text-slate-400 text-xs mt-3">Tip: rotate to landscape and tap the screen once to unlock audio.</p>
+      </div>
+
       <div className="mt-5 bg-slate-900/60 p-5 rounded-xl border border-slate-700 text-slate-200 text-sm leading-relaxed">
         <p><b className="text-amber-300">Throw:</b> Hold Throw to charge (0–100%). Higher charge = more power but harder to catch.</p>
         <p><b className="text-emerald-300">Catch:</b> Tap Catch when a ball is near — timing matters.</p>
