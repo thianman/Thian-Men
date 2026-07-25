@@ -6,8 +6,11 @@ alter table public.profiles
   add column if not exists last_seen_at timestamptz;
 
 -- === Friendships ===
+-- Drop any prior partial attempt so this migration is idempotent.
+drop table if exists public.friendships cascade;
+
 -- Directional row: requester → addressee. status = 'pending' | 'accepted' | 'blocked'.
-create table if not exists public.friendships (
+create table public.friendships (
   id            bigserial primary key,
   requester_id  uuid not null references auth.users(id) on delete cascade,
   addressee_id  uuid not null references auth.users(id) on delete cascade,
