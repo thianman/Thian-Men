@@ -12,6 +12,8 @@ import StreakReward from './components/StreakReward.jsx'
 import FriendsScreen from './components/FriendsScreen.jsx'
 import InviteToast from './components/InviteToast.jsx'
 import { acceptInvite as libAcceptInvite } from './lib/party.js'
+import TutorialCanvas, { isTutorialDone } from './components/TutorialCanvas.jsx'
+import { supabase } from './lib/supabase.js'
 import { playMusic, stopMusic, resumeAudio } from './game/sfx.js'
 import { CHARACTERS, MAPS, DIFFICULTIES } from './game/constants.js'
 import { addRecord, bestForCharacter, getRecords, formatTime } from './game/ladderStore.js'
@@ -205,6 +207,8 @@ export default function App() {
           onDaily={auth.session ? () => setScreen('dailyChallenges') : null}
           onFriends={auth.session ? () => setScreen('friends') : null}
           friendRequests={auth.pendingFriendCount || 0}
+          onTutorial={() => setScreen('tutorial')}
+          tutorialDone={isTutorialDone()}
           dailyUnclaimed={0}
           streak={auth.progression?.progression?.current_streak || 0}
           onQuickPlay={() => {
@@ -453,6 +457,31 @@ export default function App() {
         <FriendsScreen
           session={auth.session}
           onBack={() => { auth.refreshFriends?.(); backToTitle() }}
+        />
+      )}
+      {screen === 'tutorial' && (
+        <TutorialCanvas
+          onExit={backToTitle}
+          onComplete={backToTitle}
+          onReward={async () => {
+            const uid = auth.session?.user?.id
+            if (!uid) return
+            // Idempotent-ish: mark completion + one-time reward via an xp_events row
+            const { data: existing } = await supabase.from('xp_events').select('id').eq('user_id', uid).eq('reason', 'tutorial_complete').maybeSingle()
+            if (existing) return
+            const prev = auth.progression?.progression || { level: 1, xp: 0, coins: 0 }
+            const { xpToLevel, levelFromXp, MAX_LEVEL } = await import('./game/progressionConstants.js')
+            const gainXp = 200, gainCoins = 100
+            const newXp = prev.xp + gainXp
+            let newLevel = levelFromXp(newXp); if (newLevel > MAX_LEVEL) newLevel = MAX_LEVEL
+            const newCoins = prev.coins + gainCoins
+            await supabase.from('progression').upsert({
+              user_id: uid, level: newLevel, xp: newXp, coins: newCoins,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'user_id' })
+            await supabase.from('xp_events').insert({ user_id: uid, reason: 'tutorial_complete', xp: gainXp, coins: gainCoins })
+            auth.refreshProgression?.()
+          }}
         />
       )}
       {levelUpResult && (
