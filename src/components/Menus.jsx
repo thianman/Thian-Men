@@ -491,6 +491,7 @@ export function InstructionsScreen({ onBack }) {
           <Row k="Duck" v="S" />
           <Row k="Throw (hold to charge)" v="F" />
           <Row k="Catch (timed)" v="G" />
+          <Row k="Emote wheel" v="T" />
         </div>
         <div className="bg-slate-900/60 p-5 rounded-xl border border-slate-700">
           <h3 className="text-xl font-bold mb-2 text-rose-300">Player 2 (Arrows)</h3>

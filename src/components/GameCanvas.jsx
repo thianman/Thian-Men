@@ -4,6 +4,8 @@ import { initState, tick, applyInput } from '../game/engine.js'
 import { render } from '../game/render.js'
 import { makeAIController } from '../game/ai.js'
 import { playMusic, stopMusic, resumeAudio, sfx, isMusicMuted, isSfxMuted, setMusicMuted, setSfxMuted } from '../game/sfx.js'
+import EmoteWheel from './EmoteWheel.jsx'
+import { EMOTE_HOLD_MS } from '../game/emotes.js'
 
 export default function GameCanvas({ config, onExit, onMatchEnd, profile, session, onRewardsEarned }) {
   const canvasRef = useRef(null)
@@ -22,6 +24,8 @@ export default function GameCanvas({ config, onExit, onMatchEnd, profile, sessio
   const [isMobile, setIsMobile] = useState(false)
   const [rematchNonce, setRematchNonce] = useState(0)
   const [gamePhase, setGamePhase] = useState('play')
+  const [wheelOpen, setWheelOpen] = useState(false)
+  const [activeEmotes, setActiveEmotes] = useState({}) // { p1: {emote, until}, p2: {...} }
 
   useEffect(() => {
     const mapObj = MAPS.find(m => m.id === config.map) || MAPS[0]
@@ -57,6 +61,7 @@ export default function GameCanvas({ config, onExit, onMatchEnd, profile, sessio
     const down = e => {
       keysRef.current[e.code] = true
       if (e.code === 'Escape') { setPaused(p => !p); sfx.click() }
+      if (e.code === 'KeyT') { setWheelOpen(o => !o); sfx.click() }
     }
     const up = e => { keysRef.current[e.code] = false }
     window.addEventListener('keydown', down)
@@ -201,10 +206,48 @@ export default function GameCanvas({ config, onExit, onMatchEnd, profile, sessio
 
         {/* Top bar */}
         <div className="absolute top-2 right-2 flex gap-2" style={{ transform: `scale(${scale})`, transformOrigin: 'top right' }}>
+          <button onClick={() => { setWheelOpen(true); sfx.click() }} className="px-3 py-1 rounded bg-amber-700/80 border border-amber-400 text-white text-sm">
+            😂 Emote
+          </button>
           <button onClick={() => setPaused(p => !p)} className="px-3 py-1 rounded bg-slate-800/80 border border-slate-500 text-white text-sm">
             {paused ? 'Resume' : 'Pause'}
           </button>
         </div>
+
+        {/* Emote bubbles above players (P1 only in offline; own bubble in online) */}
+        {Object.entries(activeEmotes).map(([who, data]) => {
+          if (!data || data.until < Date.now()) return null
+          const s = stateRef.current
+          if (!s) return null
+          const idx = who === 'p1' ? 0 : 1
+          const p = s.players[idx]
+          if (!p) return null
+          const x = (p.x + p.w / 2) * scale
+          const y = (p.y - 20) * scale
+          return (
+            <div
+              key={who}
+              className="absolute pointer-events-none"
+              style={{ left: x, top: y, transform: 'translate(-50%, -100%)' }}
+            >
+              <div className="px-3 py-2 rounded-2xl bg-slate-950/90 border border-amber-400/70 shadow-2xl flex items-center gap-2 whitespace-nowrap animate-in fade-in slide-in-from-bottom-2">
+                <span className="text-2xl leading-none">{data.emote.emoji}</span>
+                <span className="text-xs font-bold text-amber-200">{data.emote.label}</span>
+              </div>
+            </div>
+          )
+        })}
+
+        <EmoteWheel
+          open={wheelOpen}
+          onClose={() => setWheelOpen(false)}
+          onPick={(emote) => {
+            setWheelOpen(false)
+            const until = Date.now() + EMOTE_HOLD_MS
+            setActiveEmotes(m => ({ ...m, p1: { emote, until } }))
+            setTimeout(() => setActiveEmotes(m => (m.p1?.until === until ? { ...m, p1: null } : m)), EMOTE_HOLD_MS + 20)
+          }}
+        />
 
         {/* Pause menu */}
         {paused && (
