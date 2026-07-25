@@ -112,6 +112,7 @@ export function resetRound(state) {
     p.charging = false; p.chargeVal = 0
     p.hitFlash = 0; p.ducking = false; p.onGround = true
     p.doubleJumped = false; p.dashActive = 0; p.dashCd = 0
+    p.dmgFreeUsed = false
   })
   state.balls.forEach((b, i) => {
     const spacing = ARENA_W / (state.balls.length + 1)
@@ -224,13 +225,14 @@ function grabNearestBall(player, state) {
 function throwBall(player, state) {
   const b = player.holdingBall; if (!b) return
   const power = 6 + 18 * player.chargeVal
-  b.vx = player.facing * power * player.char.throwMul
-  b.vy = -4 - 8 * player.chargeVal
+  const perk = (state.mods && state.mods.has('noperks')) ? {} : (player.char.perk || {})
+  const speedMul = perk.throwSpeedMul || 1
+  b.vx = player.facing * power * player.char.throwMul * speedMul
+  b.vy = (-4 - 8 * player.chargeVal) * speedMul
   b.x = player.x + player.w/2 + player.facing * (player.w/2 + BALL_R + 2)
   b.y = player.y + 30
   b.held = false; b.ownerSide = null; b.live = true; b.thrownBy = player.side; b.chargeAtThrow = player.chargeVal; b.aliveMs = 0
   b.trail = []
-  const perk = (state.mods && state.mods.has('noperks')) ? {} : (player.char.perk || {})
   b.uncatchable = !!(perk.uncatchableAt && player.chargeVal >= perk.uncatchableAt)
   player.holdingBall = null
   state.stats[player.side].throws++
@@ -261,6 +263,8 @@ function attemptCatch(player, state) {
       b.held = true; b.ownerSide = player.side
       player.holdingBall = b
       state.stats[player.side].catches++
+      // Perk: Second Wind — restore 1 HP on catch (cap at MAX_HP)
+      if (perk.healOnCatch && player.hp < MAX_HP) player.hp += 1
       sfx.catch()
       return true
     }
@@ -490,6 +494,17 @@ function hazardHit(state, p, h) {
 }
 
 function hitPlayer(state, p, b) {
+  const perk = (state.mods && state.mods.has('noperks')) ? {} : (p.char.perk || {})
+  // Perk: Iron Wall — first hit each round is free.
+  if (perk.firstHitFree && !p.dmgFreeUsed) {
+    p.dmgFreeUsed = true
+    p.hitFlash = 260
+    sfx.hit()
+    state.shake = 200
+    b.live = false; b.vx = 0; b.vy = 0; b.y = FLOOR_Y - b.r
+    state.stats[b.thrownBy].hits++
+    return
+  }
   p.hp -= 1
   p.hitFlash = 260
   sfx.hit()

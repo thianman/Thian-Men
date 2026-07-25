@@ -171,5 +171,5 @@ export async function buyCharacterWithCoins(userId, characterId, currentCoins) {
 }
 
 function isKnownCharacter(id) {
-  return ['blaze', 'nova', 'tank', 'ghost', 'crusher', 'striker'].includes(id)
+  return ['blaze', 'nova', 'tank', 'ghost', 'crusher', 'striker', 'volt', 'ruby', 'bastion'].includes(id)
 }

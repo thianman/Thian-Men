@@ -10,6 +10,9 @@ const POSES = {
   ghost:   { verb: 'AERIAL DODGE', render: renderGhost   },
   crusher: { verb: 'CANNON SHOT',  render: renderCrusher },
   striker: { verb: 'SLIDE STRIKE', render: renderStriker },
+  volt:    { verb: 'STORM SHOT',   render: renderVolt    },
+  ruby:    { verb: 'FIELD MEDIC',  render: renderRuby    },
+  bastion: { verb: 'IRON WALL',    render: renderBastion },
 }
 
 export function poseVerb(charId) {
@@ -338,6 +341,87 @@ function renderStriker(ctx) {
       {headWithHair(ctx, 74, 56)}
       {drawFace(ctx, 74, 56, char.expression || 'cocky', 1)}
       {ctx.showBall && ball(96, 54, 5)}
+    </g>
+  )
+}
+
+// === VOLT — electric storm throw =========================================
+function renderVolt(ctx) {
+  const { char, skin } = ctx
+  return (
+    <g>
+      {/* lightning behind */}
+      <g stroke={char.accent} strokeWidth="2" strokeLinecap="round" opacity="0.85" fill="none">
+        <path d="M 24 30 L 30 44 L 24 50 L 32 66" />
+        <path d="M 12 40 L 18 52 L 14 60" />
+      </g>
+      {torsoAndLegs(ctx)}
+      <path d="M 40 46 Q 26 60 20 76" stroke={char.color} strokeWidth="6" strokeLinecap="round" fill="none" />
+      {/* front arm throwing with electric bolt trail */}
+      <path d="M 60 46 Q 82 44 94 48" stroke={char.color} strokeWidth="7" strokeLinecap="round" fill="none" />
+      <circle cx="94" cy="48" r="4" fill={skin} />
+      {headWithHair(ctx, 50, 32)}
+      {drawFace(ctx, 50, 32, char.expression || 'mischievous', 1)}
+      {ctx.showBall && (
+        <>
+          {ball(96, 44, 5)}
+          {/* zigzag bolt from ball */}
+          <path d="M 100 42 L 106 40 L 102 46 L 108 44" stroke={char.accent} strokeWidth="1.6" fill="none" strokeLinecap="round" />
+        </>
+      )}
+    </g>
+  )
+}
+
+// === RUBY — support / heal aura ==========================================
+function renderRuby(ctx) {
+  const { char, skin } = ctx
+  return (
+    <g>
+      {/* healing aura ring under feet */}
+      <ellipse cx="50" cy="125" rx="30" ry="6" fill="none" stroke={char.accent} strokeWidth="1.4" opacity="0.7" />
+      <ellipse cx="50" cy="122" rx="24" ry="4" fill="none" stroke={char.color} strokeWidth="1.2" opacity="0.85" />
+      {torsoAndLegs(ctx)}
+      {/* one arm cradling a heart / ball */}
+      <path d="M 40 46 Q 28 44 22 34" stroke={char.color} strokeWidth="6" strokeLinecap="round" fill="none" />
+      <path d="M 60 46 Q 72 44 78 34" stroke={char.color} strokeWidth="6" strokeLinecap="round" fill="none" />
+      {/* Heart above hands */}
+      <path d="M 50 22 L 45 17 A 3 3 0 0 1 50 15 A 3 3 0 0 1 55 17 Z" fill={char.accent} />
+      {headWithHair(ctx, 50, 34)}
+      {drawFace(ctx, 50, 34, char.expression || 'smug', 1)}
+      {/* soft sparkles */}
+      <g fill={char.accent}>
+        <circle cx="20" cy="60" r="1.4" />
+        <circle cx="82" cy="66" r="1.6" />
+        <circle cx="76" cy="52" r="1.2" />
+      </g>
+    </g>
+  )
+}
+
+// === BASTION — arms-crossed iron wall =====================================
+function renderBastion(ctx) {
+  const { char, skin } = ctx
+  return (
+    <g>
+      {/* shield glow behind */}
+      <path d="M 20 40 L 20 90 Q 50 100 80 90 L 80 40 Q 50 30 20 40 Z"
+        fill="none" stroke={char.accent} strokeWidth="2" opacity="0.35" />
+      {torsoAndLegs(ctx, { torsoWide: 34 })}
+      {/* Arms crossed over chest */}
+      <path d="M 34 54 Q 50 62 66 54" stroke={char.color} strokeWidth="8" strokeLinecap="round" fill="none" />
+      <path d="M 34 62 Q 50 54 66 62" stroke={char.color} strokeWidth="8" strokeLinecap="round" fill="none" />
+      <circle cx="34" cy="58" r="4" fill={skin} />
+      <circle cx="66" cy="58" r="4" fill={skin} />
+      {headWithHair(ctx, 50, 34)}
+      {drawFace(ctx, 50, 34, char.expression || 'intense', 1)}
+      {/* Impact ring in front (blocked hit) */}
+      {ctx.showBall && (
+        <g>
+          <circle cx="90" cy="58" r="7" fill="none" stroke={char.accent} strokeWidth="2" />
+          <circle cx="90" cy="58" r="12" fill="none" stroke={char.accent} strokeWidth="1" opacity="0.5" />
+        </g>
+      )}
     </g>
   )
 }

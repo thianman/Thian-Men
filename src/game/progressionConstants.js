@@ -7,9 +7,12 @@ export const STARTER_CHARACTERS = ['blaze', 'nova', 'tank']
 // Level thresholds for the play-based unlocks. If a level isn't in this map,
 // the character is unlocked purely by paying coins.
 export const CHARACTER_LEVEL_UNLOCKS = {
-  ghost: 5,
+  ghost:   5,
   crusher: 10,
   striker: 15,
+  volt:    20,
+  ruby:    25,
+  bastion: 30,
 }
 
 // Coin price to buy any non-starter character before hitting its level.

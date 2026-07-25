@@ -54,12 +54,33 @@ export const CHARACTERS = [
       { name: 'Coral',   color: '#fb7185', accent: '#831843' },
       { name: 'Lime',    color: '#84cc16', accent: '#1a2e05' },
     ] },
+  { id: 'volt',    name: 'VOLT',    speed: 6, jump: 20, throwMul: 1.0, color: '#06b6d4', vibe: 'Electric prodigy',    shape: 'slim',    accent: '#67e8f9', expression: 'mischievous',
+    perk: { throwSpeedMul: 1.4, label: 'Storm Shot',  desc: 'Thrown balls fly 40% faster.' },
+    skins: [
+      { name: 'Default', color: '#06b6d4', accent: '#67e8f9' },
+      { name: 'Volt',    color: '#7c3aed', accent: '#c4b5fd' },
+      { name: 'Ion',     color: '#0ea5e9', accent: '#fef08a' },
+    ] },
+  { id: 'ruby',    name: 'RUBY',    speed: 4, jump: 22, throwMul: 0.9, color: '#ec4899', vibe: 'Support medic',       shape: 'normal',  accent: '#fce7f3', expression: 'smug',
+    perk: { healOnCatch: true,   label: 'Second Wind', desc: 'Catching a ball restores 1 HP.' },
+    skins: [
+      { name: 'Default', color: '#ec4899', accent: '#fce7f3' },
+      { name: 'Rose',    color: '#be123c', accent: '#fecdd3' },
+      { name: 'Blossom', color: '#f472b6', accent: '#fef2f2' },
+    ] },
+  { id: 'bastion', name: 'BASTION', speed: 3, jump: 12, throwMul: 1.2, color: '#94a3b8', vibe: 'Iron defender',       shape: 'bulky',   accent: '#cbd5e1', expression: 'intense',
+    perk: { firstHitFree: true,  label: 'Iron Wall',   desc: 'First hit each round does no damage.' },
+    skins: [
+      { name: 'Default', color: '#94a3b8', accent: '#cbd5e1' },
+      { name: 'Rust',    color: '#78350f', accent: '#fed7aa' },
+      { name: 'Onyx',    color: '#0f172a', accent: '#f8fafc' },
+    ] },
 ]
 
 export const STAT_STARS = {
-  speed:    { blaze: 2, tank: 1, nova: 2, ghost: 2, crusher: 1, striker: 3 },
-  strength: { blaze: 1, tank: 3, nova: 2, ghost: 1, crusher: 2, striker: 1 },
-  jump:     { blaze: 2, tank: 1, nova: 1, ghost: 2, crusher: 2, striker: 1 },
+  speed:    { blaze: 2, tank: 1, nova: 2, ghost: 2, crusher: 1, striker: 3, volt: 3, ruby: 2, bastion: 1 },
+  strength: { blaze: 1, tank: 3, nova: 2, ghost: 1, crusher: 2, striker: 1, volt: 2, ruby: 2, bastion: 3 },
+  jump:     { blaze: 2, tank: 1, nova: 1, ghost: 2, crusher: 2, striker: 1, volt: 2, ruby: 2, bastion: 1 },
 }
 
 export const MAPS = [
