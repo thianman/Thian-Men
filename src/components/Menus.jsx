@@ -249,7 +249,7 @@ function HeroScene() {
   )
 }
 
-export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onGlobalLeaderboard, onCredits, onDaily, onFriends, onTutorial, onRanked, tutorialDone = false, friendRequests = 0, dailyUnclaimed = 0, streak = 0 }) {
+export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, onLeaderboard, onGlobalLeaderboard, onCredits, onDaily, onFriends, onTutorial, tutorialDone = false, friendRequests = 0, dailyUnclaimed = 0, streak = 0 }) {
   const stars = Array.from({ length: 14 }).map((_, i) => ({
     left:  (i * 71) % 100,
     delay: (i * 0.43) % 8,
@@ -329,11 +329,6 @@ export function TitleScreen({ onPlay, onInstructions, onQuickPlay, onSettings, o
               {!tutorialDone && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 text-slate-900 text-[10px] font-black flex items-center justify-center">!</span>
               )}
-            </button>
-          )}
-          {onRanked && (
-            <button className="chip-btn" onClick={() => { sfx.click(); onRanked() }}>
-              🏆 Ranked
             </button>
           )}
           {onFriends && (
@@ -541,6 +536,7 @@ export function InstructionsScreen({ onBack }) {
 
 export function ModeSelect({ onPick, onBack }) {
   const modes = [
+    { id: 'ranked', name: 'Ranked', desc: 'Compete for MMR + tier. First to 3 rounds wins.', highlight: true },
     { id: 'online', name: 'Play Online (Beta)', desc: 'Real-time multiplayer preview', highlight: true },
     { id: 'onlineLadder', name: 'Online Ladder', desc: 'Server-timed 6-fight ladder + global leaderboard', highlight: true },
     { id: '1p', name: '1P vs CPU', desc: 'Play against the AI' },

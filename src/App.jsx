@@ -212,7 +212,6 @@ export default function App() {
           friendRequests={auth.pendingFriendCount || 0}
           onTutorial={() => setScreen('tutorial')}
           tutorialDone={isTutorialDone()}
-          onRanked={auth.session ? () => setScreen('ranked') : null}
           dailyUnclaimed={0}
           streak={auth.progression?.progression?.current_streak || 0}
           onQuickPlay={() => {
@@ -294,6 +293,11 @@ export default function App() {
         <ModeSelect
           onBack={backToTitle}
           onPick={(m) => {
+            if (m === 'ranked') {
+              if (!auth.session || !auth.profile) { setScreen('signin'); return }
+              setScreen('ranked')
+              return
+            }
             if (m === 'online') {
               if (!auth.session || !auth.profile) { setScreen('signin'); return }
               setScreen('online')
