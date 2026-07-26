@@ -111,6 +111,27 @@ export class MatchRoom {
     try { msg = JSON.parse(evt.data) } catch { return }
     if (msg.t === 'ping') { try { ws.send(JSON.stringify({ t: 'pong', at: msg.at })) } catch {}; return }
 
+    // Lobby / match chat — broadcast to everyone in the room.
+    if (msg.t === 'chat' && typeof msg.text === 'string') {
+      const now = Date.now()
+      const last = meta.lastChatAt || 0
+      // Basic rate limit: no more than one message every 500ms per client
+      if (now - last < 500) return
+      meta.lastChatAt = now
+      let text = msg.text.trim().slice(0, 200)
+      if (!text) return
+      // Strip control chars (0x00-0x1F) and angle brackets to avoid weird payloads
+      text = text.replace(/[\x00-\x1F<>]/g, '')
+      this._broadcast({
+        t: 'chat',
+        from: meta.slotIndex,
+        name: meta.name || 'Player',
+        text,
+        at: now,
+      })
+      return
+    }
+
     if (this.state_ === 'lobby') {
       const slot = this.slots.find(s => s.slotIndex === meta.slotIndex)
       if (!slot) return

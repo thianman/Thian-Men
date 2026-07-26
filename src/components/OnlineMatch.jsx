@@ -18,6 +18,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver
   const [screen, setScreen] = useState('menu') // 'menu' | 'connecting' | 'lobby' | 'match' | 'ended' | 'error'
   const [joinCode, setJoinCode] = useState(autoJoinCode || '')
   const [code, setCode] = useState('')
+  const [chatMessages, setChatMessages] = useState([]) // {name, text, at, from}
   const [error, setError] = useState('')
   const [rtt, setRtt] = useState(0)
   const [me, setMe] = useState(null)          // { playerId, side, sideSlot, isHost, type }
@@ -54,6 +55,7 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver
     t.on('welcome',     (m) => { setMe(m); sfx.click() })
     t.on('roster',      (m) => setRoster(m.players))
     t.on('lobby',       (m) => setLobby(m))
+    t.on('chat',        (m) => setChatMessages(list => [...list.slice(-50), m]))
     t.on('matchStart',  () => { setMatchEnd(null); setScreen('match') })
     t.on('state',       (m) => setSnap(m.snap))
     t.on('matchEnd',    (m) => {
@@ -199,6 +201,8 @@ export default function OnlineMatch({ profile, onExit, autoJoinCode, onMatchOver
       onCopyInvite={copyInvite}
       progression={progression}
       session={session}
+      chatMessages={chatMessages}
+      onSendChat={(text) => transportRef.current?.sendChat(text)}
       onPickCharacter={(id) => transportRef.current?.setCharacter(id)}
       onPickMap={(id) => transportRef.current?.setMap(id)}
       onReady={() => transportRef.current?.ready()}
@@ -250,7 +254,7 @@ function MenuLayout({ title, name, children, error, onExit }) {
   )
 }
 
-function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCharacter, onPickMap, onReady, onUnready, onRematch, name, onCopyInvite, copied, progression, session }) {
+function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCharacter, onPickMap, onReady, onUnready, onRematch, name, onCopyInvite, copied, progression, session, chatMessages = [], onSendChat }) {
   const [showPicker, setShowPicker] = useState(false)
   const mySide = me?.side
   const mySideSlot = me?.sideSlot
@@ -389,8 +393,53 @@ function LobbyScreen({ code, rtt, me, roster, lobby, matchEnd, onLeave, onPickCh
               </span>
             ))}
           </div>
+          <LobbyChat messages={chatMessages} onSend={onSendChat} mySlot={me?.slotIndex} />
         </div>
       </div>
+    </div>
+  )
+}
+
+function LobbyChat({ messages, onSend, mySlot }) {
+  const [text, setText] = useState('')
+  const listRef = useRef(null)
+  useEffect(() => {
+    const el = listRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [messages])
+  const submit = (e) => {
+    e.preventDefault()
+    const t = text.trim()
+    if (!t) return
+    onSend && onSend(t)
+    setText('')
+  }
+  return (
+    <div className="mt-4 rounded-xl bg-slate-900/80 border border-slate-700 max-w-2xl mx-auto text-left">
+      <div className="px-3 py-2 border-b border-slate-800 text-xs uppercase tracking-widest text-amber-300">
+        Lobby Chat
+      </div>
+      <div ref={listRef} className="max-h-40 overflow-y-auto px-3 py-2 space-y-1 text-sm">
+        {!messages.length && (
+          <div className="text-slate-500 italic text-xs">No messages yet. Say hi!</div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i}>
+            <span className={`font-bold ${m.from === mySlot ? 'text-cyan-300' : 'text-fuchsia-300'}`}>{m.name}:</span>{' '}
+            <span className="text-slate-100">{m.text}</span>
+          </div>
+        ))}
+      </div>
+      <form onSubmit={submit} className="flex gap-2 p-2 border-t border-slate-800">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={200}
+          placeholder="Send a message…"
+          className="flex-1 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-white text-sm outline-none focus:border-amber-400"
+        />
+        <button type="submit" disabled={!text.trim()} className="arcade-btn text-xs py-1 px-3 disabled:opacity-50">Send</button>
+      </form>
     </div>
   )
 }

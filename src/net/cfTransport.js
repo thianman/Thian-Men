@@ -95,6 +95,7 @@ export class CloudflareTransport extends TransportBase {
   ready()                 { this._send({ t: 'ready' }) }
   unready()               { this._send({ t: 'unready' }) }
   rematch()               { this._send({ t: 'rematch' }) }
+  sendChat(text)          { this._send({ t: 'chat', text }) }
 
   disconnect() {
     this._closedByUser = true
